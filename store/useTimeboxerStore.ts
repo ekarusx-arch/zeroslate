@@ -95,7 +95,7 @@ interface TimeboxerState {
   setTopThreeAssigned: (id: string, assigned: boolean) => void;
   toggleTopThreeItem: (id: string) => void;
 
-  addTimeBlock: (block: Omit<TimeBlock, "id" | "isCompleted"> & { color?: string }) => void;
+  addTimeBlock: (block: Omit<TimeBlock, "id" | "isCompleted" | "color"> & { color?: string }) => void;
   updateTimeBlock: (id: string, patch: Partial<TimeBlock>) => void;
   deleteTimeBlock: (id: string) => void;
   toggleTimeBlock: (id: string) => void;
