@@ -6,6 +6,7 @@ import { useCurrentMinutes } from "@/hooks/useCurrentMinutes";
 import { playAlarm } from "@/utils/audio";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
+import { TimeBlock as TimeBlockType } from "@/types";
 
 const ROW_HEIGHT = 48; // px per 30min
 const MIN_BLOCK_MINUTES = 15; // 최소 15분
