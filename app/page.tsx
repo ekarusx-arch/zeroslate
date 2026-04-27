@@ -149,7 +149,7 @@ export default function Home() {
         content: item.content,
         startTime: formatTime(startMin),
         endTime: formatTime(endMin),
-        color: item.color,
+        color: item.color || "bg-zinc-200",
       });
     } else if (data.type === "top-three") {
       const item = data.item as TopThreeItem;
@@ -160,7 +160,7 @@ export default function Home() {
         content: item.content,
         startTime: formatTime(startMin),
         endTime: formatTime(endMin),
-        color: item.color,
+        color: item.color || "bg-zinc-200",
       });
     }
   };
