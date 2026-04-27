@@ -11,10 +11,6 @@ import {
   useSensors,
   closestCenter,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import { useAuth } from "@/components/AuthProvider";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";

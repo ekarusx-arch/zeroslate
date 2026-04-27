@@ -40,8 +40,8 @@ export default function LoginPage() {
           setMessage("가입이 완료되었습니다! (이메일 확인이 필요할 수 있습니다)");
         }
       }
-    } catch (err: any) {
-      setError(err.message || "오류가 발생했습니다.");
+    } catch (err: unknown) {
+      setError((err as Error).message || "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }

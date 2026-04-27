@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BarChart3, CheckCircle2, Clock3, Save, Target, Zap } from "lucide-react";
+import { CheckCircle2, Clock3, Save, Target, Zap } from "lucide-react";
 
 export default function SummaryModal() {
   const [saved, setSaved] = useState(false);
