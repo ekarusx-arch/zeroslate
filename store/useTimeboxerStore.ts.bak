@@ -1,0 +1,391 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  BrainDumpItem,
+  DailyLog,
+  Settings,
+  TimeBlock,
+  TopThreeItem,
+  PRESET_COLORS,
+} from "@/types";
+
+// ── 헬퍼 ──────────────────────────────────────────────────────────────
+function syncTopThreeAssigned(
+  topThree: TopThreeItem[],
+  timeBlocks: TimeBlock[]
+) {
+  const assignedIds = new Set(
+    timeBlocks
+      .map((block) => block.taskId)
+      .filter((taskId): taskId is string => Boolean(taskId))
+  );
+
+  return topThree.map((item) => ({
+    ...item,
+    isAssigned: assignedIds.has(item.id),
+  }));
+}
+
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getBlockMinutes(block: TimeBlock) {
+  const [startHour, startMinute] = block.startTime.split(":").map(Number);
+  const [endHour, endMinute] = block.endTime.split(":").map(Number);
+  return endHour * 60 + endMinute - (startHour * 60 + startMinute);
+}
+
+function timeToMinutes(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** 새 블록이 기존 블록들과 시간 겹침이 있는지 확인 */
+function hasOverlap(
+  newStart: string,
+  newEnd: string,
+  existing: TimeBlock[],
+  excludeId?: string
+) {
+  const ns = timeToMinutes(newStart);
+  const ne = timeToMinutes(newEnd);
+  return existing.some((b) => {
+    if (b.id === excludeId) return false;
+    const bs = timeToMinutes(b.startTime);
+    const be = timeToMinutes(b.endTime);
+    return ns < be && ne > bs; // 반열린 구간 겹침 판정
+  });
+}
+
+function createDailyLog(
+  state: Pick<TimeboxerState, "brainDump" | "topThree" | "timeBlocks">
+): DailyLog {
+  const completedBlocks = state.timeBlocks.filter((b) => b.isCompleted);
+  const completedBrainDump = state.brainDump.filter((i) => i.isCompleted);
+  const assignedTop = state.topThree.filter((t) => t.isAssigned).length;
+  const totalPlannedMinutes = state.timeBlocks.reduce(
+    (sum, block) => sum + getBlockMinutes(block),
+    0
+  );
+  const completedMinutes = completedBlocks.reduce(
+    (sum, block) => sum + getBlockMinutes(block),
+    0
+  );
+
+  return {
+    date: getTodayKey(),
+    savedAt: new Date().toISOString(),
+    completedBlocks,
+    completedBrainDump,
+    topThree: state.topThree,
+    totalBlocks: state.timeBlocks.length,
+    totalPlannedMinutes,
+    completedMinutes,
+    topCompletionRate:
+      state.topThree.length > 0
+        ? Math.round((assignedTop / state.topThree.length) * 100)
+        : 0,
+    blockCompletionRate:
+      state.timeBlocks.length > 0
+        ? Math.round((completedBlocks.length / state.timeBlocks.length) * 100)
+        : 0,
+  };
+}
+
+// ── 타입 ──────────────────────────────────────────────────────────────
+interface TimeboxerState {
+  settings: Settings;
+  brainDump: BrainDumpItem[];
+  topThree: TopThreeItem[];
+  timeBlocks: TimeBlock[];
+  dailyLogs: DailyLog[];
+  colorIndex: number; // ← 전역 변수에서 store 내부로 이동
+
+  // Settings
+  updateSettings: (s: Partial<Settings>) => void;
+
+  // Brain Dump
+  addBrainDumpItem: (content: string) => void;
+  updateBrainDumpItem: (id: string, updates: Partial<BrainDumpItem>) => void;
+  toggleBrainDumpItem: (id: string) => void;
+  deleteBrainDumpItem: (id: string) => void;
+
+  // Top Three
+  addTopThreeItem: (content: string) => void;
+  updateTopThreeItem: (id: string, updates: Partial<TopThreeItem>) => void;
+  deleteTopThreeItem: (id: string) => void;
+  setTopThreeAssigned: (id: string, assigned: boolean) => void;
+  toggleTopThreeItem: (id: string) => void; // ← 신규
+
+  // Time Blocks
+  addTimeBlock: (
+    block: Omit<TimeBlock, "id" | "isCompleted"> & { color?: string }
+  ) => void;
+  updateTimeBlock: (id: string, patch: Partial<TimeBlock>) => void;
+  deleteTimeBlock: (id: string) => void;
+  toggleTimeBlock: (id: string) => void;
+
+  // Utilities
+  saveTodayLog: () => void;
+  carryOver: () => void; // ← 신규: 미완료 이월하기
+  resetAll: () => void;
+}
+
+const defaultSettings: Settings = {
+  startTime: 5,
+  endTime: 24,
+  step: 30,
+};
+
+// ── Store ─────────────────────────────────────────────────────────────
+export const useTimeboxerStore = create<TimeboxerState>()(
+  persist(
+    (set) => ({
+      settings: defaultSettings,
+      brainDump: [],
+      topThree: [],
+      timeBlocks: [],
+      dailyLogs: [],
+      colorIndex: 0, // ← 여기서 관리
+
+      updateSettings: (s) =>
+        set((state) => ({ settings: { ...state.settings, ...s } })),
+
+      // ── Brain Dump ─────────────────────────────────────────────────
+      addBrainDumpItem: (content) =>
+        set((state) => ({
+          brainDump: [
+            ...state.brainDump,
+            {
+              id: `brain-${Date.now()}`,
+              content,
+              isCompleted: false,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        })),
+
+      updateBrainDumpItem: (id, updates) =>
+        set((state) => ({
+          brainDump: state.brainDump.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ),
+        })),
+
+      toggleBrainDumpItem: (id) =>
+        set((state) => {
+          const item = state.brainDump.find((i) => i.id === id);
+          if (!item) return state;
+          
+          const newStatus = !item.isCompleted;
+          
+          return {
+            brainDump: state.brainDump.map((i) =>
+              i.id === id ? { ...i, isCompleted: newStatus } : i
+            ),
+            timeBlocks: state.timeBlocks.map((block) =>
+              block.taskId === id ? { ...block, isCompleted: newStatus } : block
+            ),
+          };
+        }),
+
+      deleteBrainDumpItem: (id) =>
+        set((state) => ({
+          brainDump: state.brainDump.filter((item) => item.id !== id),
+          timeBlocks: state.timeBlocks.filter((b) => b.taskId !== id),
+        })),
+
+      // ── Top Three ──────────────────────────────────────────────────
+      addTopThreeItem: (content) =>
+        set((state) => ({
+          topThree: [
+            ...state.topThree,
+            {
+              id: `focus-${Date.now()}`,
+              content,
+              isAssigned: false,
+              isCompleted: false,
+            },
+          ],
+        })),
+
+      updateTopThreeItem: (id, updates) =>
+        set((state) => ({
+          topThree: state.topThree.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ),
+        })),
+
+      deleteTopThreeItem: (id) =>
+        set((state) => {
+          const timeBlocks = state.timeBlocks.filter((b) => b.taskId !== id);
+          return {
+            topThree: state.topThree.filter((item) => item.id !== id),
+            timeBlocks,
+          };
+        }),
+
+      setTopThreeAssigned: (id, assigned) =>
+        set((state) => ({
+          topThree: state.topThree.map((item) =>
+            item.id === id ? { ...item, isAssigned: assigned } : item
+          ),
+        })),
+
+      toggleTopThreeItem: (id) =>
+        set((state) => {
+          const item = state.topThree.find((i) => i.id === id);
+          if (!item) return state;
+          const newStatus = !item.isCompleted;
+          return {
+            topThree: state.topThree.map((i) =>
+              i.id === id ? { ...i, isCompleted: newStatus } : i
+            ),
+            timeBlocks: state.timeBlocks.map((b) =>
+              b.taskId === id ? { ...b, isCompleted: newStatus } : b
+            ),
+          };
+        }),
+
+      // ── Time Blocks ────────────────────────────────────────────────
+      addTimeBlock: (block) =>
+        set((state) => {
+          // Top Three 중복 방지
+          if (
+            block.taskId?.startsWith("focus-") &&
+            state.timeBlocks.some((b) => b.taskId === block.taskId)
+          ) {
+            return state;
+          }
+
+          // 겹침 방지
+          if (hasOverlap(block.startTime, block.endTime, state.timeBlocks)) {
+            return state;
+          }
+
+          // 태그 기반 컬러 지정 (블록에 명시된 색상이 없으면)
+          let color = block.color || PRESET_COLORS[state.colorIndex % PRESET_COLORS.length].value;
+          const content = block.content;
+          
+          if (!block.color) {
+            if (/#(개발|코딩)/.test(content)) color = "#93C5FD"; // blue
+            else if (/#(작곡|음악|기획)/.test(content)) color = "#C4B5FD"; // violet
+            else if (/#(운동|건강)/.test(content)) color = "#6EE7B7"; // emerald
+            else if (/#(휴식|식사)/.test(content)) color = "#FDBA74"; // orange
+            else if (/#(미팅|연락)/.test(content)) color = "#FCA5A5"; // red
+          }
+
+          const timeBlocks = [
+            ...state.timeBlocks,
+            {
+              ...block,
+              id: `block-${Date.now()}`,
+              color,
+              isCompleted: false,
+            },
+          ];
+
+          return {
+            timeBlocks,
+            topThree: syncTopThreeAssigned(state.topThree, timeBlocks),
+            colorIndex: state.colorIndex + 1,
+          };
+        }),
+
+      updateTimeBlock: (id, patch) =>
+        set((state) => {
+          // 시간 변경이 있고 겹침이 발생하면 무시
+          if (patch.startTime !== undefined || patch.endTime !== undefined) {
+            const target = state.timeBlocks.find((b) => b.id === id);
+            if (target) {
+              const newStart = patch.startTime ?? target.startTime;
+              const newEnd = patch.endTime ?? target.endTime;
+              if (hasOverlap(newStart, newEnd, state.timeBlocks, id)) {
+                return state;
+              }
+            }
+          }
+          return {
+            timeBlocks: state.timeBlocks.map((b) =>
+              b.id === id ? { ...b, ...patch } : b
+            ),
+          };
+        }),
+
+      deleteTimeBlock: (id) =>
+        set((state) => {
+          const timeBlocks = state.timeBlocks.filter((b) => b.id !== id);
+          return {
+            timeBlocks,
+            topThree: syncTopThreeAssigned(state.topThree, timeBlocks),
+          };
+        }),
+
+      toggleTimeBlock: (id) =>
+        set((state) => {
+          const timeBlocks = state.timeBlocks.map((b) =>
+            b.id === id ? { ...b, isCompleted: !b.isCompleted } : b
+          );
+          
+          const toggledBlock = timeBlocks.find((b) => b.id === id);
+          
+          if (toggledBlock?.taskId) {
+            const taskId = toggledBlock.taskId;
+            // 해당 taskId를 가진 모든 블록이 완료되었는지 확인
+            const allBlocksOfTask = timeBlocks.filter((b) => b.taskId === taskId);
+            const allCompleted = allBlocksOfTask.length > 0 && allBlocksOfTask.every((b) => b.isCompleted);
+
+            return {
+              timeBlocks,
+              brainDump: state.brainDump.map((item) =>
+                item.id === taskId ? { ...item, isCompleted: allCompleted } : item
+              ),
+              topThree: state.topThree.map((item) =>
+                item.id === taskId ? { ...item, isCompleted: allCompleted } : item
+              ),
+            };
+          }
+
+          return { timeBlocks };
+        }),
+
+      saveTodayLog: () =>
+        set((state) => {
+          const log = createDailyLog(state);
+          return {
+            dailyLogs: [
+              log,
+              ...state.dailyLogs.filter((item) => item.date !== log.date),
+            ],
+          };
+        }),
+
+      carryOver: () =>
+        set((state) => {
+          const incompleteBrainDump = state.brainDump.filter((i) => !i.isCompleted);
+          return {
+            brainDump: incompleteBrainDump,
+            topThree: [],
+            timeBlocks: [],
+            colorIndex: 0,
+          };
+        }),
+
+      resetAll: () =>
+        set({
+          brainDump: [],
+          topThree: [],
+          timeBlocks: [],
+          colorIndex: 0,
+        }),
+    }),
+    {
+      name: "timeboxer-pro-storage",
+    }
+  )
+);
