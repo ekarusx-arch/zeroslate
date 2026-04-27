@@ -53,7 +53,7 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
   const handleEditCommit = () => {
     const trimmed = editValue.trim();
     if (trimmed && trimmed !== item.content) {
-      updateTopThreeItem(item.id, trimmed);
+      updateTopThreeItem(item.id, { content: trimmed });
     } else {
       setEditValue(item.content);
     }

@@ -53,7 +53,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
   const handleEditCommit = () => {
     const trimmed = editValue.trim();
     if (trimmed && trimmed !== item.content) {
-      updateBrainDumpItem(item.id, trimmed);
+      updateBrainDumpItem(item.id, { content: trimmed });
     } else {
       setEditValue(item.content);
     }
