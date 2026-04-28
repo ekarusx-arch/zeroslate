@@ -157,12 +157,20 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   },
 
   updateBrainDumpItem: async (id, updates) => {
-    set((state) => ({ brainDump: state.brainDump.map((i) => i.id === id ? { ...i, ...updates } : i) }));
+    set((state) => ({
+      brainDump: state.brainDump.map((i) => i.id === id ? { ...i, ...updates } : i),
+      timeBlocks: state.timeBlocks.map((b) => b.taskId === id ? { ...b, color: updates.color ?? b.color, content: updates.content ?? b.content } : b)
+    }));
+
     const dbUpdates: any = {};
     if (updates.content !== undefined) dbUpdates.content = updates.content;
     if (updates.color !== undefined) dbUpdates.color = updates.color;
+    
     if (Object.keys(dbUpdates).length > 0) {
-      await supabase.from("brain_dumps").update(dbUpdates).eq("id", id);
+      await Promise.all([
+        supabase.from("brain_dumps").update(dbUpdates).eq("id", id),
+        supabase.from("time_blocks").update(dbUpdates).eq("task_id", id)
+      ]);
     }
   },
 
@@ -206,12 +214,20 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   },
 
   updateTopThreeItem: async (id, updates) => {
-    set((state) => ({ topThree: state.topThree.map((i) => i.id === id ? { ...i, ...updates } : i) }));
+    set((state) => ({
+      topThree: state.topThree.map((i) => i.id === id ? { ...i, ...updates } : i),
+      timeBlocks: state.timeBlocks.map((b) => b.taskId === id ? { ...b, color: updates.color ?? b.color, content: updates.content ?? b.content } : b)
+    }));
+
     const dbUpdates: any = {};
     if (updates.content !== undefined) dbUpdates.content = updates.content;
     if (updates.color !== undefined) dbUpdates.color = updates.color;
+    
     if (Object.keys(dbUpdates).length > 0) {
-      await supabase.from("top_three").update(dbUpdates).eq("id", id);
+      await Promise.all([
+        supabase.from("top_three").update(dbUpdates).eq("id", id),
+        supabase.from("time_blocks").update(dbUpdates).eq("task_id", id)
+      ]);
     }
   },
 
