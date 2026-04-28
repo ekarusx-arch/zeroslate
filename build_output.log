@@ -1,0 +1,24 @@
+
+> timboxer-pro@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./components/timeline/TimelineGrid.tsx:92:20
+Type error: Argument of type '{ taskId: null; content: string; startTime: string; endTime: string; }' is not assignable to parameter of type 'Omit<TimeBlock, "id" | "isCompleted"> & { color?: string | undefined; }'.
+  Property 'color' is missing in type '{ taskId: null; content: string; startTime: string; endTime: string; }' but required in type 'Omit<TimeBlock, "id" | "isCompleted">'.
+
+[0m [90m 90 |[39m       [36mconst[39m endMin [33m=[39m startMin [33m+[39m [35m30[39m[33m;[39m[0m
+[0m [90m 91 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 92 |[39m       addTimeBlock({[0m
+[0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+[0m [90m 93 |[39m         taskId[33m:[39m [36mnull[39m[33m,[39m[0m
+[0m [90m 94 |[39m         content[33m:[39m [32m"새 블록"[39m[33m,[39m[0m
+[0m [90m 95 |[39m         startTime[33m:[39m minutesToTimeString(startMin)[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null

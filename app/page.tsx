@@ -227,7 +227,7 @@ export default function Home() {
         <main className="flex-1 max-w-[1500px] mx-auto w-full px-3 sm:px-4 py-4 flex flex-col lg:flex-row gap-4 min-h-0">
 
           {/* 좌측 패널 */}
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col gap-3">
+          <aside className="w-full lg:w-[30%] xl:w-[420px] shrink-0 flex flex-col gap-3">
             {/* Top 3 */}
             <div className="panel-card p-4">
               <TopThreeSection />
