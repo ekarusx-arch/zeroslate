@@ -28,6 +28,7 @@ export interface TimeBlock {
   endTime: string;   // "10:30"
   color: string;
   isCompleted: boolean;
+  memo?: string; // ← 신규: 상세 메모
 }
 
 export interface DailyLog {

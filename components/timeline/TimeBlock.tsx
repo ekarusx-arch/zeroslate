@@ -5,8 +5,15 @@ import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { useCurrentMinutes } from "@/hooks/useCurrentMinutes";
 import { playAlarm } from "@/utils/audio";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2 } from "lucide-react";
+import { Trash2, StickyNote, AlignLeft, X } from "lucide-react";
 import { TimeBlock as TimeBlockType } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const ROW_HEIGHT = 48; // px per 30min
 const MIN_BLOCK_MINUTES = 15; // 최소 15분
@@ -49,6 +56,8 @@ export default function TimeBlock({
 
   const blockRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMemoOpen, setIsMemoOpen] = useState(false);
+  const [tempMemo, setTempMemo] = useState(block.memo || "");
   const currentMinutes = useCurrentMinutes();
 
   const startMinutes = timeStringToMinutes(block.startTime);
@@ -208,10 +217,16 @@ export default function TimeBlock({
     ]
   );
 
+  const handleSaveMemo = () => {
+    updateTimeBlock(block.id, { memo: tempMemo });
+    setIsMemoOpen(false);
+  };
+
   return (
+    <>
     <div
       ref={blockRef}
-      className={`time-block group transition-all duration-300 overflow-hidden ${
+      className={`time-block group transition-all duration-300 overflow-hidden cursor-pointer ${
         isActive ? "active-block-glow" : ""
       } ${!isActive && isPast && !block.isCompleted ? "opacity-60 grayscale-[0.2]" : ""} ${
         isEndingSoon ? "animate-pulse ring-2 ring-red-400" : ""
@@ -225,7 +240,17 @@ export default function TimeBlock({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onMouseDown={handleBlockDrag}
+      onMouseDown={(e) => {
+        // 드래그 로직 실행
+        handleBlockDrag(e);
+      }}
+      onClick={(e) => {
+        // 드래그 핸들이나 버튼 클릭 시에는 모달을 띄우지 않음
+        if (!(e.target as HTMLElement).closest("button, input, [data-handle]")) {
+          setTempMemo(block.memo || "");
+          setIsMemoOpen(true);
+        }
+      }}
     >
       {/* 상단 리사이즈 핸들 */}
       <div
@@ -290,6 +315,13 @@ export default function TimeBlock({
         )}
       </div>
 
+      {/* 메모 배지 (내용이 있을 때만) */}
+      {block.memo && (
+        <div className="absolute bottom-1 right-2 opacity-60 group-hover:opacity-100">
+          <StickyNote className="w-2.5 h-2.5 text-zinc-700" />
+        </div>
+      )}
+
       {/* 하단 리사이즈 핸들 */}
       <div
         data-handle="bottom"
@@ -299,5 +331,56 @@ export default function TimeBlock({
         <div className="w-8 h-0.5 bg-white/60 rounded-full" />
       </div>
     </div>
+
+    {/* 메모 편집 모달 */}
+    <Dialog open={isMemoOpen} onOpenChange={setIsMemoOpen}>
+      <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl">
+        <div 
+          className="h-2 w-full" 
+          style={{ backgroundColor: block.color }}
+        />
+        <div className="p-6">
+          <DialogHeader className="mb-4">
+            <div className="flex items-center gap-2 text-zinc-500 mb-1">
+              <AlignLeft className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Details & Memo</span>
+            </div>
+            <DialogTitle className="text-xl font-bold text-zinc-900">
+              {block.content}
+            </DialogTitle>
+            <p className="text-xs text-zinc-500">
+              🕒 {block.startTime} – {block.endTime} ({durationText})
+            </p>
+          </DialogHeader>
+
+          <div className="relative">
+            <textarea
+              value={tempMemo}
+              onChange={(e) => setTempMemo(e.target.value)}
+              placeholder="이 작업에 대한 상세한 내용을 적어보세요..."
+              className="w-full min-h-[160px] p-4 text-sm bg-zinc-50 rounded-xl border border-zinc-100 focus:border-blue-300 focus:ring-4 focus:ring-blue-50 outline-none transition-all resize-none text-zinc-700"
+              autoFocus
+            />
+          </div>
+
+          <div className="mt-6 flex gap-2">
+            <Button 
+              variant="ghost" 
+              className="flex-1 h-11 rounded-xl text-zinc-500 hover:bg-zinc-100"
+              onClick={() => setIsMemoOpen(false)}
+            >
+              취소
+            </Button>
+            <Button 
+              className="flex-2 h-11 rounded-xl bg-zinc-900 hover:bg-black text-white px-8"
+              onClick={handleSaveMemo}
+            >
+              메모 저장하기
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

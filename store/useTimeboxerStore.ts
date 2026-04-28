@@ -138,7 +138,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       userId,
       brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color })),
-      timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed })),
+      timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
       dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean)
     });
   },
@@ -288,7 +288,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     }
 
     const id = crypto.randomUUID();
-    const newBlock: TimeBlock = { ...block, id, color, isCompleted: false };
+    const newBlock: TimeBlock = { ...block, id, color, isCompleted: false, memo: "" };
     
     const newBlocks = [...state.timeBlocks, newBlock];
     const newTopThree = syncTopThreeAssigned(state.topThree, newBlocks);
@@ -296,7 +296,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     set({ timeBlocks: newBlocks, topThree: newTopThree, colorIndex: state.colorIndex + 1 });
     
     await supabase.from("time_blocks").insert({
-      id, user_id: userId, task_id: block.taskId, content: block.content, start_time: block.startTime, end_time: block.endTime, color, is_completed: false
+      id, user_id: userId, task_id: block.taskId, content: block.content, start_time: block.startTime, end_time: block.endTime, color, is_completed: false, memo: ""
     });
     
     // Update assigned status in DB if it changed
@@ -326,6 +326,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (patch.endTime) dbUpdates.end_time = patch.endTime;
     if (patch.content) dbUpdates.content = patch.content;
     if (patch.color) dbUpdates.color = patch.color;
+    if (patch.memo !== undefined) dbUpdates.memo = patch.memo;
     
     if (Object.keys(dbUpdates).length > 0) {
       await supabase.from("time_blocks").update(dbUpdates).eq("id", id);
