@@ -102,7 +102,7 @@ export default function SettingsModal() {
         설정
       </DialogTrigger>
 
-      <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="max-w-md h-[650px] flex flex-col p-0 overflow-hidden bg-white border-none shadow-2xl">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Settings2 className="w-4 h-4 text-zinc-500" />
@@ -111,13 +111,13 @@ export default function SettingsModal() {
         </DialogHeader>
 
         <Tabs defaultValue="timeline" className="flex-1 overflow-hidden flex flex-col">
-          <div className="px-6 border-b border-zinc-100">
-            <TabsList className="w-full bg-zinc-50/50 p-1 rounded-lg h-10 mt-2">
-              <TabsTrigger value="timeline" className="flex-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Settings2 className="w-3 h-3 mr-1.5" /> 타임라인
+          <div className="px-6 border-b border-zinc-100 bg-zinc-50/30">
+            <TabsList className="w-full bg-zinc-200/50 p-1 rounded-xl h-11 mt-4 mb-3">
+              <TabsTrigger value="timeline" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                <Settings2 className="w-3.5 h-3.5 mr-2" /> 타임라인
               </TabsTrigger>
-              <TabsTrigger value="routines" className="flex-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Repeat className="w-3 h-3 mr-1.5" /> 반복 루틴
+              <TabsTrigger value="routines" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                <Repeat className="w-3.5 h-3.5 mr-2" /> 반복 루틴
               </TabsTrigger>
             </TabsList>
           </div>

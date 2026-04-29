@@ -145,7 +145,13 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (!session) return;
     const userId = session.user.id;
     
-    // Supabase에서 데이터 불러오기
+    // 1. 로컬 스토리지에서 우선 로드 (즉각적인 UI 반영)
+    const localSettings = localStorage.getItem(`zeroslate_settings_${userId}`);
+    if (localSettings) {
+      set({ settings: JSON.parse(localSettings) });
+    }
+
+    // 2. Supabase에서 최신 데이터 불러오기
     const [bd, tt, tb, dl, rt, st] = await Promise.all([
       supabase.from("brain_dumps").select("*").eq("user_id", userId),
       supabase.from("top_three").select("*").eq("user_id", userId),
@@ -155,16 +161,16 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle()
     ]);
 
-    // 설정 파싱
-    const savedSettings = st.data ? {
+    // DB 설정이 있다면 로컬보다 우선함
+    const finalSettings = st.data ? {
       startTime: st.data.start_time,
       endTime: st.data.end_time,
       step: st.data.step
-    } : defaultSettings;
+    } : (localSettings ? JSON.parse(localSettings) : defaultSettings);
 
     set({
       userId,
-      settings: savedSettings,
+      settings: finalSettings,
       brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color })),
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
@@ -179,6 +185,10 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     set({ settings: newSettings });
 
     if (userId) {
+      // 로컬 스토리지 저장 (백업)
+      localStorage.setItem(`zeroslate_settings_${userId}`, JSON.stringify(newSettings));
+      
+      // DB 저장
       await supabase.from("user_settings").upsert({
         user_id: userId,
         start_time: newSettings.startTime,
