@@ -65,6 +65,7 @@ function createDailyLog(state: Pick<TimeboxerState, "brainDump" | "topThree" | "
     completedBrainDump,
     topThree: state.topThree,
     totalBlocks: state.timeBlocks.length,
+    totalTasks: state.brainDump.length, // ← 추가
     totalPlannedMinutes,
     completedMinutes,
     topCompletionRate: state.topThree.length > 0 ? Math.round((assignedTop / state.topThree.length) * 100) : 0,

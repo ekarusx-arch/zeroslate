@@ -47,6 +47,7 @@ export interface DailyLog {
   completedBrainDump: BrainDumpItem[];
   topThree: TopThreeItem[];
   totalBlocks: number;
+  totalTasks: number; // ← 추가
   totalPlannedMinutes: number;
   completedMinutes: number;
   topCompletionRate: number;
