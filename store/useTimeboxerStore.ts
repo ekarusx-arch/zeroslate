@@ -97,6 +97,7 @@ interface TimeboxerState {
   deleteTopThreeItem: (id: string) => void;
   setTopThreeAssigned: (id: string, assigned: boolean) => void;
   toggleTopThreeItem: (id: string) => void;
+  restoreLog: (date: string) => Promise<void>;
 
   addTimeBlock: (block: Omit<TimeBlock, "id" | "isCompleted" | "color"> & { color?: string }) => void;
   updateTimeBlock: (id: string, patch: Partial<TimeBlock>) => void;
@@ -681,6 +682,60 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         supabase.from("brain_dumps").delete().in("id", completedIds)
       ]);
     }
+  },
+
+  restoreLog: async (date: string) => {
+    const state = get();
+    const { userId, dailyLogs } = state;
+    const targetLog = dailyLogs.find(l => l.date === date);
+    if (!targetLog || !userId) return;
+
+    // 1. 상태 복원
+    set({
+      brainDump: targetLog.completedBrainDump,
+      topThree: targetLog.topThree,
+      timeBlocks: targetLog.completedBlocks,
+      colorIndex: 0
+    });
+
+    // 2. DB 동기화 (기존 데이터 삭제 후 복원 데이터 삽입)
+    // 주의: 실제 운영 환경에서는 더 안전한 트랜잭션 처리가 필요하지만, 현재는 단순 복원 로직 적용
+    await Promise.all([
+      supabase.from("time_blocks").delete().eq("user_id", userId),
+      supabase.from("top_three").delete().eq("user_id", userId),
+      supabase.from("brain_dumps").delete().eq("user_id", userId),
+    ]);
+
+    const blockInserts = targetLog.completedBlocks.map(b => ({
+      user_id: userId,
+      task_id: b.taskId,
+      content: b.content,
+      start_time: b.startTime,
+      end_time: b.endTime,
+      color: b.color,
+      is_completed: b.isCompleted,
+      memo: b.memo
+    }));
+
+    const dumpInserts = targetLog.completedBrainDump.map(d => ({
+      id: d.id,
+      user_id: userId,
+      content: d.content,
+      is_completed: d.isCompleted,
+      created_at: new Date().toISOString()
+    }));
+
+    const topInserts = targetLog.topThree.map(t => ({
+      id: t.id,
+      user_id: userId,
+      content: t.content,
+      is_completed: t.isCompleted,
+      is_assigned: t.isAssigned
+    }));
+
+    if (blockInserts.length > 0) await supabase.from("time_blocks").insert(blockInserts);
+    if (dumpInserts.length > 0) await supabase.from("brain_dumps").insert(dumpInserts);
+    if (topInserts.length > 0) await supabase.from("top_three").insert(topInserts);
   },
 
   resetAll: async () => {

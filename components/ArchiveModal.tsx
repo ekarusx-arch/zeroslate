@@ -11,7 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Archive, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Archive, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Button } from "./ui/button";
 
 function formatMonthLabel(date: Date) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
@@ -42,6 +43,8 @@ export default function ArchiveModal() {
   const dailyLogs = useTimeboxerStore((s) => s.dailyLogs);
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => toDateKey(new Date()));
+  const [isOpen, setIsOpen] = useState(false);
+  const restoreLog = useTimeboxerStore((s) => s.restoreLog);
 
   const logsByDate = useMemo(
     () => new Map(dailyLogs.map((log) => [log.date, log])),
@@ -84,8 +87,9 @@ export default function ArchiveModal() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger
+        onClick={() => setIsOpen(true)}
         className="inline-flex items-center gap-2 h-8 px-3 rounded-md border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-medium transition-colors"
         aria-label="기록 보관소 열기"
       >
@@ -174,6 +178,22 @@ export default function ArchiveModal() {
                     {formatMinutes(selectedLog.completedMinutes)}
                   </Badge>
                 </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 border-violet-200 text-violet-700 hover:bg-violet-50 hover:text-violet-800 transition-all"
+                  onClick={async () => {
+                    if (confirm(`${selectedLog.date}의 기록을 오늘로 다시 불러올까요?\n현재 작성 중인 내용은 사라질 수 있습니다.`)) {
+                      await restoreLog(selectedLog.date);
+                      setIsOpen(false);
+                      alert("기록이 성공적으로 복구되었습니다!");
+                    }
+                  }}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  오늘로 다시 불러오기
+                </Button>
 
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-zinc-500">완료한 타임블록</p>
