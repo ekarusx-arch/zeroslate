@@ -3,16 +3,17 @@
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Sparkles, Timer, Trophy } from "lucide-react";
 
-export default function ShareCard() {
+export default function ShareCard({ stats }: { stats?: any }) {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
 
-  const completedBlocks = timeBlocks.filter((b) => b.isCompleted).length;
-  const completedTasks = brainDump.filter((i) => i.isCompleted).length;
+  // props로 전달받은 데이터가 있으면 그것을 우선 사용 (마감 후 0점 방지)
+  const completedBlocks = stats ? stats.completedBlocks : timeBlocks.filter((b) => b.isCompleted).length;
+  const completedTasks = stats ? stats.completedTasks : brainDump.filter((i) => i.isCompleted).length;
   
-  const blockRate = timeBlocks.length > 0 ? Math.round((completedBlocks / timeBlocks.length) * 100) : 0;
-  const taskRate = brainDump.length > 0 ? Math.round((completedTasks / brainDump.length) * 100) : 0;
-  const overallScore = Math.round((blockRate + taskRate) / 2) || 0;
+  const blockRate = stats ? stats.blockRate : (timeBlocks.length > 0 ? Math.round((completedBlocks / timeBlocks.length) * 100) : 0);
+  const taskRate = stats ? stats.taskRate : (brainDump.length > 0 ? Math.round((completedTasks / brainDump.length) * 100) : 0);
+  const overallScore = stats ? stats.overallScore : (Math.round((blockRate + taskRate) / 2) || 0);
 
   const today = new Date().toLocaleDateString("ko-KR", { 
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 

@@ -15,45 +15,83 @@ import { CheckCircle2, Clock3, Save, Target, Zap, Share2 } from "lucide-react";
 import ShareCard from "./ShareCard";
 
 export default function SummaryModal() {
-  const [saved, setSaved] = useState(false);
-  const [showShareCard, setShowShareCard] = useState(false);
+  const [summaryData, setSummaryData] = useState<{
+    overallScore: number;
+    blockRate: number;
+    taskRate: number;
+    topRate: number;
+    completedBlocks: number;
+    totalBlocks: number;
+    completedTasks: number;
+    totalTasks: number;
+    assignedTop: number;
+    totalTopThree: number;
+    totalPlannedMinutes: number;
+    completedMinutes: number;
+    completedBlockList: any[];
+  } | null>(null);
+
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
   const topThree = useTimeboxerStore((s) => s.topThree);
   const saveTodayLog = useTimeboxerStore((s) => s.saveTodayLog);
   const carryOver = useTimeboxerStore((s) => s.carryOver);
 
-  const totalBlocks = timeBlocks.length;
-  const completedBlocks = timeBlocks.filter((b) => b.isCompleted).length;
-  const blockRate = totalBlocks > 0 ? Math.round((completedBlocks / totalBlocks) * 100) : 0;
+  // 현재 실시간 통계 계산 (마감 전용)
+  const calcStats = () => {
+    const totalBlocks = timeBlocks.length;
+    const completedBlocksCount = timeBlocks.filter((b) => b.isCompleted).length;
+    const blockRate = totalBlocks > 0 ? Math.round((completedBlocksCount / totalBlocks) * 100) : 0;
 
-  const totalTasks = brainDump.length;
-  const completedTasks = brainDump.filter((i) => i.isCompleted).length;
-  const taskRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const totalTasks = brainDump.length;
+    const completedTasksCount = brainDump.filter((i) => i.isCompleted).length;
+    const taskRate = totalTasks > 0 ? Math.round((completedTasksCount / totalTasks) * 100) : 0;
 
-  const assignedTop = topThree.filter((t) => t.isAssigned).length;
-  const topRate = topThree.length > 0 ? Math.round((assignedTop / topThree.length) * 100) : 0;
+    const assignedTopCount = topThree.filter((t) => t.isAssigned).length;
+    const topRate = topThree.length > 0 ? Math.round((assignedTopCount / topThree.length) * 100) : 0;
 
-  // 총 계획 시간 계산
-  const totalPlannedMinutes = timeBlocks.reduce((acc, b) => {
-    const [sh, sm] = b.startTime.split(":").map(Number);
-    const [eh, em] = b.endTime.split(":").map(Number);
-    return acc + (eh * 60 + em) - (sh * 60 + sm);
-  }, 0);
-  const completedMinutes = timeBlocks
-    .filter((b) => b.isCompleted)
-    .reduce((acc, b) => {
+    const totalPlannedMins = timeBlocks.reduce((acc, b) => {
       const [sh, sm] = b.startTime.split(":").map(Number);
       const [eh, em] = b.endTime.split(":").map(Number);
       return acc + (eh * 60 + em) - (sh * 60 + sm);
     }, 0);
+    const completedMins = timeBlocks
+      .filter((b) => b.isCompleted)
+      .reduce((acc, b) => {
+        const [sh, sm] = b.startTime.split(":").map(Number);
+        const [eh, em] = b.endTime.split(":").map(Number);
+        return acc + (eh * 60 + em) - (sh * 60 + sm);
+      }, 0);
+
+    const score = Math.round((blockRate + taskRate + topRate) / 3);
+    const completedBlockList = timeBlocks.filter((b) => b.isCompleted);
+
+    return {
+      overallScore: score,
+      blockRate,
+      taskRate,
+      topRate,
+      completedBlocks: completedBlocksCount,
+      totalBlocks,
+      completedTasks: completedTasksCount,
+      totalTasks,
+      assignedTop: assignedTopCount,
+      totalTopThree: topThree.length,
+      totalPlannedMinutes: totalPlannedMins,
+      completedMinutes: completedMins,
+      completedBlockList,
+    };
+  };
+
+  // 현재 상태에 따른 실시간 값 (UI 표시용)
+  const liveStats = calcStats();
+  const currentStats = summaryData || liveStats;
+
 
   function formatTime(min: number) {
     if (min < 60) return `${min}분`;
     return `${Math.floor(min / 60)}시간 ${min % 60 > 0 ? min % 60 + "분" : ""}`;
   }
-
-  const overallScore = Math.round((blockRate + taskRate + topRate) / 3);
 
   function getEmoji(score: number) {
     if (score >= 80) return "🏆";
@@ -63,6 +101,10 @@ export default function SummaryModal() {
   }
 
   const handleSave = () => {
+    // 1. 마감 전 현재 통계를 스냅샷으로 저장
+    setSummaryData(liveStats);
+    
+    // 2. 마감 및 이월 (상태 초기화됨)
     saveTodayLog();
     carryOver();
     setSaved(true);
@@ -73,6 +115,7 @@ export default function SummaryModal() {
       if (!open) {
         setSaved(false);
         setShowShareCard(false);
+        setSummaryData(null);
       }
     }}>
       <DialogTrigger
@@ -82,9 +125,9 @@ export default function SummaryModal() {
         🚀 하루 마감하기
       </DialogTrigger>
       <DialogContent className="max-w-md" id="summary-modal">
-        <DialogHeader>
+          <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <span className="text-2xl">{getEmoji(overallScore)}</span>
+            <span className="text-2xl">{getEmoji(currentStats.overallScore)}</span>
             오늘의 생산성 리포트
           </DialogTitle>
         </DialogHeader>
@@ -93,7 +136,7 @@ export default function SummaryModal() {
           {/* 종합 점수 */}
           <div className="text-center py-4 rounded-2xl bg-gradient-to-br from-blue-50 to-violet-50 border border-blue-100">
             <p className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
-              {overallScore}
+              {currentStats.overallScore}
             </p>
             <p className="text-sm text-zinc-500 mt-1">종합 생산성 점수</p>
           </div>
@@ -105,11 +148,11 @@ export default function SummaryModal() {
                 <Clock3 className="w-4 h-4 text-blue-500" />
                 타임 블록 완료율
               </div>
-              <span className="text-sm font-semibold text-blue-600">{blockRate}%</span>
+              <span className="text-sm font-semibold text-blue-600">{currentStats.blockRate}%</span>
             </div>
-            <Progress value={blockRate} className="h-2" />
+            <Progress value={currentStats.blockRate} className="h-2" />
             <p className="text-xs text-zinc-400">
-              {completedBlocks}/{totalBlocks}개 완료 · 계획 {formatTime(totalPlannedMinutes)} 중 {formatTime(completedMinutes)} 수행
+              {currentStats.completedBlocks}/{currentStats.totalBlocks}개 완료 · 계획 {formatTime(currentStats.totalPlannedMinutes)} 중 {formatTime(currentStats.completedMinutes)} 수행
             </p>
           </div>
 
@@ -120,11 +163,11 @@ export default function SummaryModal() {
                 <Zap className="w-4 h-4 text-amber-500" />
                 할 일 완료율
               </div>
-              <span className="text-sm font-semibold text-amber-600">{taskRate}%</span>
+              <span className="text-sm font-semibold text-amber-600">{currentStats.taskRate}%</span>
             </div>
-            <Progress value={taskRate} className="h-2 [&>*]:bg-amber-400" />
+            <Progress value={currentStats.taskRate} className="h-2 [&>*]:bg-amber-400" />
             <p className="text-xs text-zinc-400">
-              {completedTasks}/{totalTasks}개 완료
+              {currentStats.completedTasks}/{currentStats.totalTasks}개 완료
             </p>
           </div>
 
@@ -135,20 +178,20 @@ export default function SummaryModal() {
                 <Target className="w-4 h-4 text-violet-500" />
                 Top 3 타임라인 배정률
               </div>
-              <span className="text-sm font-semibold text-violet-600">{topRate}%</span>
+              <span className="text-sm font-semibold text-violet-600">{currentStats.topRate}%</span>
             </div>
-            <Progress value={topRate} className="h-2 [&>*]:bg-violet-400" />
+            <Progress value={currentStats.topRate} className="h-2 [&>*]:bg-violet-400" />
             <p className="text-xs text-zinc-400">
-              {assignedTop}/{topThree.length}개 배정됨
+              {currentStats.assignedTop}/{currentStats.totalTopThree}개 배정됨
             </p>
           </div>
 
           {/* 완료된 과업 목록 */}
-          {completedBlocks > 0 && (
+          {currentStats.completedBlocks > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">완료된 블록</p>
               <div className="space-y-1">
-                {timeBlocks.filter((b) => b.isCompleted).map((b) => (
+                {currentStats.completedBlockList.map((b) => (
                   <div key={b.id} className="flex items-center gap-2 text-xs text-zinc-600">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span>{b.content}</span>
@@ -203,7 +246,7 @@ export default function SummaryModal() {
           {showShareCard && (
             <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
               <div className="scale-90 sm:scale-100">
-                <ShareCard />
+                <ShareCard stats={currentStats} />
               </div>
               <p className="text-[10px] text-zinc-400">화면을 캡처하여 SNS에 공유해보세요!</p>
               <Button 
