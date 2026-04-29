@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
 import { Plus, Trash2, Repeat, Clock, Edit2, Check, X } from "lucide-react";
-import { PRESET_COLORS } from "@/types";
+import { PRESET_COLORS, Routine } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -73,7 +73,7 @@ export default function SettingsModal() {
     setNewRoutineContent("");
   };
 
-  const handleStartEdit = (r: any) => {
+  const handleStartEdit = (r: Routine) => {
     setEditingId(r.id);
     setEditContent(r.content);
     setEditStart(r.startTime);
