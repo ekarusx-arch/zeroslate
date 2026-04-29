@@ -147,9 +147,10 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     
     // 1. 로컬 스토리지에서 우선 로드 (즉각적인 UI 반영)
     const localSettings = localStorage.getItem(`zeroslate_settings_${userId}`);
-    if (localSettings) {
-      set({ settings: JSON.parse(localSettings) });
-    }
+    const localRoutines = localStorage.getItem(`zeroslate_routines_${userId}`);
+    
+    if (localSettings) set({ settings: JSON.parse(localSettings) });
+    if (localRoutines) set({ routines: JSON.parse(localRoutines) });
 
     // 2. Supabase에서 최신 데이터 불러오기
     const [bd, tt, tb, dl, rt, st] = await Promise.all([
@@ -168,14 +169,23 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       step: st.data.step
     } : (localSettings ? JSON.parse(localSettings) : defaultSettings);
 
+    const finalRoutines = rt.data && rt.data.length > 0 ? (rt.data || []).map(r => ({ 
+      id: r.id, 
+      content: r.content, 
+      startTime: r.start_time, 
+      endTime: r.end_time, 
+      color: r.color, 
+      isActive: r.is_active 
+    })) : (localRoutines ? JSON.parse(localRoutines) : []);
+
     set({
       userId,
       settings: finalSettings,
+      routines: finalRoutines,
       brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color })),
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
       dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean),
-      routines: (rt.data || []).map(r => ({ id: r.id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isActive: r.is_active }))
     });
   },
 
@@ -440,18 +450,29 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   // ── Routines ──
   addRoutine: async (routine) => {
-    const { userId } = get();
+    const { userId, routines } = get();
     if (!userId) return;
     const id = crypto.randomUUID();
     const newRoutine: Routine = { ...routine, id, isActive: true };
-    set((s) => ({ routines: [...s.routines, newRoutine] }));
+    const newRoutines = [...routines, newRoutine];
+    
+    set({ routines: newRoutines });
+    localStorage.setItem(`zeroslate_routines_${userId}`, JSON.stringify(newRoutines));
+    
     await supabase.from("routines").insert({
       id, user_id: userId, content: routine.content, start_time: routine.startTime, end_time: routine.endTime, color: routine.color, is_active: true
     });
   },
 
   updateRoutine: async (id, patch) => {
-    set((s) => ({ routines: s.routines.map((r) => r.id === id ? { ...r, ...patch } : r) }));
+    const { userId, routines } = get();
+    const newRoutines = routines.map((r) => r.id === id ? { ...r, ...patch } : r);
+    
+    set({ routines: newRoutines });
+    if (userId) {
+      localStorage.setItem(`zeroslate_routines_${userId}`, JSON.stringify(newRoutines));
+    }
+
     const dbUpdates: any = {};
     if (patch.content) dbUpdates.content = patch.content;
     if (patch.startTime) dbUpdates.start_time = patch.startTime;
@@ -459,14 +480,20 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (patch.color) dbUpdates.color = patch.color;
     if (patch.isActive !== undefined) dbUpdates.is_active = patch.isActive;
 
-    if (Object.keys(dbUpdates).length > 0) {
+    if (Object.keys(dbUpdates).length > 0 && userId) {
       await supabase.from("routines").update(dbUpdates).eq("id", id);
     }
   },
 
   deleteRoutine: async (id) => {
-    set((s) => ({ routines: s.routines.filter((r) => r.id !== id) }));
-    await supabase.from("routines").delete().eq("id", id);
+    const { userId, routines } = get();
+    const newRoutines = routines.filter((r) => r.id !== id);
+    
+    set({ routines: newRoutines });
+    if (userId) {
+      localStorage.setItem(`zeroslate_routines_${userId}`, JSON.stringify(newRoutines));
+      await supabase.from("routines").delete().eq("id", id);
+    }
   },
 
   applyRoutines: async () => {
