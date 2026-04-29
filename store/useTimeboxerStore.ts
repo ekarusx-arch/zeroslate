@@ -213,22 +213,57 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   addBrainDumpItem: async (content) => {
     const { userId } = get();
     if (!userId) return;
+    
+    // 해시태그 기반 색상 자동 지정
+    let color = undefined;
+    for (const preset of PRESET_COLORS) {
+      if (preset.tag && content.includes(preset.tag)) {
+        color = preset.value;
+        break;
+      }
+    }
+
     const id = crypto.randomUUID();
-    const newItem: BrainDumpItem = { id, content, isCompleted: false, createdAt: new Date().toISOString() };
+    const newItem: BrainDumpItem = { id, content, isCompleted: false, createdAt: new Date().toISOString(), color };
     
     set((state) => ({ brainDump: [...state.brainDump, newItem] }));
-    await supabase.from("brain_dumps").insert({ id, user_id: userId, content, is_completed: false, created_at: newItem.createdAt });
+    await supabase.from("brain_dumps").insert({ id, user_id: userId, content, is_completed: false, created_at: newItem.createdAt, color });
   },
 
   updateBrainDumpItem: async (id, updates) => {
+    const state = get();
+    const item = state.brainDump.find(i => i.id === id);
+    if (!item) return;
+
+    let finalUpdates = { ...updates };
+
+    // 색상이 변경되었다면 해시태그도 연동
+    if (updates.color !== undefined) {
+      const newPreset = PRESET_COLORS.find(p => p.value === updates.color);
+      let newContent = updates.content ?? item.content;
+      
+      // 기존 프레셋 태그들 제거
+      for (const preset of PRESET_COLORS) {
+        if (preset.tag) {
+          newContent = newContent.replace(preset.tag, "").trim();
+        }
+      }
+      
+      // 새 태그 추가
+      if (newPreset?.tag) {
+        newContent = `${newContent} ${newPreset.tag}`.trim();
+      }
+      finalUpdates.content = newContent;
+    }
+
     set((state) => ({
-      brainDump: state.brainDump.map((i) => i.id === id ? { ...i, ...updates } : i),
-      timeBlocks: state.timeBlocks.map((b) => b.taskId === id ? { ...b, color: updates.color ?? b.color, content: updates.content ?? b.content } : b)
+      brainDump: state.brainDump.map((i) => i.id === id ? { ...i, ...finalUpdates } : i),
+      timeBlocks: state.timeBlocks.map((b) => b.taskId === id ? { ...b, color: finalUpdates.color ?? b.color, content: finalUpdates.content ?? b.content } : b)
     }));
 
     const dbUpdates: any = {};
-    if (updates.content !== undefined) dbUpdates.content = updates.content;
-    if (updates.color !== undefined) dbUpdates.color = updates.color;
+    if (finalUpdates.content !== undefined) dbUpdates.content = finalUpdates.content;
+    if (finalUpdates.color !== undefined) dbUpdates.color = finalUpdates.color;
     
     if (Object.keys(dbUpdates).length > 0) {
       await Promise.all([
@@ -270,22 +305,55 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   addTopThreeItem: async (content) => {
     const { userId } = get();
     if (!userId) return;
+
+    // 해시태그 기반 색상 자동 지정
+    let color = undefined;
+    for (const preset of PRESET_COLORS) {
+      if (preset.tag && content.includes(preset.tag)) {
+        color = preset.value;
+        break;
+      }
+    }
+
     const id = crypto.randomUUID();
-    const newItem: TopThreeItem = { id, content, isAssigned: false, isCompleted: false };
+    const newItem: TopThreeItem = { id, content, isAssigned: false, isCompleted: false, color };
     
     set((state) => ({ topThree: [...state.topThree, newItem] }));
-    await supabase.from("top_three").insert({ id, user_id: userId, content, is_assigned: false, is_completed: false });
+    await supabase.from("top_three").insert({ id, user_id: userId, content, is_assigned: false, is_completed: false, color });
   },
 
   updateTopThreeItem: async (id, updates) => {
+    const state = get();
+    const item = state.topThree.find(i => i.id === id);
+    if (!item) return;
+
+    let finalUpdates = { ...updates };
+
+    // 색상이 변경되었다면 해시태그도 연동
+    if (updates.color !== undefined) {
+      const newPreset = PRESET_COLORS.find(p => p.value === updates.color);
+      let newContent = updates.content ?? item.content;
+      
+      for (const preset of PRESET_COLORS) {
+        if (preset.tag) {
+          newContent = newContent.replace(preset.tag, "").trim();
+        }
+      }
+      
+      if (newPreset?.tag) {
+        newContent = `${newContent} ${newPreset.tag}`.trim();
+      }
+      finalUpdates.content = newContent;
+    }
+
     set((state) => ({
-      topThree: state.topThree.map((i) => i.id === id ? { ...i, ...updates } : i),
-      timeBlocks: state.timeBlocks.map((b) => b.taskId === id ? { ...b, color: updates.color ?? b.color, content: updates.content ?? b.content } : b)
+      topThree: state.topThree.map((i) => i.id === id ? { ...i, ...finalUpdates } : i),
+      timeBlocks: state.timeBlocks.map((b) => b.taskId === id ? { ...b, color: finalUpdates.color ?? b.color, content: finalUpdates.content ?? b.content } : b)
     }));
 
     const dbUpdates: any = {};
-    if (updates.content !== undefined) dbUpdates.content = updates.content;
-    if (updates.color !== undefined) dbUpdates.color = updates.color;
+    if (finalUpdates.content !== undefined) dbUpdates.content = finalUpdates.content;
+    if (finalUpdates.color !== undefined) dbUpdates.color = finalUpdates.color;
     
     if (Object.keys(dbUpdates).length > 0) {
       await Promise.all([
@@ -342,13 +410,17 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     if (hasOverlap(block.startTime, block.endTime, state.timeBlocks)) return;
 
-    let color = block.color || PRESET_COLORS[state.colorIndex % PRESET_COLORS.length].value;
-    if (!block.color) {
-      if (/#(개발|코딩)/.test(block.content)) color = "#93C5FD";
-      else if (/#(작곡|음악|기획)/.test(block.content)) color = "#C4B5FD";
-      else if (/#(운동|건강)/.test(block.content)) color = "#6EE7B7";
-      else if (/#(휴식|식사)/.test(block.content)) color = "#FDBA74";
-      else if (/#(미팅|연락)/.test(block.content)) color = "#FCA5A5";
+    let color = block.color;
+    if (!color) {
+      for (const preset of PRESET_COLORS) {
+        if (preset.tag && block.content.includes(preset.tag)) {
+          color = preset.value;
+          break;
+        }
+      }
+    }
+    if (!color) {
+      color = PRESET_COLORS[state.colorIndex % PRESET_COLORS.length].value;
     }
 
     const id = crypto.randomUUID();

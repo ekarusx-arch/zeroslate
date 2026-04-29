@@ -12,20 +12,13 @@ import {
   Zap,
   CheckCircle2,
   Sparkles,
+  Tag,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PRESET_COLORS } from "@/types";
 
-// ── 상수 ──────────────────────────────────────────────────────────────
-const CONTEXT_COLORS = [
-  undefined, // 기본 (자동 태그 또는 랜덤)
-  "#93C5FD", // 파랑 (개발)
-  "#C4B5FD", // 보라 (작곡)
-  "#6EE7B7", // 초록 (휴식/운동)
-  "#FDBA74", // 주황 (기타)
-  "#FCA5A5", // 빨강 (중요)
-];
 
 // ── 개별 Brain Dump 드래그 아이템 ───────────────────────────
 function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
@@ -71,9 +64,9 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 
   const handleColorCycle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const currentIndex = CONTEXT_COLORS.indexOf(item.color);
-    const nextIndex = (currentIndex + 1) % CONTEXT_COLORS.length;
-    updateBrainDumpItem(item.id, { color: CONTEXT_COLORS[nextIndex] });
+    const currentIndex = PRESET_COLORS.findIndex(p => p.value === (item.color || "#F4F4F5"));
+    const nextIndex = (currentIndex + 1) % PRESET_COLORS.length;
+    updateBrainDumpItem(item.id, { color: PRESET_COLORS[nextIndex].value });
   };
 
   const handleRefine = async (e: React.MouseEvent) => {
@@ -116,13 +109,13 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       {/* 컨텍스트 컬러 도트 */}
       <button
         onClick={handleColorCycle}
-        className="shrink-0 w-3 h-3 rounded-full border shadow-sm transition-colors cursor-pointer hover:ring-2 hover:ring-zinc-200"
+        className="shrink-0 w-3 h-3 rounded-full border shadow-sm transition-all cursor-pointer hover:ring-2 hover:ring-blue-200 active:scale-90"
         style={{
-          backgroundColor: item.color || "#f4f4f5", // default zinc-100
+          backgroundColor: item.color || "#f4f4f5",
           borderColor: item.color ? "transparent" : "#e4e4e7",
         }}
         aria-label="컨텍스트 색상 변경"
-        title="클릭하여 태그 색상 순환"
+        title={`클릭하여 카테고리 변경: ${PRESET_COLORS.find(p => p.value === (item.color || "#F4F4F5"))?.label || "기본"}`}
       />
 
       {/* 체크박스 */}

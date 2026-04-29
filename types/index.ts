@@ -65,12 +65,12 @@ export const BLOCK_COLORS = [
 ];
 
 export const PRESET_COLORS = [
-  { label: "블루", value: "#93C5FD" },
-  { label: "그린", value: "#86EFAC" },
-  { label: "레드", value: "#FCA5A5" },
-  { label: "옐로", value: "#FCD34D" },
-  { label: "바이올렛", value: "#C4B5FD" },
-  { label: "핑크", value: "#F9A8D4" },
-  { label: "에메랄드", value: "#6EE7B7" },
-  { label: "오렌지", value: "#FDBA74" },
+  { label: "기본", value: "#F4F4F5", tag: "" },
+  { label: "개발", value: "#93C5FD", tag: "#개발" },
+  { label: "운동", value: "#6EE7B7", tag: "#운동" },
+  { label: "중요", value: "#FCA5A5", tag: "#중요" },
+  { label: "기획", value: "#FDBA74", tag: "#기획" },
+  { label: "작곡", value: "#C4B5FD", tag: "#작곡" },
+  { label: "휴식", value: "#FCD34D", tag: "#휴식" },
+  { label: "기타", value: "#F9A8D4", tag: "#기타" },
 ];
