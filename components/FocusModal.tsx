@@ -98,7 +98,9 @@ export default function FocusModal() {
   };
 
   const handleComplete = () => {
-    toggleTimeBlock(block.id);
+    if (block) {
+      toggleTimeBlock(block.id);
+    }
     setFocusId(null);
   };
 
