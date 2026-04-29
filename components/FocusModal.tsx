@@ -2,22 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
-import { 
-  Dialog, 
-  DialogContent, 
-} from "@/components/ui/dialog";
-import { 
-  Wind, 
-  CloudRain, 
-  Coffee, 
-  CheckCircle2, 
-  Minimize2
-} from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Wind, CloudRain, Coffee, CheckCircle2, X } from "lucide-react";
 
 const AMBIENT_SOUNDS = [
-  { id: "none", label: "끄기", icon: Wind, url: "" },
+  { id: "none", label: "없음", icon: Wind, url: "" },
   { id: "rain", label: "빗소리", icon: CloudRain, url: "https://assets.mixkit.co/active_storage/sfx/2432/2432-preview.mp3" },
-  { id: "cafe", label: "카페", icon: Coffee, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" }, // Placeholder
+  { id: "cafe", label: "카페", icon: Coffee, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
 ];
 
 export default function FocusModal() {
@@ -27,186 +18,203 @@ export default function FocusModal() {
   const toggleTimeBlock = useTimeboxerStore((s) => s.toggleTimeBlock);
 
   const block = timeBlocks.find((b) => b.id === activeFocusId);
-  
+
   const [timeLeft, setTimeLeft] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeSound, setActiveSound] = useState("none");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // 타이머 초기화 및 실행
   useEffect(() => {
     if (!block) return;
 
-    const calculateTimeLeft = () => {
+    const calculate = () => {
       const now = new Date();
-      const currentMin = now.getHours() * 60 + now.getMinutes();
-      
+      const currentSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       const [eh, em] = block.endTime.split(":").map(Number);
-      const endMin = eh * 60 + em;
-      
-      const diff = (endMin - currentMin) * 60 - now.getSeconds();
-      return Math.max(0, diff);
+      const endSec = eh * 3600 + em * 60;
+      const [sh, sm] = block.startTime.split(":").map(Number);
+      const startSec = sh * 3600 + sm * 60;
+      setTotalTime(endSec - startSec);
+      return Math.max(0, endSec - currentSec);
     };
 
-    setTimeLeft(calculateTimeLeft());
-
+    setTimeLeft(calculate());
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0;
-        }
+        if (prev <= 0) { clearInterval(timer); return 0; }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [block]);
 
-  // 오디오 제어
   useEffect(() => {
     if (activeSound === "none") {
+      if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
       return;
     }
-
-    const sound = AMBIENT_SOUNDS.find(s => s.id === activeSound);
-    if (sound && sound.url) {
+    const sound = AMBIENT_SOUNDS.find((s) => s.id === activeSound);
+    if (sound?.url) {
       if (!audioRef.current) {
         audioRef.current = new Audio(sound.url);
         audioRef.current.loop = true;
       } else {
         audioRef.current.src = sound.url;
       }
-      
       if (isPlaying) {
-        audioRef.current.play().catch(e => console.error("Audio play failed", e));
+        audioRef.current.play().catch(() => {});
       }
     }
   }, [activeSound, isPlaying]);
 
-
-  const formatSeconds = (s: number) => {
+  const formatTime = (s: number) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
-    return `${h > 0 ? `${h}:` : ""}${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+    return h > 0
+      ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+      : `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   };
 
   const handleComplete = () => {
-    if (block) {
-      toggleTimeBlock(block.id);
-    }
+    if (block) toggleTimeBlock(block.id);
     setFocusId(null);
   };
 
+  const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
+  const circumference = 2 * Math.PI * 110;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
   return (
     <Dialog open={!!activeFocusId} onOpenChange={(open) => !open && setFocusId(null)}>
-      <DialogContent className="max-w-3xl aspect-[4/5] bg-zinc-950 border-zinc-800/50 text-white p-0 overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)] z-[100] rounded-[40px]">
+      <DialogContent className="max-w-md w-full bg-[#0d0d0f] border border-white/[0.06] text-white p-0 overflow-hidden shadow-2xl z-[100] rounded-3xl">
         {!block ? (
-          <div className="flex flex-col items-center justify-center h-full space-y-4">
-            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-            <p className="text-zinc-500 font-medium">몰입 준비 중...</p>
+          <div className="flex items-center justify-center h-80">
+            <div className="w-8 h-8 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="relative h-full flex flex-col items-center justify-between p-12 py-16 overflow-hidden">
-            {/* 배경 오로라 효과 */}
-            <div className="absolute inset-0 pointer-events-none z-0">
-              <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
-              <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px] animate-pulse delay-700" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(30,30,30,0)_0%,rgba(9,9,11,1)_80%)]" />
-            </div>
+          <div className="flex flex-col">
 
-            {/* 닫기 버튼 */}
-            <div className="absolute top-8 right-8 z-50">
-              <button 
+            {/* 헤더 */}
+            <div className="flex items-center justify-between px-7 pt-7 pb-0">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                  Focus Mode
+                </span>
+              </div>
+              <button
                 onClick={() => setFocusId(null)}
-                className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all backdrop-blur-md border border-white/5"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-white transition-all"
               >
-                <Minimize2 className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* 상단 섹션 */}
-            <div className="relative z-10 flex flex-col items-center space-y-6 w-full">
-              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-inner">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-100/80">Focusing Now</span>
-              </div>
-              
-              <div className="text-center space-y-3">
-                <h2 className="text-4xl font-black tracking-tight bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent">
-                  {block.content}
-                </h2>
-                {block.memo && (
-                  <p className="text-zinc-500 text-sm font-medium max-w-sm mx-auto leading-relaxed italic">
-                    &quot; {block.memo} &quot;
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* 메인 타이머 섹션 */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="relative group">
-                {/* 타이머 빛 번짐 */}
-                <div className="absolute -inset-10 bg-blue-500/10 rounded-full blur-[60px] group-hover:bg-blue-500/20 transition-all duration-1000" />
-                <p className="text-[160px] font-black tabular-nums tracking-[-0.05em] leading-none text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                  {formatSeconds(timeLeft)}
+            {/* 타이틀 */}
+            <div className="px-7 pt-5 pb-8 text-center">
+              <h2 className="text-2xl font-bold text-white leading-tight tracking-tight">
+                {block.content}
+              </h2>
+              <p className="mt-1.5 text-sm text-zinc-600">
+                {block.startTime} – {block.endTime}
+              </p>
+              {block.memo && (
+                <p className="mt-3 text-sm text-zinc-500 italic leading-relaxed">
+                  {block.memo}
                 </p>
+              )}
+            </div>
+
+            {/* 원형 타이머 */}
+            <div className="flex items-center justify-center py-2">
+              <div className="relative w-64 h-64">
+                {/* 배경 원 */}
+                <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 240 240">
+                  <circle
+                    cx="120" cy="120" r="110"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.04)"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="120" cy="120" r="110"
+                    fill="none"
+                    stroke="url(#timerGradient)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    style={{ transition: "stroke-dashoffset 1s linear" }}
+                  />
+                  <defs>
+                    <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#3b82f6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* 타이머 텍스트 */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-6xl font-black tabular-nums tracking-tight leading-none">
+                    {formatTime(timeLeft)}
+                  </span>
+                  <span className="mt-2 text-xs font-medium text-zinc-600 uppercase tracking-widest">
+                    남은 시간
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* 하단 컨트롤 섹션 */}
-            <div className="relative z-10 w-full max-w-sm space-y-10">
-              {/* 앰비언트 사운드 선택 */}
-              <div className="flex justify-center gap-6">
-                {AMBIENT_SOUNDS.map((sound) => {
-                  const Icon = sound.icon;
-                  const isActive = activeSound === sound.id;
-                  return (
-                    <button
-                      key={sound.id}
-                      onClick={() => {
-                        if (activeSound === sound.id) {
-                          setIsPlaying(!isPlaying);
-                        } else {
-                          setActiveSound(sound.id);
-                          setIsPlaying(true);
-                        }
-                      }}
-                      className="flex flex-col items-center gap-3 group"
-                    >
-                      <div className={`p-4 rounded-[24px] border transition-all duration-500 ${
-                        isActive 
-                        ? "border-blue-500/50 bg-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.3)] scale-110" 
-                        : "border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/10"
-                      }`}>
-                        <Icon className={`w-6 h-6 transition-colors duration-500 ${isActive ? "text-blue-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
-                      </div>
-                      <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? "text-blue-400" : "text-zinc-600"}`}>
-                        {sound.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* 구분선 */}
+            <div className="mx-7 mt-6 h-px bg-white/[0.05]" />
 
-              {/* 완료 버튼 */}
+            {/* 앰비언트 사운드 */}
+            <div className="flex items-center justify-center gap-3 px-7 py-5">
+              {AMBIENT_SOUNDS.map((sound) => {
+                const Icon = sound.icon;
+                const isActive = activeSound === sound.id;
+                return (
+                  <button
+                    key={sound.id}
+                    onClick={() => {
+                      if (activeSound === sound.id) {
+                        setIsPlaying(!isPlaying);
+                      } else {
+                        setActiveSound(sound.id);
+                        setIsPlaying(true);
+                      }
+                    }}
+                    className={`flex-1 flex flex-col items-center gap-2 py-3.5 rounded-2xl border transition-all duration-300 ${
+                      isActive
+                        ? "border-blue-500/40 bg-blue-500/10 text-blue-400"
+                        : "border-white/[0.05] bg-white/[0.03] text-zinc-600 hover:text-zinc-400 hover:border-white/10"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{sound.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 완료 버튼 */}
+            <div className="px-7 pb-7">
               <button
                 onClick={handleComplete}
-                className="w-full h-16 bg-white text-black hover:bg-zinc-200 rounded-[24px] font-black text-lg gap-3 flex items-center justify-center transition-all active:scale-[0.98] shadow-[0_20px_40px_rgba(255,255,255,0.1)] group"
+                className="w-full h-14 flex items-center justify-center gap-2.5 rounded-2xl bg-white text-zinc-900 font-bold text-sm hover:bg-zinc-100 active:scale-[0.98] transition-all"
               >
-                <CheckCircle2 className="w-6 h-6 transition-transform group-hover:scale-110" />
-                완료하고 돌아가기
+                <CheckCircle2 className="w-5 h-5" />
+                작업 완료하기
               </button>
             </div>
+
           </div>
         )}
       </DialogContent>
