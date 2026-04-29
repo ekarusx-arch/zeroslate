@@ -146,16 +146,25 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     const userId = session.user.id;
     
     // Supabase에서 데이터 불러오기
-    const [bd, tt, tb, dl, rt] = await Promise.all([
+    const [bd, tt, tb, dl, rt, st] = await Promise.all([
       supabase.from("brain_dumps").select("*").eq("user_id", userId),
       supabase.from("top_three").select("*").eq("user_id", userId),
       supabase.from("time_blocks").select("*").eq("user_id", userId),
       supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("routines").select("*").eq("user_id", userId)
+      supabase.from("routines").select("*").eq("user_id", userId),
+      supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle()
     ]);
+
+    // 설정 파싱
+    const savedSettings = st.data ? {
+      startTime: st.data.start_time,
+      endTime: st.data.end_time,
+      step: st.data.step
+    } : defaultSettings;
 
     set({
       userId,
+      settings: savedSettings,
       brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color })),
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
@@ -164,7 +173,21 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     });
   },
 
-  updateSettings: (s) => set((state) => ({ settings: { ...state.settings, ...s } })),
+  updateSettings: async (s) => {
+    const { userId, settings } = get();
+    const newSettings = { ...settings, ...s };
+    set({ settings: newSettings });
+
+    if (userId) {
+      await supabase.from("user_settings").upsert({
+        user_id: userId,
+        start_time: newSettings.startTime,
+        end_time: newSettings.endTime,
+        step: newSettings.step,
+        updated_at: new Date().toISOString()
+      });
+    }
+  },
 
   // ── Brain Dump ──
   addBrainDumpItem: async (content) => {
