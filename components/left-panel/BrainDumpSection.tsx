@@ -12,6 +12,7 @@ import {
   Zap,
   CheckCircle2,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
+  const [isRefining, setIsRefining] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -70,6 +72,9 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 
   const handleRefine = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isRefining) return;
+    
+    setIsRefining(true);
     try {
       const res = await fetch("/api/zeropilot", {
         method: "POST",
@@ -82,6 +87,8 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       }
     } catch (err) {
       console.error("AI Refine failed", err);
+    } finally {
+      setIsRefining(false);
     }
   };
 
@@ -156,10 +163,19 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       {!item.isCompleted && (
         <button
           onClick={handleRefine}
-          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-zinc-300 hover:text-blue-500 transition-all duration-150 shrink-0"
+          disabled={isRefining}
+          className={`transition-all duration-150 shrink-0 ${
+            isRefining 
+            ? "text-blue-500 animate-spin" 
+            : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-zinc-300 hover:text-blue-500"
+          }`}
           title="AI로 작업명 다듬기"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          {isRefining ? (
+            <Loader2 className="w-3.5 h-3.5" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5" />
+          )}
         </button>
       )}
 

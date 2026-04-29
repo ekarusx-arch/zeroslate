@@ -30,18 +30,35 @@ export async function POST(req: Request) {
     // 2. 작업 다듬기 (Refine)
     if (type === "refine") {
       const { content } = data;
-      const emojis: Record<string, string> = {
-        "운동": "🏋️", "공부": "📚", "개발": "💻", "회의": "🤝", "식사": "🍱", "휴식": "☕"
+      const categories: Record<string, { emoji: string, verb: string }> = {
+        "운동": { emoji: "🏋️", verb: "완료하기" },
+        "공부": { emoji: "📚", verb: "집중해서 끝내기" },
+        "개발": { emoji: "💻", verb: "구현 및 테스트" },
+        "회의": { emoji: "🤝", verb: "내용 정리하기" },
+        "식사": { emoji: "🍱", verb: "맛있게 먹고 리프레시" },
+        "휴식": { emoji: "☕", verb: "충분히 쉬기" },
+        "독서": { emoji: "📖", verb: "30분 읽기" },
+        "청소": { emoji: "🧹", verb: "깔끔하게 정리" },
       };
       
       let refined = content;
-      for (const [key, val] of Object.entries(emojis)) {
+      let matched = false;
+
+      for (const [key, val] of Object.entries(categories)) {
         if (content.includes(key)) {
-          refined = `${val} ${content}`;
+          const base = content.replace(key, "").replace(/[#]/g, "").trim();
+          refined = `${val.emoji} ${key}${base ? ` (${base})` : ""} ${val.verb}`;
+          matched = true;
           break;
         }
       }
-      if (refined === content) refined = `✅ ${content}`;
+
+      if (!matched) {
+        refined = `✨ ${content} 확실히 끝내기`;
+      }
+
+      // 인위적인 지연 시간 (AI 느낌 주기)
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       return NextResponse.json({ refined });
     }
