@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: "어떤 도움이 필요하신가요?" });
-  } catch (_error) {
+  } catch {
     return NextResponse.json({ error: "API 요청 중 오류가 발생했습니다." }, { status: 500 });
   }
 }

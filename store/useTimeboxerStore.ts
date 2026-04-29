@@ -7,6 +7,7 @@ import {
   TimeBlock,
   TopThreeItem,
   PRESET_COLORS,
+  Routine,
 } from "@/types";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────
@@ -399,11 +400,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     await Promise.all(dbPromises);
   },
 
-  activeFocusId: null,
   setFocusId: (id) => set({ activeFocusId: id }),
 
-  isPilotLoading: false,
-  pilotMessage: null,
   setPilotLoading: (loading) => set({ isPilotLoading: loading }),
   setPilotMessage: (msg) => set({ pilotMessage: msg }),
 

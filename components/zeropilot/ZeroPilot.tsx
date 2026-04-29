@@ -41,7 +41,7 @@ export default function ZeroPilot() {
       } else {
         setPilotMessage(result.message);
       }
-    } catch (_e) {
+    } catch {
       setPilotMessage("앗, 연결에 문제가 생겼어요. 잠시 후 다시 시도해주세요.");
     } finally {
       setPilotLoading(false);
