@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock3, Save, Target, Zap } from "lucide-react";
+import { CheckCircle2, Clock3, Save, Target, Zap, Share2 } from "lucide-react";
+import ShareCard from "./ShareCard";
 
 export default function SummaryModal() {
   const [saved, setSaved] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
   const topThree = useTimeboxerStore((s) => s.topThree);
@@ -67,7 +69,12 @@ export default function SummaryModal() {
   };
 
   return (
-    <Dialog onOpenChange={(open) => { if (!open) setSaved(false); }}>
+    <Dialog onOpenChange={(open) => { 
+      if (!open) {
+        setSaved(false);
+        setShowShareCard(false);
+      }
+    }}>
       <DialogTrigger
         id="summary-modal-trigger"
         className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-colors shadow-sm ml-2"
@@ -171,7 +178,7 @@ export default function SummaryModal() {
           </Button>
 
           {/* 마감 완료 후 내일 계획 안내 메시지 */}
-          {saved && (
+          {saved && !showShareCard && (
             <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100 text-center animate-in fade-in slide-in-from-bottom-2">
               <p className="text-sm font-semibold text-blue-800">
                 🎉 오늘 하루도 고생 많으셨습니다!
@@ -181,6 +188,31 @@ export default function SummaryModal() {
                 남은 잡념들을 보며 <b>내일의 핵심 과업(Top 3)</b>과<br />
                 <b>타임블록</b>을 미리 세팅해 두고 푹 쉬세요!
               </p>
+              
+              <Button 
+                onClick={() => setShowShareCard(true)}
+                variant="outline" 
+                className="mt-4 w-full border-blue-200 text-blue-700 hover:bg-blue-100 gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                성과 공유 카드 만들기
+              </Button>
+            </div>
+          )}
+
+          {showShareCard && (
+            <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+              <div className="scale-90 sm:scale-100">
+                <ShareCard />
+              </div>
+              <p className="text-[10px] text-zinc-400">화면을 캡처하여 SNS에 공유해보세요!</p>
+              <Button 
+                onClick={() => setShowShareCard(false)}
+                variant="ghost" 
+                className="text-xs text-zinc-500"
+              >
+                리포트 보러가기
+              </Button>
             </div>
           )}
         </div>

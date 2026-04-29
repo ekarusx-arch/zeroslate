@@ -104,6 +104,11 @@ interface TimeboxerState {
   activeFocusId: string | null;
   setFocusId: (id: string | null) => void;
 
+  isPilotLoading: boolean;
+  pilotMessage: string | null;
+  setPilotLoading: (loading: boolean) => void;
+  setPilotMessage: (msg: string | null) => void;
+
   addRoutine: (routine: Omit<Routine, "id" | "isActive">) => void;
   updateRoutine: (id: string, patch: Partial<Routine>) => void;
   deleteRoutine: (id: string) => void;
@@ -129,6 +134,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   routines: [],
   dailyLogs: [],
   activeFocusId: null,
+  isPilotLoading: false,
+  pilotMessage: null,
   colorIndex: 0,
   userId: null,
 
@@ -394,6 +401,11 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   activeFocusId: null,
   setFocusId: (id) => set({ activeFocusId: id }),
+
+  isPilotLoading: false,
+  pilotMessage: null,
+  setPilotLoading: (loading) => set({ isPilotLoading: loading }),
+  setPilotMessage: (msg) => set({ pilotMessage: msg }),
 
   // ── Routines ──
   addRoutine: async (routine) => {

@@ -24,6 +24,7 @@ import ArchiveModal from "@/components/ArchiveModal";
 import SettingsModal from "@/components/SettingsModal";
 import ArchivePanel from "@/components/right-panel/ArchivePanel";
 import FocusModal from "@/components/FocusModal";
+import ZeroPilot from "@/components/zeropilot/ZeroPilot";
 
 
 import {
@@ -288,6 +289,7 @@ export default function Home() {
       </DragOverlay>
 
       <FocusModal />
+      <ZeroPilot />
     </DndContext>
   );
 }

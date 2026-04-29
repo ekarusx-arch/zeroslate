@@ -11,6 +11,7 @@ import {
   Plus,
   Zap,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,23 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
     const currentIndex = CONTEXT_COLORS.indexOf(item.color);
     const nextIndex = (currentIndex + 1) % CONTEXT_COLORS.length;
     updateBrainDumpItem(item.id, { color: CONTEXT_COLORS[nextIndex] });
+  };
+
+  const handleRefine = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch("/api/zeropilot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "refine", data: { content: item.content } })
+      });
+      const result = await res.json();
+      if (result.refined) {
+        updateBrainDumpItem(item.id, { content: result.refined });
+      }
+    } catch (err) {
+      console.error("AI Refine failed", err);
+    }
   };
 
   return (
@@ -140,6 +158,17 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         >
           {item.content}
         </span>
+      )}
+
+      {/* AI 다듬기 버튼 */}
+      {!item.isCompleted && (
+        <button
+          onClick={handleRefine}
+          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-zinc-300 hover:text-blue-500 transition-all duration-150 shrink-0"
+          title="AI로 작업명 다듬기"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+        </button>
       )}
 
       {/* 삭제 버튼 */}
