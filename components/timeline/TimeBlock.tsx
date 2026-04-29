@@ -210,7 +210,7 @@ export default function TimeBlock({
   // ── 블록 드래그 이동 ──────────────────────────────
   const handleBlockDrag = useCallback(
     (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest("[data-handle]")) return;
+      if ((e.target as HTMLElement).closest("button, input, [data-handle]")) return;
       e.preventDefault();
 
       setIsDragging(true);

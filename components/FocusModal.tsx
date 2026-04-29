@@ -89,7 +89,6 @@ export default function FocusModal() {
     }
   }, [activeSound, isPlaying]);
 
-  if (!block) return null;
 
   const formatSeconds = (s: number) => {
     const h = Math.floor(s / 3600);
@@ -105,7 +104,11 @@ export default function FocusModal() {
 
   return (
     <Dialog open={!!activeFocusId} onOpenChange={(open) => !open && setFocusId(null)}>
-      <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-800 text-white p-0 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+      <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-800 text-white p-0 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] z-[100]">
+        {!block ? (
+          <div className="p-20 text-center text-zinc-500">정보를 불러오는 중...</div>
+        ) : (
+          <>
         <div className="absolute top-4 right-4 z-50">
           <button 
             onClick={() => setFocusId(null)}
@@ -187,7 +190,9 @@ export default function FocusModal() {
         <div className="absolute inset-0 pointer-events-none opacity-20 z-[-1]">
           <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px]" />
           <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-violet-500/20 rounded-full blur-[100px]" />
-        </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
