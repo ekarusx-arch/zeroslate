@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
-import { Plus, Trash2, Repeat, Clock } from "lucide-react";
+import { Plus, Trash2, Repeat, Clock, Edit2, Check, X } from "lucide-react";
 import { PRESET_COLORS } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,12 @@ export default function SettingsModal() {
   const [newRoutineStart, setNewRoutineStart] = useState("09:00");
   const [newRoutineEnd, setNewRoutineEnd] = useState("10:00");
   const [newRoutineColor, setNewRoutineColor] = useState(PRESET_COLORS[0].value);
+  
+  // 루틴 수정 상태
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
 
   const handleOpen = (v: boolean) => {
     if (v) {
@@ -65,6 +71,23 @@ export default function SettingsModal() {
       color: newRoutineColor,
     });
     setNewRoutineContent("");
+  };
+
+  const handleStartEdit = (r: any) => {
+    setEditingId(r.id);
+    setEditContent(r.content);
+    setEditStart(r.startTime);
+    setEditEnd(r.endTime);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingId) return;
+    updateRoutine(editingId, {
+      content: editContent,
+      startTime: editStart,
+      endTime: editEnd,
+    });
+    setEditingId(null);
   };
 
   const isValid = localStart < localEnd;
@@ -252,32 +275,74 @@ export default function SettingsModal() {
                     {routines.map((r) => (
                       <div 
                         key={r.id} 
-                        className="flex items-center justify-between p-3 bg-white border border-zinc-100 rounded-xl hover:border-zinc-200 transition-colors"
+                        className="flex flex-col p-3 bg-white border border-zinc-100 rounded-xl hover:border-zinc-200 transition-colors gap-3"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-8 rounded-full" style={{ backgroundColor: r.color }} />
-                          <div>
-                            <p className="text-sm font-semibold text-zinc-800">{r.content}</p>
-                            <p className="text-[10px] text-zinc-500 flex items-center gap-1">
-                              <Clock className="w-2.5 h-2.5" />
-                              {r.startTime} – {r.endTime}
-                            </p>
+                        {editingId === r.id ? (
+                          <div className="space-y-3">
+                            <Input
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="h-9 text-sm"
+                            />
+                            <div className="flex gap-2">
+                              <Input
+                                type="time"
+                                value={editStart}
+                                onChange={(e) => setEditStart(e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                              <Input
+                                type="time"
+                                value={editEnd}
+                                onChange={(e) => setEditEnd(e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button onClick={handleSaveEdit} size="sm" className="flex-1 h-8 bg-zinc-900 text-xs">
+                                <Check className="w-3 h-3 mr-1" /> 저장
+                              </Button>
+                              <Button onClick={() => setEditingId(null)} variant="ghost" size="sm" className="flex-1 h-8 text-xs">
+                                <X className="w-3 h-3 mr-1" /> 취소
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateRoutine(r.id, { isActive: !r.isActive })}
-                            className={`w-10 h-5 rounded-full relative transition-colors ${r.isActive ? "bg-blue-500" : "bg-zinc-200"}`}
-                          >
-                            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${r.isActive ? "left-6" : "left-1"}`} />
-                          </button>
-                          <button
-                            onClick={() => deleteRoutine(r.id)}
-                            className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-2 h-8 rounded-full" style={{ backgroundColor: r.color }} />
+                              <div>
+                                <p className="text-sm font-semibold text-zinc-800">{r.content}</p>
+                                <p className="text-[10px] text-zinc-500 flex items-center gap-1">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {r.startTime} – {r.endTime}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => updateRoutine(r.id, { isActive: !r.isActive })}
+                                className={`w-8 h-4 rounded-full relative transition-colors mr-1 ${r.isActive ? "bg-blue-500" : "bg-zinc-200"}`}
+                              >
+                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${r.isActive ? "left-4.5" : "left-0.5"}`} />
+                              </button>
+                              <button
+                                onClick={() => handleStartEdit(r)}
+                                className="p-1.5 text-zinc-400 hover:text-blue-500 transition-colors"
+                                title="수정"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => deleteRoutine(r.id)}
+                                className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors"
+                                title="삭제"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
