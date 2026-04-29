@@ -6,7 +6,6 @@ import {
   Dialog, 
   DialogContent, 
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { 
   Wind, 
   CloudRain, 
@@ -147,7 +146,7 @@ export default function FocusModal() {
                 </h2>
                 {block.memo && (
                   <p className="text-zinc-500 text-sm font-medium max-w-sm mx-auto leading-relaxed italic">
-                    " {block.memo} "
+                    &quot; {block.memo} &quot;
                   </p>
                 )}
               </div>
