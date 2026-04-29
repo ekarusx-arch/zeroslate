@@ -74,3 +74,19 @@ export const PRESET_COLORS = [
   { label: "휴식", value: "#FCD34D", tag: "#휴식" },
   { label: "기타", value: "#F9A8D4", tag: "#기타" },
 ];
+
+export interface SummaryStats {
+  overallScore: number;
+  blockRate: number;
+  taskRate: number;
+  topRate: number;
+  completedBlocks: number;
+  totalBlocks: number;
+  completedTasks: number;
+  totalTasks: number;
+  assignedTop: number;
+  totalTopThree: number;
+  totalPlannedMinutes: number;
+  completedMinutes: number;
+  completedBlockList: TimeBlock[];
+}

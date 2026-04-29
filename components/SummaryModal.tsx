@@ -13,23 +13,10 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock3, Save, Target, Zap, Share2 } from "lucide-react";
 import ShareCard from "./ShareCard";
+import { SummaryStats } from "@/types";
 
 export default function SummaryModal() {
-  const [summaryData, setSummaryData] = useState<{
-    overallScore: number;
-    blockRate: number;
-    taskRate: number;
-    topRate: number;
-    completedBlocks: number;
-    totalBlocks: number;
-    completedTasks: number;
-    totalTasks: number;
-    assignedTop: number;
-    totalTopThree: number;
-    totalPlannedMinutes: number;
-    completedMinutes: number;
-    completedBlockList: any[];
-  } | null>(null);
+  const [summaryData, setSummaryData] = useState<SummaryStats | null>(null);
 
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);

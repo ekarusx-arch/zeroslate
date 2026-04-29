@@ -2,8 +2,9 @@
 
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Sparkles, Timer, Trophy } from "lucide-react";
+import { SummaryStats } from "@/types";
 
-export default function ShareCard({ stats }: { stats?: any }) {
+export default function ShareCard({ stats }: { stats?: SummaryStats }) {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
 
