@@ -23,6 +23,7 @@ import GuideModal from "@/components/GuideModal";
 import ArchiveModal from "@/components/ArchiveModal";
 import SettingsModal from "@/components/SettingsModal";
 import ArchivePanel from "@/components/right-panel/ArchivePanel";
+import FocusModal from "@/components/FocusModal";
 
 
 import {
@@ -165,6 +166,9 @@ export default function Home() {
     }
   };
 
+  const routines = useTimeboxerStore((s) => s.routines);
+  const applyRoutines = useTimeboxerStore((s) => s.applyRoutines);
+
   return (
     <DndContext
       sensors={sensors}
@@ -243,13 +247,25 @@ export default function Home() {
           <section className="flex-1 panel-card overflow-hidden flex flex-col min-h-[520px] lg:min-h-0 lg:min-w-[400px]">
             {/* 타임라인 헤더 */}
             <div className="px-4 py-3 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 shrink-0">
-              <h2 className="text-sm font-semibold text-zinc-800 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-400 pulse-dot" />
-                타임라인
-              </h2>
-              <p className="text-xs text-zinc-600">
-                클릭 & 드래그로 블록 생성 · 왼쪽에서 드래그하여 배치
-              </p>
+              <div className="flex flex-col gap-0.5">
+                <h2 className="text-sm font-semibold text-zinc-800 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-400 pulse-dot" />
+                  타임라인
+                </h2>
+                <p className="text-[10px] text-zinc-500">
+                  클릭 & 드래그로 블록 생성 · 왼쪽에서 드래그하여 배치
+                </p>
+              </div>
+              
+              {routines.length > 0 && (
+                <button
+                  onClick={applyRoutines}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[11px] font-bold hover:bg-blue-100 transition-colors border border-blue-100"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  루틴 불러오기
+                </button>
+              )}
             </div>
 
             {/* 스크롤 영역 */}
@@ -266,10 +282,12 @@ export default function Home() {
         </main>
       </div>
 
-      {/* 드래그 오버레이 (마우스 커서에 따라다니는 미리보기) */}
+      {/* 드래그 오버레이 */}
       <DragOverlay dropAnimation={null}>
         {activeItem && <DragPreview label={activeItem.label} />}
       </DragOverlay>
+
+      <FocusModal />
     </DndContext>
   );
 }

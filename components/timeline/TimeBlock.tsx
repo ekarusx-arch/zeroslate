@@ -5,7 +5,7 @@ import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { useCurrentMinutes } from "@/hooks/useCurrentMinutes";
 import { playAlarm } from "@/utils/audio";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, StickyNote, AlignLeft, X } from "lucide-react";
+import { Trash2, StickyNote, AlignLeft, Play } from "lucide-react";
 import { TimeBlock as TimeBlockType } from "@/types";
 import {
   Dialog,
@@ -53,6 +53,7 @@ export default function TimeBlock({
   const updateTimeBlock = useTimeboxerStore((s) => s.updateTimeBlock);
   const deleteTimeBlock = useTimeboxerStore((s) => s.deleteTimeBlock);
   const toggleTimeBlock = useTimeboxerStore((s) => s.toggleTimeBlock);
+  const setFocusId = useTimeboxerStore((s) => s.setFocusId);
 
   const blockRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -60,40 +61,47 @@ export default function TimeBlock({
   const [tempMemo, setTempMemo] = useState(block.memo || "");
   const currentMinutes = useCurrentMinutes();
 
-  const startMinutes = timeStringToMinutes(block.startTime);
-  const endMinutes = timeStringToMinutes(block.endTime);
+  // ── 드래그/리사이징 로컬 상태 ──
+  const [isDragging, setIsDragging] = useState(false);
+  const [localStart, setLocalStart] = useState(timeStringToMinutes(block.startTime));
+  const [localEnd, setLocalEnd] = useState(timeStringToMinutes(block.endTime));
+
+  // 외부(스토어) 데이터와 동기화
+  useEffect(() => {
+    if (!isDragging) {
+      setLocalStart(timeStringToMinutes(block.startTime));
+      setLocalEnd(timeStringToMinutes(block.endTime));
+    }
+  }, [block.startTime, block.endTime, isDragging]);
+
   const timelineStartMinutes = startHour * 60;
   const timelineEndMinutes = endHour * 60;
 
-  const isActive = currentMinutes >= startMinutes && currentMinutes < endMinutes;
-  const isPast = currentMinutes >= endMinutes;
-  const progressPercent = isActive ? ((currentMinutes - startMinutes) / (endMinutes - startMinutes)) * 100 : 0;
-  const isEndingSoon = isActive && (endMinutes - currentMinutes) <= 5;
+  const isActive = localStart <= currentMinutes && currentMinutes < localEnd;
+  const isPast = currentMinutes >= localEnd;
+  const progressPercent = isActive ? ((currentMinutes - localStart) / (localEnd - localStart)) * 100 : 0;
+  const isEndingSoon = isActive && (localEnd - currentMinutes) <= 5;
 
-  // ── 알림 효과 (시작/종료 시 한 번씩만 울리도록 ref로 관리) ──
+  // ── 알림 효과 ──
   const alarmsRef = useRef({ start: false, end: false });
 
   useEffect(() => {
-    // 시작 알림 (현재 시간이 시작 시간과 정확히 일치할 때)
-    if (currentMinutes === startMinutes && !alarmsRef.current.start) {
+    if (currentMinutes === localStart && !alarmsRef.current.start) {
       playAlarm("start");
       alarmsRef.current.start = true;
     }
-    // 종료 알림 (현재 시간이 종료 시간과 일치할 때)
-    if (currentMinutes === endMinutes && !alarmsRef.current.end) {
+    if (currentMinutes === localEnd && !alarmsRef.current.end) {
       playAlarm("end");
       alarmsRef.current.end = true;
     }
+    if (currentMinutes < localStart) alarmsRef.current.start = false;
+    if (currentMinutes < localEnd) alarmsRef.current.end = false;
+  }, [currentMinutes, localStart, localEnd]);
 
-    // 시간이 초기화되거나 블록이 수정되면 플래그 리셋
-    if (currentMinutes < startMinutes) alarmsRef.current.start = false;
-    if (currentMinutes < endMinutes) alarmsRef.current.end = false;
-  }, [currentMinutes, startMinutes, endMinutes]);
+  const top = minutesToPx(localStart - timelineStartMinutes);
+  const height = minutesToPx(localEnd - localStart);
 
-  const top = minutesToPx(startMinutes - timelineStartMinutes);
-  const height = minutesToPx(endMinutes - startMinutes);
-
-  const duration = endMinutes - startMinutes;
+  const duration = localEnd - localStart;
   const durationText =
     duration >= 60
       ? `${Math.floor(duration / 60)}h${duration % 60 > 0 ? ` ${duration % 60}m` : ""}`
@@ -106,8 +114,9 @@ export default function TimeBlock({
       e.preventDefault();
       if (!containerRef.current) return;
 
+      setIsDragging(true);
       const containerTop = containerRef.current.getBoundingClientRect().top;
-      const originalEnd = endMinutes;
+      const originalEnd = localEnd;
 
       const onMouseMove = (me: MouseEvent) => {
         const relY = me.clientY - containerTop;
@@ -116,20 +125,32 @@ export default function TimeBlock({
           timelineStartMinutes,
           Math.min(newStartRaw, originalEnd - MIN_BLOCK_MINUTES)
         );
-        updateTimeBlock(block.id, {
-          startTime: minutesToTimeString(newStart),
-        });
+        setLocalStart(newStart);
       };
 
-      const onMouseUp = () => {
+      const onMouseUp = (me: MouseEvent) => {
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("mouseup", onMouseUp);
+        
+        setIsDragging(false);
+        const relY = me.clientY - containerTop;
+        const finalStartRaw = timelineStartMinutes + pxToMinutes(relY);
+        const finalStart = Math.max(
+          timelineStartMinutes,
+          Math.min(finalStartRaw, originalEnd - MIN_BLOCK_MINUTES)
+        );
+
+        if (finalStart !== timeStringToMinutes(block.startTime)) {
+          updateTimeBlock(block.id, {
+            startTime: minutesToTimeString(finalStart),
+          });
+        }
       };
 
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("mouseup", onMouseUp);
     },
-    [block.id, endMinutes, timelineStartMinutes, containerRef, updateTimeBlock]
+    [block.id, block.startTime, localEnd, timelineStartMinutes, containerRef, updateTimeBlock]
   );
 
   // ── 하단 핸들 리사이즈 ──────────────────────────────
@@ -139,8 +160,9 @@ export default function TimeBlock({
       e.preventDefault();
       if (!containerRef.current) return;
 
+      setIsDragging(true);
       const containerTop = containerRef.current.getBoundingClientRect().top;
-      const originalStart = startMinutes;
+      const originalStart = localStart;
 
       const onMouseMove = (me: MouseEvent) => {
         const relY = me.clientY - containerTop;
@@ -149,14 +171,26 @@ export default function TimeBlock({
           timelineEndMinutes,
           Math.max(originalStart + MIN_BLOCK_MINUTES, newEndRaw)
         );
-        updateTimeBlock(block.id, {
-          endTime: minutesToTimeString(newEnd),
-        });
+        setLocalEnd(newEnd);
       };
 
-      const onMouseUp = () => {
+      const onMouseUp = (me: MouseEvent) => {
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("mouseup", onMouseUp);
+        
+        setIsDragging(false);
+        const relY = me.clientY - containerTop;
+        const finalEndRaw = timelineStartMinutes + pxToMinutes(relY);
+        const finalEnd = Math.min(
+          timelineEndMinutes,
+          Math.max(originalStart + MIN_BLOCK_MINUTES, finalEndRaw)
+        );
+
+        if (finalEnd !== timeStringToMinutes(block.endTime)) {
+          updateTimeBlock(block.id, {
+            endTime: minutesToTimeString(finalEnd),
+          });
+        }
       };
 
       window.addEventListener("mousemove", onMouseMove);
@@ -164,7 +198,8 @@ export default function TimeBlock({
     },
     [
       block.id,
-      startMinutes,
+      block.endTime,
+      localStart,
       timelineStartMinutes,
       timelineEndMinutes,
       containerRef,
@@ -178,9 +213,10 @@ export default function TimeBlock({
       if ((e.target as HTMLElement).closest("[data-handle]")) return;
       e.preventDefault();
 
-      const blockDuration = endMinutes - startMinutes;
+      setIsDragging(true);
+      const blockDuration = localEnd - localStart;
       const startY = e.clientY;
-      const originalStartMin = startMinutes;
+      const originalStartMin = localStart;
       const maxStartMin = timelineEndMinutes - blockDuration;
 
       const onMouseMove = (me: MouseEvent) => {
@@ -193,15 +229,31 @@ export default function TimeBlock({
           originalStartMin + deltaMin
           )
         );
-        updateTimeBlock(block.id, {
-          startTime: minutesToTimeString(newStart),
-          endTime: minutesToTimeString(newStart + blockDuration),
-        });
+        setLocalStart(newStart);
+        setLocalEnd(newStart + blockDuration);
       };
 
-      const onMouseUp = () => {
+      const onMouseUp = (me: MouseEvent) => {
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("mouseup", onMouseUp);
+        
+        setIsDragging(false);
+        const dy = me.clientY - startY;
+        const deltaMin = pxToMinutes(dy);
+        const finalStart = Math.min(
+          maxStartMin,
+          Math.max(
+          timelineStartMinutes,
+          originalStartMin + deltaMin
+          )
+        );
+
+        if (finalStart !== timeStringToMinutes(block.startTime)) {
+          updateTimeBlock(block.id, {
+            startTime: minutesToTimeString(finalStart),
+            endTime: minutesToTimeString(finalStart + blockDuration),
+          });
+        }
       };
 
       window.addEventListener("mousemove", onMouseMove);
@@ -209,8 +261,9 @@ export default function TimeBlock({
     },
     [
       block.id,
-      startMinutes,
-      endMinutes,
+      block.startTime,
+      localStart,
+      localEnd,
       timelineStartMinutes,
       timelineEndMinutes,
       updateTimeBlock,
@@ -226,26 +279,24 @@ export default function TimeBlock({
     <>
     <div
       ref={blockRef}
-      className={`time-block group transition-all duration-300 overflow-hidden cursor-pointer ${
+      className={`time-block group overflow-hidden cursor-pointer ${
         isActive ? "active-block-glow" : ""
       } ${!isActive && isPast && !block.isCompleted ? "opacity-60 grayscale-[0.2]" : ""} ${
         isEndingSoon ? "animate-pulse ring-2 ring-red-400" : ""
-      }`}
+      } ${isDragging ? "z-50 shadow-2xl scale-[1.02]" : "transition-all duration-300 z-5"}`}
       style={{
         top: `${top}px`,
         height: `${Math.max(height, 20)}px`,
         backgroundColor: block.color + "CC",
         borderLeft: `3px solid ${block.color}`,
-        zIndex: isHovered ? 10 : 5,
+        zIndex: isDragging ? 50 : (isHovered ? 10 : 5),
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseDown={(e) => {
-        // 드래그 로직 실행
         handleBlockDrag(e);
       }}
       onClick={(e) => {
-        // 드래그 핸들이나 버튼 클릭 시에는 모달을 띄우지 않음
         if (!(e.target as HTMLElement).closest("button, input, [data-handle]")) {
           setTempMemo(block.memo || "");
           setIsMemoOpen(true);
@@ -261,7 +312,7 @@ export default function TimeBlock({
         <div className="w-8 h-0.5 bg-white/60 rounded-full" />
       </div>
 
-      {/* 내부 프로그레스 바 (진행 중일 때만 표시) */}
+      {/* 내부 프로그레스 바 */}
       {isActive && (
         <div 
           className="absolute top-0 left-0 right-0 bg-white/20 transition-all duration-1000 ease-linear z-0 pointer-events-none"
@@ -294,7 +345,21 @@ export default function TimeBlock({
             </span>
           )}
 
-          {isHovered && (
+          {isActive && isHovered && !isDragging && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setFocusId(block.id);
+              }}
+              className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-zinc-900 text-white rounded text-[10px] font-bold hover:bg-black transition-colors"
+              title="몰입 모드 시작"
+            >
+              <Play className="w-2.5 h-2.5 fill-current" />
+              몰입
+            </button>
+          )}
+
+          {isHovered && !isDragging && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -310,12 +375,12 @@ export default function TimeBlock({
 
         {height >= 40 && (
           <span className="text-[10px] text-zinc-600/70 leading-none pl-5">
-            {block.startTime} – {block.endTime} · {durationText}
+            {minutesToTimeString(localStart)} – {minutesToTimeString(localEnd)} · {durationText}
           </span>
         )}
       </div>
 
-      {/* 메모 배지 (내용이 있을 때만) */}
+      {/* 메모 배지 */}
       {block.memo && (
         <div className="absolute bottom-1 right-2 opacity-60 group-hover:opacity-100">
           <StickyNote className="w-2.5 h-2.5 text-zinc-700" />

@@ -31,6 +31,15 @@ export interface TimeBlock {
   memo?: string; // ← 신규: 상세 메모
 }
 
+export interface Routine {
+  id: string;
+  content: string;
+  startTime: string;
+  endTime: string;
+  color: string;
+  isActive: boolean;
+}
+
 export interface DailyLog {
   date: string; // "YYYY-MM-DD"
   savedAt: string;

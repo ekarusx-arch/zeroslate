@@ -77,6 +77,7 @@ interface TimeboxerState {
   brainDump: BrainDumpItem[];
   topThree: TopThreeItem[];
   timeBlocks: TimeBlock[];
+  routines: Routine[];
   dailyLogs: DailyLog[];
   colorIndex: number;
   userId: string | null;
@@ -100,6 +101,14 @@ interface TimeboxerState {
   deleteTimeBlock: (id: string) => void;
   toggleTimeBlock: (id: string) => void;
 
+  activeFocusId: string | null;
+  setFocusId: (id: string | null) => void;
+
+  addRoutine: (routine: Omit<Routine, "id" | "isActive">) => void;
+  updateRoutine: (id: string, patch: Partial<Routine>) => void;
+  deleteRoutine: (id: string) => void;
+  applyRoutines: () => void;
+
   saveTodayLog: () => void;
   carryOver: () => void;
   resetAll: () => void;
@@ -117,7 +126,9 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   brainDump: [],
   topThree: [],
   timeBlocks: [],
+  routines: [],
   dailyLogs: [],
+  activeFocusId: null,
   colorIndex: 0,
   userId: null,
 
@@ -127,11 +138,12 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     const userId = session.user.id;
     
     // Supabase에서 데이터 불러오기
-    const [bd, tt, tb, dl] = await Promise.all([
+    const [bd, tt, tb, dl, rt] = await Promise.all([
       supabase.from("brain_dumps").select("*").eq("user_id", userId),
       supabase.from("top_three").select("*").eq("user_id", userId),
       supabase.from("time_blocks").select("*").eq("user_id", userId),
-      supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false })
+      supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("routines").select("*").eq("user_id", userId)
     ]);
 
     set({
@@ -139,7 +151,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color })),
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
-      dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean)
+      dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean),
+      routines: (rt.data || []).map(r => ({ id: r.id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isActive: r.is_active }))
     });
   },
 
@@ -377,6 +390,81 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     set({ timeBlocks: newBlocks, brainDump: newBrainDump, topThree: newTopThree });
     await Promise.all(dbPromises);
+  },
+
+  activeFocusId: null,
+  setFocusId: (id) => set({ activeFocusId: id }),
+
+  // ── Routines ──
+  addRoutine: async (routine) => {
+    const { userId } = get();
+    if (!userId) return;
+    const id = crypto.randomUUID();
+    const newRoutine: Routine = { ...routine, id, isActive: true };
+    set((s) => ({ routines: [...s.routines, newRoutine] }));
+    await supabase.from("routines").insert({
+      id, user_id: userId, content: routine.content, start_time: routine.startTime, end_time: routine.endTime, color: routine.color, is_active: true
+    });
+  },
+
+  updateRoutine: async (id, patch) => {
+    set((s) => ({ routines: s.routines.map((r) => r.id === id ? { ...r, ...patch } : r) }));
+    const dbUpdates: any = {};
+    if (patch.content) dbUpdates.content = patch.content;
+    if (patch.startTime) dbUpdates.start_time = patch.startTime;
+    if (patch.endTime) dbUpdates.end_time = patch.endTime;
+    if (patch.color) dbUpdates.color = patch.color;
+    if (patch.isActive !== undefined) dbUpdates.is_active = patch.isActive;
+
+    if (Object.keys(dbUpdates).length > 0) {
+      await supabase.from("routines").update(dbUpdates).eq("id", id);
+    }
+  },
+
+  deleteRoutine: async (id) => {
+    set((s) => ({ routines: s.routines.filter((r) => r.id !== id) }));
+    await supabase.from("routines").delete().eq("id", id);
+  },
+
+  applyRoutines: async () => {
+    const state = get();
+    const { userId, routines, timeBlocks } = state;
+    if (!userId) return;
+
+    const activeRoutines = routines.filter(r => r.isActive);
+    const blocksToAdd: TimeBlock[] = [];
+
+    for (const r of activeRoutines) {
+      if (!hasOverlap(r.startTime, r.endTime, [...timeBlocks, ...blocksToAdd])) {
+        blocksToAdd.push({
+          id: crypto.randomUUID(),
+          taskId: null,
+          content: r.content,
+          startTime: r.startTime,
+          endTime: r.endTime,
+          color: r.color,
+          isCompleted: false,
+          memo: ""
+        });
+      }
+    }
+
+    if (blocksToAdd.length === 0) return;
+
+    const newBlocks = [...timeBlocks, ...blocksToAdd];
+    set({ timeBlocks: newBlocks });
+
+    await supabase.from("time_blocks").insert(blocksToAdd.map(b => ({
+      id: b.id,
+      user_id: userId,
+      task_id: b.taskId,
+      content: b.content,
+      start_time: b.startTime,
+      end_time: b.endTime,
+      color: b.color,
+      is_completed: b.isCompleted,
+      memo: b.memo
+    })));
   },
 
   saveTodayLog: async () => {
