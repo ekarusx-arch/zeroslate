@@ -17,6 +17,8 @@ import { SummaryStats } from "@/types";
 
 export default function SummaryModal() {
   const [summaryData, setSummaryData] = useState<SummaryStats | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
