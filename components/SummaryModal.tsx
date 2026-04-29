@@ -23,8 +23,21 @@ export default function SummaryModal() {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
   const topThree = useTimeboxerStore((s) => s.topThree);
+  const dailyLogs = useTimeboxerStore((s) => s.dailyLogs);
   const saveTodayLog = useTimeboxerStore((s) => s.saveTodayLog);
   const carryOver = useTimeboxerStore((s) => s.carryOver);
+
+  // 오늘 날짜 키 (YYYY-MM-DD)
+  const getTodayKey = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  };
+
+  const todayKey = getTodayKey();
+  const existingLog = dailyLogs.find(l => l.date === todayKey);
+
+  // 이미 마감되었는지 여부 (저장된 로그가 있거나 saved 상태가 true인 경우)
+  const isActuallySaved = saved || !!existingLog;
 
   // 현재 실시간 통계 계산 (마감 전용)
   const calcStats = () => {
@@ -74,7 +87,23 @@ export default function SummaryModal() {
 
   // 현재 상태에 따른 실시간 값 (UI 표시용)
   const liveStats = calcStats();
-  const currentStats = summaryData || liveStats;
+  
+  // 표시할 데이터: 이미 마감되었다면 기존 로그 데이터를, 아니라면 현재 실시간 데이터를 보여줌
+  const currentStats = summaryData || (existingLog ? {
+    overallScore: Math.round((existingLog.blockCompletionRate + (existingLog.totalTasks > 0 ? Math.round((existingLog.completedBrainDump.length / existingLog.totalTasks) * 100) : 0) + existingLog.topCompletionRate) / 3),
+    blockRate: existingLog.blockCompletionRate,
+    taskRate: existingLog.totalTasks > 0 ? Math.round((existingLog.completedBrainDump.length / existingLog.totalTasks) * 100) : 0,
+    topRate: existingLog.topCompletionRate,
+    completedBlocks: existingLog.completedBlocks.length,
+    totalBlocks: existingLog.totalBlocks,
+    completedTasks: existingLog.completedBrainDump.length,
+    totalTasks: existingLog.totalTasks,
+    assignedTop: existingLog.topThree.filter(t => t.isAssigned).length,
+    totalTopThree: existingLog.topThree.length,
+    totalPlannedMinutes: existingLog.totalPlannedMinutes,
+    completedMinutes: existingLog.completedMinutes,
+    completedBlockList: existingLog.completedBlocks,
+  } : liveStats);
 
 
   function formatTime(min: number) {
@@ -89,7 +118,12 @@ export default function SummaryModal() {
     return "🌱";
   }
 
-  const handleSave = () => {
+    const handleSave = () => {
+    if (isActuallySaved && !saved) {
+      setSaved(true);
+      return;
+    }
+
     // 1. 마감 전 현재 통계를 스냅샷으로 저장
     setSummaryData(liveStats);
     
@@ -193,13 +227,13 @@ export default function SummaryModal() {
 
           <Button
             onClick={handleSave}
-            disabled={saved}
-            className={`w-full ${saved ? "bg-emerald-500 hover:bg-emerald-600 opacity-100" : "bg-zinc-900 hover:bg-zinc-800"}`}
+            disabled={isActuallySaved}
+            className={`w-full ${isActuallySaved ? "bg-emerald-500 hover:bg-emerald-600 opacity-100 shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "bg-zinc-900 hover:bg-zinc-800"}`}
           >
-            {saved ? (
+            {isActuallySaved ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                성공적으로 마감 및 이월되었습니다!
+                오늘의 마감이 이미 완료되었습니다!
               </>
             ) : (
               <>
@@ -210,7 +244,7 @@ export default function SummaryModal() {
           </Button>
 
           {/* 마감 완료 후 내일 계획 안내 메시지 */}
-          {saved && !showShareCard && (
+          {isActuallySaved && !showShareCard && (
             <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100 text-center animate-in fade-in slide-in-from-bottom-2">
               <p className="text-sm font-semibold text-blue-800">
                 🎉 오늘 하루도 고생 많으셨습니다!

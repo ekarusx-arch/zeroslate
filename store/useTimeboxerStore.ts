@@ -611,20 +611,36 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   saveTodayLog: async () => {
     const state = get();
-    const { userId } = state;
+    const { userId, dailyLogs, timeBlocks, brainDump } = state;
     if (!userId) return;
     
+    // 데이터가 아예 없는 경우(0개)는 실수로 간주하고 마감 저장 방지
+    if (timeBlocks.length === 0 && brainDump.length === 0) {
+      console.log("저장할 데이터가 없어 로그 생성을 건너뜁니다.");
+      return;
+    }
+
     const log = createDailyLog(state);
     
+    // 이미 오늘 날짜의 로그가 있고, 그 기록이 현재보다 더 "알찬" 기록이라면 덮어쓰지 않음
+    const existingLocal = dailyLogs.find(l => l.date === log.date);
+    if (existingLocal && existingLocal.totalBlocks > log.totalBlocks) {
+      console.log("이미 더 상세한 기록이 존재하여 덮어쓰지 않습니다.");
+      return;
+    }
+
     set((s) => ({ dailyLogs: [log, ...s.dailyLogs.filter((item) => item.date !== log.date)] }));
     
-    // DB 조회 (오늘 날짜의 로그가 이미 있는지)
+    // DB 조회 및 저장
     const { data: existing } = await supabase
       .from("daily_logs")
-      .select("id")
+      .select("id, total_blocks")
       .eq("user_id", userId)
       .eq("date", log.date)
       .maybeSingle();
+
+    // DB에 이미 더 많은 블록이 있는 기록이 있다면 업데이트 방지
+    if (existing && (existing as any).total_blocks > log.totalBlocks) return;
       
     const payload = {
       user_id: userId,
