@@ -1,12 +1,11 @@
 "use client";
 
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
-import { Sparkles, Timer, CheckCircle2, Trophy } from "lucide-react";
+import { Sparkles, Timer, Trophy } from "lucide-react";
 
 export default function ShareCard() {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const brainDump = useTimeboxerStore((s) => s.brainDump);
-  const topThree = useTimeboxerStore((s) => s.topThree);
 
   const completedBlocks = timeBlocks.filter((b) => b.isCompleted).length;
   const completedTasks = brainDump.filter((i) => i.isCompleted).length;

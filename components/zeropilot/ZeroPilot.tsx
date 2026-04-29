@@ -4,15 +4,12 @@ import { useState } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { 
   Sparkles, 
-  Send, 
   X, 
   Zap, 
-  LayoutGrid, 
   BrainCircuit,
   Loader2,
   ChevronRight
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function ZeroPilot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,10 +19,9 @@ export default function ZeroPilot() {
     setPilotLoading, 
     setPilotMessage,
     brainDump,
-    addTimeBlock
   } = useTimeboxerStore();
 
-  const handleAction = async (type: string, data?: any) => {
+  const handleAction = async (type: string, data?: unknown) => {
     setPilotLoading(true);
     setIsOpen(true);
     try {
@@ -45,7 +41,7 @@ export default function ZeroPilot() {
       } else {
         setPilotMessage(result.message);
       }
-    } catch (e) {
+    } catch (_e) {
       setPilotMessage("앗, 연결에 문제가 생겼어요. 잠시 후 다시 시도해주세요.");
     } finally {
       setPilotLoading(false);

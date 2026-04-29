@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "브레인 덤프가 비어있네요. 할 일을 먼저 적어주세요!" });
       }
 
-      const suggestions = items.map((item: any, idx: number) => {
+      const suggestions = items.map((item: { content: string }, idx: number) => {
         const start = startTime + idx;
         const end = start + 1;
         return {
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: "어떤 도움이 필요하신가요?" });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: "API 요청 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
