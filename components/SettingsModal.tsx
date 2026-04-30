@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
-import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag } from "lucide-react";
+import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette } from "lucide-react";
 import { PRESET_COLORS, Routine } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -262,7 +262,7 @@ export default function SettingsModal() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">색상</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {PRESET_COLORS.map((c) => (
                       <button
                         key={c.value}
@@ -273,6 +273,30 @@ export default function SettingsModal() {
                         style={{ backgroundColor: c.value }}
                       />
                     ))}
+                    {/* 커스텀 컬러 피커 */}
+                    <div className="relative flex items-center">
+                      <input
+                        type="color"
+                        id="customRoutineColor"
+                        value={newRoutineColor}
+                        onChange={(e) => setNewRoutineColor(e.target.value)}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="customRoutineColor"
+                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all hover:bg-zinc-100 ${
+                          !PRESET_COLORS.some(c => c.value === newRoutineColor) ? "border-blue-500 bg-blue-50 shadow-sm" : "border-zinc-200 bg-white"
+                        }`}
+                        title="직접 색상 선택"
+                      >
+                        <Palette className="w-4 h-4" style={{ color: newRoutineColor }} />
+                      </label>
+                      {!PRESET_COLORS.some(c => c.value === newRoutineColor) && (
+                        <span className="ml-2 text-[10px] font-mono font-bold text-blue-600 uppercase">
+                          {newRoutineColor}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -401,7 +425,7 @@ export default function SettingsModal() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">태그 색상</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {PRESET_COLORS.filter(c => c.tag !== "").map((c) => (
                       <button
                         key={c.value}
@@ -412,6 +436,30 @@ export default function SettingsModal() {
                         style={{ backgroundColor: c.value }}
                       />
                     ))}
+                    {/* 커스텀 컬러 피커 */}
+                    <div className="relative flex items-center">
+                      <input
+                        type="color"
+                        id="customTagColor"
+                        value={newTagColor}
+                        onChange={(e) => setNewTagColor(e.target.value)}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="customTagColor"
+                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all hover:bg-zinc-100 ${
+                          !PRESET_COLORS.some(c => c.value === newTagColor) ? "border-blue-500 bg-blue-50 shadow-sm" : "border-zinc-200 bg-white"
+                        }`}
+                        title="직접 색상 선택"
+                      >
+                        <Palette className="w-4 h-4" style={{ color: newTagColor }} />
+                      </label>
+                      {!PRESET_COLORS.some(c => c.value === newTagColor) && (
+                        <span className="ml-2 text-[10px] font-mono font-bold text-blue-600 uppercase">
+                          {newTagColor}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
