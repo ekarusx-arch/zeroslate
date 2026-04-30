@@ -62,9 +62,12 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
 
   const handleColorCycle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const currentIndex = PRESET_COLORS.findIndex(p => p.value === (item.color || "#F4F4F5"));
-    const nextIndex = (currentIndex + 1) % PRESET_COLORS.length;
-    updateTopThreeItem(item.id, { color: PRESET_COLORS[nextIndex].value });
+    const settings = useTimeboxerStore.getState().settings;
+    const allTags = [...PRESET_COLORS, ...(settings.customTags || []).map(ct => ({ label: ct.tag, value: ct.color, tag: ct.tag }))];
+    
+    const currentIndex = allTags.findIndex(p => p.value === (item.color || "#F4F4F5"));
+    const nextIndex = (currentIndex + 1) % allTags.length;
+    updateTopThreeItem(item.id, { color: allTags[nextIndex].value });
   };
 
   return (
@@ -96,7 +99,7 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
           borderColor: item.color ? "transparent" : "#e4e4e7",
         }}
         aria-label="컨텍스트 색상 변경"
-        title={`클릭하여 카테고리 변경: ${PRESET_COLORS.find(p => p.value === (item.color || "#F4F4F5"))?.label || "기본"}`}
+        title={`클릭하여 카테고리 변경: ${[...PRESET_COLORS, ...(useTimeboxerStore.getState().settings.customTags || []).map(ct => ({ label: ct.tag, value: ct.color }))].find(p => p.value === (item.color || "#F4F4F5"))?.label || "기본"}`}
       />
 
       {/* 완료 체크박스 */}
