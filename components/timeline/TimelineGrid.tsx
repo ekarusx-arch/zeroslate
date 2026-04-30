@@ -7,7 +7,7 @@ import { Settings } from "@/types";
 import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import TimeBlock from "./TimeBlock";
 
-const ROW_HEIGHT = 48; // px per 30min slot
+const ROW_HEIGHT_30 = 48; // 30분당 기준 높이
 
 function minutesToTimeString(minutes: number) {
   const h = Math.floor(minutes / 60);
@@ -23,12 +23,14 @@ function TimeSlot({
   hour,
   minute,
   showHourLabel,
+  slotHeight,
   onStartDraw,
 }: {
   slotId: string;
   hour: number;
   minute: number;
   showHourLabel: boolean;
+  slotHeight: number;
   onStartDraw: (hour: number, minute: number) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
@@ -37,7 +39,7 @@ function TimeSlot({
     <div
       ref={setNodeRef}
       className={`time-slot flex relative ${isOver ? "bg-blue-100/60" : ""}`}
-      style={{ height: `${ROW_HEIGHT}px` }}
+      style={{ height: `${slotHeight}px` }}
       onMouseDown={(e) => {
         if (e.button === 0) onStartDraw(hour, minute);
       }}
@@ -54,9 +56,9 @@ function TimeSlot({
       {/* 슬롯 라인 */}
       <div
         className={`flex-1 border-l border-zinc-200 ${
-          minute === 30
-            ? "border-t border-dashed border-zinc-100"
-            : "border-t border-zinc-200"
+          minute === 0
+            ? "border-t border-zinc-200"
+            : "border-t border-dashed border-zinc-100"
         }`}
       />
     </div>
@@ -75,11 +77,15 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
   // 직접 그리기 상태
   const [drawing, setDrawing] = useState<boolean>(false);
 
+  // 슬롯 높이 계산 (30분당 ROW_HEIGHT_30 기준)
+  const slotHeight = (settings.step / 30) * ROW_HEIGHT_30;
+
   // 슬롯 목록 생성
   const slots: { hour: number; minute: number }[] = [];
   for (let h = settings.startTime; h < settings.endTime; h++) {
-    slots.push({ hour: h, minute: 0 });
-    slots.push({ hour: h, minute: 30 });
+    for (let m = 0; m < 60; m += settings.step) {
+      slots.push({ hour: h, minute: m });
+    }
   }
 
   // ── 마우스 드래그로 직접 블록 그리기 ──────────────────────────────
@@ -87,7 +93,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
     (hour: number, minute: number) => {
       if (!containerRef.current) return;
       const startMin = hour * 60 + minute;
-      const endMin = startMin + 30;
+      const endMin = startMin + settings.step; // 슬롯 단위만큼 기본 생성
 
       addTimeBlock({
         taskId: null,
@@ -105,7 +111,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
 
       window.addEventListener("mouseup", onMouseUp);
     },
-    [addTimeBlock]
+    [addTimeBlock, settings.step]
   );
 
   return (
@@ -125,6 +131,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             hour={slot.hour}
             minute={slot.minute}
             showHourLabel={showHourLabel}
+            slotHeight={slotHeight}
             onStartDraw={handleStartDraw}
           />
         );
@@ -148,8 +155,9 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
       <CurrentTimeIndicator
         startTime={settings.startTime}
         endTime={settings.endTime}
-        rowHeight={ROW_HEIGHT}
+        rowHeight={ROW_HEIGHT_30}
       />
     </div>
   );
 }
+
