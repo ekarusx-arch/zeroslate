@@ -147,15 +147,15 @@ export default function SummaryModal() {
       >
         🚀 하루 마감하기
       </DialogTrigger>
-      <DialogContent className="max-w-md" id="summary-modal">
-          <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden" id="summary-modal">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-base">
             <span className="text-2xl">{getEmoji(currentStats.overallScore)}</span>
             오늘의 생산성 리포트
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {/* 종합 점수 */}
           <div className="text-center py-4 rounded-2xl bg-gradient-to-br from-blue-50 to-violet-50 border border-blue-100">
             <p className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
@@ -267,7 +267,7 @@ export default function SummaryModal() {
           )}
 
           {showShareCard && (
-            <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300 pb-8">
               <div className="scale-90 sm:scale-100">
                 <ShareCard stats={currentStats} />
               </div>
