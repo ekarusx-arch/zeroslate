@@ -32,7 +32,7 @@ const FREE_LIMITS = [
 export default function UpgradeModal({ open, onClose, featureName }: UpgradeModalProps) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg w-full p-0 overflow-hidden bg-white border-none shadow-2xl rounded-3xl">
+      <DialogContent className="max-w-xl w-full p-0 overflow-hidden bg-white border-none shadow-2xl rounded-3xl">
 
         {/* ── 헤더 ── */}
         <div className="bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 px-8 pt-8 pb-14 text-white">
