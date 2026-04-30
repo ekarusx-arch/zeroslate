@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -12,7 +12,7 @@ import {
   closestCenter,
 } from "@dnd-kit/core";
 import { useAuth } from "@/components/AuthProvider";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, CalendarDays, Check, RotateCw } from "lucide-react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { BrainDumpItem, TopThreeItem } from "@/types";
 import TopThreeSection from "@/components/left-panel/TopThreeSection";
@@ -26,7 +26,8 @@ import ArchivePanel from "@/components/right-panel/ArchivePanel";
 import FocusModal from "@/components/FocusModal";
 import ZeroPilot from "@/components/zeropilot/ZeroPilot";
 import LandingPage from "@/components/LandingPage";
-
+import UpgradeModal from "@/components/UpgradeModal";
+import { ProBadge } from "@/components/ProBadge";
 
 import {
   AlertDialog,
@@ -97,7 +98,47 @@ function getTodayLabel() {
 export default function Home() {
   const settings = useTimeboxerStore((s) => s.settings);
   const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
+  const userPlan = useTimeboxerStore((s) => s.userPlan);
+  const googleTokenConnected = useTimeboxerStore((s) => s.googleTokenConnected);
+  const setGoogleTokenConnected = useTimeboxerStore((s) => s.setGoogleTokenConnected);
+  const syncGoogleCalendar = useTimeboxerStore((s) => s.syncGoogleCalendar);
   const { user, signOut } = useAuth();
+
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [calSyncing, setCalSyncing] = useState(false);
+
+  // URL 파라미터로 구글 연동 성공 여부 확인
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google_connected') === 'true') {
+      const userId = useTimeboxerStore.getState().userId;
+      if (userId) localStorage.setItem(`zeroslate_google_connected_${userId}`, 'true');
+      setGoogleTokenConnected(true);
+      syncGoogleCalendar();
+      // URL 파라미터 제거
+      window.history.replaceState({}, '', '/');
+    }
+    const error = params.get('error');
+    if (error) {
+      console.warn('구글 연동 오류:', error);
+      window.history.replaceState({}, '', '/');
+    }
+  }, [setGoogleTokenConnected, syncGoogleCalendar]);
+
+  const handleCalendarSync = async () => {
+    if (userPlan !== 'pro') {
+      setUpgradeOpen(true);
+      return;
+    }
+    if (!googleTokenConnected) {
+      window.location.href = '/api/auth/google';
+      return;
+    }
+    setCalSyncing(true);
+    await syncGoogleCalendar();
+    setCalSyncing(false);
+  };
 
   const [activeItem, setActiveItem] = useState<{
     type: "brain-dump" | "top-three";
@@ -205,6 +246,30 @@ export default function Home() {
 
             {/* 액션 버튼들 */}
             <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* 구글 캘린더 연동 버튼 */}
+              <button
+                onClick={handleCalendarSync}
+                className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs font-semibold transition-all ${
+                  googleTokenConnected
+                    ? 'border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100'
+                    : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50'
+                }`}
+                title={googleTokenConnected ? '캘린더 동기화' : '구글 캘린더 연동'}
+                disabled={calSyncing}
+              >
+                {calSyncing ? (
+                  <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                ) : googleTokenConnected ? (
+                  <Check className="w-3.5 h-3.5 text-blue-500" />
+                ) : (
+                  <CalendarDays className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden sm:inline">
+                  {googleTokenConnected ? '캘린더 동기화됨' : '캘린더 연동'}
+                </span>
+                {userPlan !== 'pro' && <ProBadge />}
+              </button>
+
               <SettingsModal />
               <GuideModal />
               <ArchiveModal />
@@ -295,6 +360,11 @@ export default function Home() {
 
       <FocusModal />
       <ZeroPilot />
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        featureName="구글 캘린더 동기화"
+      />
     </DndContext>
   );
 }

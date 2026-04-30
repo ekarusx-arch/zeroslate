@@ -6,6 +6,7 @@ import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Settings } from "@/types";
 import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import TimeBlock from "./TimeBlock";
+import { ExternalLink } from "lucide-react";
 
 const ROW_HEIGHT_30 = 48; // 30분당 기준 높이
 
@@ -71,6 +72,7 @@ function TimeSlot({
 export default function TimelineGrid({ settings }: { settings: Settings }) {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
+  const googleCalendarEvents = useTimeboxerStore((s) => s.googleCalendarEvents);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +153,49 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
         </div>
       ))}
 
+      {/* 구글 캘린더 이벤트 론루 */}
+      {googleCalendarEvents.map((event) => {
+        const [startH, startM] = event.start.split(":").map(Number);
+        const [endH, endM] = event.end.split(":").map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        const timelineStart = settings.startTime * 60;
+        const timelineEnd = settings.endTime * 60;
+
+        if (startMinutes >= timelineEnd || endMinutes <= timelineStart) return null;
+
+        const topPx = ((startMinutes - timelineStart) / 30) * ROW_HEIGHT_30;
+        const heightPx = ((endMinutes - startMinutes) / 30) * ROW_HEIGHT_30;
+
+        return (
+          <div
+            key={event.id}
+            className="absolute left-14 right-0 pointer-events-auto z-5"
+            style={{ top: `${topPx}px`, height: `${Math.max(heightPx, 20)}px` }}
+          >
+            <div
+              className="absolute inset-x-1 inset-y-0 rounded-lg border flex items-center gap-1.5 px-2 overflow-hidden"
+              style={{
+                backgroundColor: `${event.color || '#7986cb'}22`,
+                borderColor: `${event.color || '#7986cb'}55`,
+                borderStyle: 'dashed',
+              }}
+            >
+              <div className="w-1 shrink-0 rounded-full self-stretch my-1" style={{ backgroundColor: event.color || '#7986cb' }} />
+              <span className="text-[11px] font-semibold text-zinc-600 truncate flex-1">{event.summary}</span>
+              {event.htmlLink && (
+                <a href={event.htmlLink} target="_blank" rel="noopener noreferrer"
+                  className="shrink-0 text-zinc-400 hover:text-blue-500 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
       {/* 현재 시간 인디케이터 */}
       <CurrentTimeIndicator
         startTime={settings.startTime}
@@ -160,4 +205,3 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
     </div>
   );
 }
-

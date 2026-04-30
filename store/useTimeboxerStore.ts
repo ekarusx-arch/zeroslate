@@ -3,11 +3,13 @@ import { supabase } from "@/lib/supabase";
 import {
   BrainDumpItem,
   DailyLog,
+  GoogleCalendarEvent,
   Settings,
   TimeBlock,
   TopThreeItem,
   PRESET_COLORS,
   Routine,
+  UserPlan,
 } from "@/types";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────
@@ -83,6 +85,17 @@ interface TimeboxerState {
   dailyLogs: DailyLog[];
   colorIndex: number;
   userId: string | null;
+
+  // ── 유료화 ─────────────────────────────────────────────────────────
+  userPlan: UserPlan;
+  setUserPlan: (plan: UserPlan) => void;
+
+  // ── 구글 캘린더 ─────────────────────────────────────────────────────
+  googleCalendarEvents: GoogleCalendarEvent[];
+  googleTokenConnected: boolean;
+  setGoogleCalendarEvents: (events: GoogleCalendarEvent[]) => void;
+  setGoogleTokenConnected: (connected: boolean) => void;
+  syncGoogleCalendar: () => Promise<void>;
 
   initialize: () => Promise<void>;
   updateSettings: (s: Partial<Settings>) => void;
@@ -160,6 +173,31 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   colorIndex: 0,
   userId: null,
 
+  // 유료화 초기 상태
+  userPlan: 'free' as UserPlan,
+  setUserPlan: (plan) => set({ userPlan: plan }),
+
+  // 구글 캘린더 초기 상태
+  googleCalendarEvents: [],
+  googleTokenConnected: false,
+  setGoogleCalendarEvents: (events) => set({ googleCalendarEvents: events }),
+  setGoogleTokenConnected: (connected) => set({ googleTokenConnected: connected }),
+  syncGoogleCalendar: async () => {
+    const { googleTokenConnected } = get();
+    if (!googleTokenConnected) return;
+    try {
+      const res = await fetch('/api/calendar/sync');
+      if (!res.ok) {
+        get().setGoogleTokenConnected(false);
+        return;
+      }
+      const data = await res.json();
+      get().setGoogleCalendarEvents(data.events || []);
+    } catch (err) {
+      console.error('캘린더 동기화 실패:', err);
+    }
+  },
+
   initialize: async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -215,6 +253,19 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
       dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean),
     });
+
+    // 구글 캘린더 연동 상태 체크
+    const localGoogleConnected = localStorage.getItem(`zeroslate_google_connected_${userId}`);
+    if (localGoogleConnected === 'true') {
+      set({ googleTokenConnected: true });
+      get().syncGoogleCalendar();
+    }
+
+    // 유료 플랜 상태 체크 (추후 Supabase 연동)
+    const localPlan = localStorage.getItem(`zeroslate_plan_${userId}`);
+    if (localPlan === 'pro') {
+      set({ userPlan: 'pro' });
+    }
   },
 
   updateSettings: async (s) => {

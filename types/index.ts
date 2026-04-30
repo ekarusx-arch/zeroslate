@@ -1,3 +1,18 @@
+// ── 유료화 플랜 ───────────────────────────────────────────────────
+export type UserPlan = 'free' | 'pro';
+
+// ── 구글 캘린더 이벤트 ────────────────────────────────────────────
+export interface GoogleCalendarEvent {
+  id: string;
+  summary: string;       // 이벤트 제목
+  start: string;         // "HH:MM" 형식
+  end: string;           // "HH:MM" 형식
+  colorId?: string;      // 구글 캘린더 색상 ID
+  color?: string;        // 색상 hex (API에서 변환)
+  htmlLink?: string;     // 구글 캘린더 이벤트 링크
+  isAllDay?: boolean;    // 종일 이벤트 여부
+}
+
 export interface CustomTag {
   tag: string;
   color: string;
