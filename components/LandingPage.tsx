@@ -206,7 +206,7 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black text-sm font-bold hover:bg-zinc-100 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              시작하기
+              무료로 시작하기
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -220,24 +220,24 @@ export default function LandingPage() {
           <div className="flex justify-center">
             <Badge>
               <Zap className="w-3 h-3 text-yellow-400" />
-              AI 기반 생산성 플래너
+              AI 기반 생산성 엔진 ZeroSlate
             </Badge>
           </div>
 
           {/* 헤드라인 */}
           <h1 className="text-5xl md:text-[72px] font-extrabold tracking-tight leading-[1.05] text-white">
-            뇌를 비우고,
+            복잡한 뇌를 비우고,
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-300 to-violet-400">
-              하루에 집중하세요.
+              현재에만 집중하세요.
             </span>
           </h1>
 
           {/* 서브 카피 */}
           <p className="max-w-xl mx-auto text-lg text-white/50 leading-relaxed font-medium">
-            생각을 쏟아내고, 타임라인에 끌어다 놓으세요.
+            생각을 가볍게 쏟아내고, 타임라인에 바로 배치하세요.
             <br className="hidden md:block" />
-            ZeroSlate가 나머지를 알아서 정리합니다.
+            불필요한 고민은 ZeroSlate가 대신 정리합니다.
           </p>
 
           {/* CTA */}
@@ -246,11 +246,11 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-white text-black font-bold text-base hover:bg-zinc-100 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 shadow-[0_0_40px_rgba(255,255,255,0.1)]"
             >
-              무료로 시작하기
+              지금 무료로 시작하기
               <ArrowRight className="w-4 h-4" />
             </Link>
             <span className="text-sm text-white/30">
-              설치 없이 · 카드 없이 · 바로 사용
+              별도 설치 없이 · 바로 사용 가능
             </span>
           </div>
         </div>
@@ -269,12 +269,12 @@ export default function LandingPage() {
               핵심 기능
             </Badge>
             <h2 className="text-4xl font-extrabold tracking-tight text-white">
-              더 적게 생각하고,
+              더 적게 고민하고,
               <br />
               더 많이 실행하세요.
             </h2>
             <p className="text-white/40 max-w-md mx-auto">
-              복잡하지 않습니다. 딱 필요한 것만 담았습니다.
+              당신의 성과를 위해 꼭 필요한 기능만 담았습니다.
             </p>
           </div>
 
@@ -308,11 +308,11 @@ export default function LandingPage() {
             <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-2xl" />
             <h2 className="relative text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
               오늘부터 달라지는 <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400">하루의 시작</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400">당신의 하루</span>
             </h2>
           </div>
           <p className="text-white/40 text-lg">
-            수천 명이 ZeroSlate로 생산적인 하루를 보내고 있습니다.
+            이미 많은 분들이 ZeroSlate로 명쾌한 하루를 보내고 있습니다.
           </p>
           <Link
             href="/login"
@@ -334,7 +334,7 @@ export default function LandingPage() {
             <span className="text-sm font-bold text-white/60">ZeroSlate</span>
           </div>
           <p className="text-xs text-white/25">
-            © 2026 ZeroSlate. Designed for high-performance minds.
+            © 2026 ZeroSlate. 고효율을 추구하는 당신을 위해 제작되었습니다.
           </p>
           <div className="flex gap-5">
             {["개인정보처리방침", "이용약관", "문의"].map((t) => (
