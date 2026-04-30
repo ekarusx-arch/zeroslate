@@ -129,7 +129,8 @@ const defaultSettings: Settings = {
   customTags: [],
 };
 
-function getColorForContent(content: string, customTags: any[]) {
+function getColorForContent(content: string, customTags: any[] = []) {
+  if (!Array.isArray(customTags)) return undefined;
   // 1. 커스텀 태그 먼저 확인 (사용자 우선순위)
   for (const ct of customTags) {
     if (ct.tag && content.includes(ct.tag)) {
@@ -182,12 +183,19 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     ]);
 
     // DB 설정이 있다면 로컬보다 우선함
-    const finalSettings = st.data ? {
-      startTime: st.data.start_time,
-      endTime: st.data.end_time,
-      step: st.data.step,
-      customTags: st.data.custom_tags || (localSettings ? JSON.parse(localSettings).customTags : [])
-    } : (localSettings ? JSON.parse(localSettings) : defaultSettings);
+    const finalSettings = {
+      ...defaultSettings,
+      ...(localSettings ? JSON.parse(localSettings) : {}),
+      ...(st.data ? {
+        startTime: st.data.start_time,
+        endTime: st.data.end_time,
+        step: st.data.step,
+        customTags: st.data.custom_tags || []
+      } : {})
+    };
+
+    // 한번 더 강제 확인
+    if (!finalSettings.customTags) finalSettings.customTags = [];
 
     const finalRoutines = rt.data && rt.data.length > 0 ? (rt.data || []).map(r => ({ 
       id: r.id, 

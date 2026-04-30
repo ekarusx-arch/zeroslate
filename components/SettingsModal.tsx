@@ -81,17 +81,17 @@ export default function SettingsModal() {
   const handleAddCustomTag = () => {
     if (!newTagName.trim()) return;
     const tag = newTagName.startsWith("#") ? newTagName.trim() : `#${newTagName.trim()}`;
-    if (settings.customTags.some(t => t.tag === tag)) return;
+    if (settings.customTags?.some(t => t.tag === tag)) return;
 
     updateSettings({
-      customTags: [...settings.customTags, { tag, color: newTagColor }]
+      customTags: [...(settings.customTags || []), { tag, color: newTagColor }]
     });
     setNewTagName("");
   };
 
   const handleDeleteCustomTag = (tag: string) => {
     updateSettings({
-      customTags: settings.customTags.filter(t => t.tag !== tag)
+      customTags: (settings.customTags || []).filter(t => t.tag !== tag)
     });
   };
 
@@ -420,7 +420,7 @@ export default function SettingsModal() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-1">
                   <Tag className="w-3.5 h-3.5 text-zinc-500" />
-                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">나의 스마트 태그 ({settings.customTags.length})</span>
+                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">나의 스마트 태그 ({(settings.customTags || []).length})</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -436,7 +436,7 @@ export default function SettingsModal() {
                   ))}
 
                   {/* 사용자 커스텀 태그들 */}
-                  {settings.customTags.map((t) => (
+                  {(settings.customTags || []).map((t) => (
                     <div key={t.tag} className="flex items-center justify-between p-2.5 bg-white border border-blue-100 rounded-lg shadow-sm group">
                       <div className="flex items-center gap-2 overflow-hidden">
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
@@ -452,7 +452,7 @@ export default function SettingsModal() {
                   ))}
                 </div>
 
-                {settings.customTags.length === 0 && (
+                {(!settings.customTags || settings.customTags.length === 0) && (
                   <p className="text-[11px] text-zinc-400 text-center py-4 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
                     직접 태그를 추가해 보세요! 해당 단어가 포함되면 자동 색상이 적용됩니다.
                   </p>
