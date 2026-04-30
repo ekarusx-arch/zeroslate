@@ -51,6 +51,7 @@ export default function SettingsModal() {
   const [editContent, setEditContent] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
+  const [editColor, setEditColor] = useState("");
 
   const handleOpen = (v: boolean) => {
     if (v) {
@@ -100,6 +101,7 @@ export default function SettingsModal() {
     setEditContent(r.content);
     setEditStart(r.startTime);
     setEditEnd(r.endTime);
+    setEditColor(r.color || PRESET_COLORS[0].value);
   };
 
   const handleSaveEdit = () => {
@@ -108,6 +110,7 @@ export default function SettingsModal() {
       content: editContent,
       startTime: editStart,
       endTime: editEnd,
+      color: editColor,
     });
     setEditingId(null);
   };
@@ -346,6 +349,36 @@ export default function SettingsModal() {
                                 onChange={(e) => setEditEnd(e.target.value)}
                                 className="h-8 text-xs"
                               />
+                            </div>
+                            {/* 수정 시 색상 선택 */}
+                            <div className="flex flex-wrap items-center gap-2 py-1">
+                              {PRESET_COLORS.map((c) => (
+                                <button
+                                  key={c.value}
+                                  onClick={() => setEditColor(c.value)}
+                                  className={`w-5 h-5 rounded-full border-2 transition-transform ${
+                                    editColor === c.value ? "scale-110 border-zinc-400" : "border-transparent"
+                                  }`}
+                                  style={{ backgroundColor: c.value }}
+                                />
+                              ))}
+                              <div className="relative flex items-center">
+                                <input
+                                  type="color"
+                                  id={`editRoutineColor-${r.id}`}
+                                  value={editColor}
+                                  onChange={(e) => setEditColor(e.target.value)}
+                                  className="sr-only"
+                                />
+                                <label
+                                  htmlFor={`editRoutineColor-${r.id}`}
+                                  className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all hover:bg-zinc-100 ${
+                                    !PRESET_COLORS.some(c => c.value === editColor) ? "border-blue-500 bg-blue-50" : "border-zinc-200 bg-white"
+                                  }`}
+                                >
+                                  <Palette className="w-3 h-3" style={{ color: editColor }} />
+                                </label>
+                              </div>
                             </div>
                             <div className="flex gap-2">
                               <Button onClick={handleSaveEdit} size="sm" className="flex-1 h-8 bg-zinc-900 text-xs">
