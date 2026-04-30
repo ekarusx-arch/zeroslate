@@ -25,6 +25,7 @@ import SettingsModal from "@/components/SettingsModal";
 import ArchivePanel from "@/components/right-panel/ArchivePanel";
 import FocusModal from "@/components/FocusModal";
 import ZeroPilot from "@/components/zeropilot/ZeroPilot";
+import LandingPage from "@/components/LandingPage";
 
 
 import {
@@ -169,6 +170,10 @@ export default function Home() {
 
   const routines = useTimeboxerStore((s) => s.routines);
   const applyRoutines = useTimeboxerStore((s) => s.applyRoutines);
+
+  if (!user) {
+    return <LandingPage />;
+  }
 
   return (
     <DndContext

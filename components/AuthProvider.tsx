@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useTimeboxerStore.getState().initialize();
       }
 
-      if (!session && pathname !== "/login") {
+      if (!session && pathname !== "/login" && pathname !== "/") {
         router.push("/login");
       }
     };
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useTimeboxerStore.getState().initialize();
       }
       
-      if (!session && pathname !== "/login") {
+      if (!session && pathname !== "/login" && pathname !== "/") {
         router.push("/login");
       } else if (session && pathname === "/login") {
         router.push("/");
