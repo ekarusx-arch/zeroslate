@@ -126,7 +126,24 @@ const defaultSettings: Settings = {
   startTime: 5,
   endTime: 24,
   step: 30,
+  customTags: [],
 };
+
+function getColorForContent(content: string, customTags: any[]) {
+  // 1. 커스텀 태그 먼저 확인 (사용자 우선순위)
+  for (const ct of customTags) {
+    if (ct.tag && content.includes(ct.tag)) {
+      return ct.color;
+    }
+  }
+  // 2. 프리셋 태그 확인
+  for (const preset of PRESET_COLORS) {
+    if (preset.tag && content.includes(preset.tag)) {
+      return preset.value;
+    }
+  }
+  return undefined;
+}
 
 // ── Store (Supabase 동기화 버전) ──────────────────────────────────────
 export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
@@ -168,7 +185,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     const finalSettings = st.data ? {
       startTime: st.data.start_time,
       endTime: st.data.end_time,
-      step: st.data.step
+      step: st.data.step,
+      customTags: st.data.custom_tags || (localSettings ? JSON.parse(localSettings).customTags : [])
     } : (localSettings ? JSON.parse(localSettings) : defaultSettings);
 
     const finalRoutines = rt.data && rt.data.length > 0 ? (rt.data || []).map(r => ({ 
@@ -206,6 +224,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         start_time: newSettings.startTime,
         end_time: newSettings.endTime,
         step: newSettings.step,
+        custom_tags: newSettings.customTags,
         updated_at: new Date().toISOString()
       });
     }
@@ -217,13 +236,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (!userId) return;
     
     // 해시태그 기반 색상 자동 지정
-    let color = undefined;
-    for (const preset of PRESET_COLORS) {
-      if (preset.tag && content.includes(preset.tag)) {
-        color = preset.value;
-        break;
-      }
-    }
+    const color = getColorForContent(content, get().settings.customTags);
 
     const id = crypto.randomUUID();
     const newItem: BrainDumpItem = { id, content, isCompleted: false, createdAt: new Date().toISOString(), color };
@@ -241,13 +254,14 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     // 색상이 변경되었다면 해시태그도 연동
     if (updates.color !== undefined) {
-      const newPreset = PRESET_COLORS.find(p => p.value === updates.color);
+      const allTags = [...PRESET_COLORS, ...state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }))];
+      const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
       
-      // 기존 프레셋 태그들 제거
-      for (const preset of PRESET_COLORS) {
-        if (preset.tag) {
-          newContent = newContent.replace(preset.tag, "").trim();
+      // 기존 프레셋/커스텀 태그들 제거
+      for (const t of allTags) {
+        if (t.tag) {
+          newContent = newContent.replace(t.tag, "").trim();
         }
       }
       
@@ -309,13 +323,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (!userId) return;
 
     // 해시태그 기반 색상 자동 지정
-    let color = undefined;
-    for (const preset of PRESET_COLORS) {
-      if (preset.tag && content.includes(preset.tag)) {
-        color = preset.value;
-        break;
-      }
-    }
+    const color = getColorForContent(content, get().settings.customTags);
 
     const id = crypto.randomUUID();
     const newItem: TopThreeItem = { id, content, isAssigned: false, isCompleted: false, color };
@@ -333,12 +341,13 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     // 색상이 변경되었다면 해시태그도 연동
     if (updates.color !== undefined) {
-      const newPreset = PRESET_COLORS.find(p => p.value === updates.color);
+      const allTags = [...PRESET_COLORS, ...state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }))];
+      const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
       
-      for (const preset of PRESET_COLORS) {
-        if (preset.tag) {
-          newContent = newContent.replace(preset.tag, "").trim();
+      for (const t of allTags) {
+        if (t.tag) {
+          newContent = newContent.replace(t.tag, "").trim();
         }
       }
       
@@ -414,12 +423,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     let color = block.color;
     if (!color) {
-      for (const preset of PRESET_COLORS) {
-        if (preset.tag && block.content.includes(preset.tag)) {
-          color = preset.value;
-          break;
-        }
-      }
+      color = getColorForContent(block.content, state.settings.customTags);
     }
     if (!color) {
       color = PRESET_COLORS[state.colorIndex % PRESET_COLORS.length].value;

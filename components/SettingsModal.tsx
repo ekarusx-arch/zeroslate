@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
-import { Plus, Trash2, Repeat, Clock, Edit2, Check, X } from "lucide-react";
+import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag } from "lucide-react";
 import { PRESET_COLORS, Routine } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,6 +42,10 @@ export default function SettingsModal() {
   const [newRoutineEnd, setNewRoutineEnd] = useState("10:00");
   const [newRoutineColor, setNewRoutineColor] = useState(PRESET_COLORS[0].value);
   
+  // 새 커스텀 태그 상태
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState(PRESET_COLORS[1].value);
+
   // 루틴 수정 상태
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -53,6 +57,7 @@ export default function SettingsModal() {
       setLocalStart(settings.startTime);
       setLocalEnd(settings.endTime);
       setLocalStep(settings.step);
+      setNewTagName("");
     }
     setOpen(v);
   };
@@ -71,6 +76,23 @@ export default function SettingsModal() {
       color: newRoutineColor,
     });
     setNewRoutineContent("");
+  };
+
+  const handleAddCustomTag = () => {
+    if (!newTagName.trim()) return;
+    const tag = newTagName.startsWith("#") ? newTagName.trim() : `#${newTagName.trim()}`;
+    if (settings.customTags.some(t => t.tag === tag)) return;
+
+    updateSettings({
+      customTags: [...settings.customTags, { tag, color: newTagColor }]
+    });
+    setNewTagName("");
+  };
+
+  const handleDeleteCustomTag = (tag: string) => {
+    updateSettings({
+      customTags: settings.customTags.filter(t => t.tag !== tag)
+    });
   };
 
   const handleStartEdit = (r: Routine) => {
@@ -114,10 +136,13 @@ export default function SettingsModal() {
           <div className="px-6 border-b border-zinc-100 bg-zinc-50/30">
             <TabsList className="w-full bg-zinc-200/50 p-1 rounded-xl h-11 mt-4 mb-3">
               <TabsTrigger value="timeline" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
-                <Settings2 className="w-3.5 h-3.5 mr-2" /> 타임라인
+                <Settings2 className="w-3.5 h-3.5 mr-1" /> 타임라인
               </TabsTrigger>
               <TabsTrigger value="routines" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
-                <Repeat className="w-3.5 h-3.5 mr-2" /> 반복 루틴
+                <Repeat className="w-3.5 h-3.5 mr-1" /> 루틴
+              </TabsTrigger>
+              <TabsTrigger value="tags" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                <Tag className="w-3.5 h-3.5 mr-1" /> 스마트 태그
               </TabsTrigger>
             </TabsList>
           </div>
@@ -192,7 +217,7 @@ export default function SettingsModal() {
                 <Button
                   onClick={handleSaveSettings}
                   disabled={!isValid}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800"
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 h-11 rounded-xl font-bold"
                 >
                   변경사항 적용
                 </Button>
@@ -349,9 +374,95 @@ export default function SettingsModal() {
                 )}
               </div>
             </TabsContent>
+
+            <TabsContent value="tags" className="mt-0 space-y-6">
+              {/* 커스텀 태그 추가 폼 */}
+              <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Plus className="w-3.5 h-3.5 text-zinc-500" />
+                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">새 스마트 태그</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Input
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    placeholder="예: #공부, #미팅"
+                    className="h-10 text-sm bg-white flex-1"
+                  />
+                  <Button
+                    onClick={handleAddCustomTag}
+                    disabled={!newTagName.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg text-sm font-bold shrink-0"
+                  >
+                    추가
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">태그 색상</label>
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_COLORS.filter(c => c.tag !== "").map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => setNewTagColor(c.value)}
+                        className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                          newTagColor === c.value ? "scale-110 border-zinc-400" : "border-transparent"
+                        }`}
+                        style={{ backgroundColor: c.value }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 커스텀 태그 목록 */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Tag className="w-3.5 h-3.5 text-zinc-500" />
+                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">나의 스마트 태그 ({settings.customTags.length})</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {/* 기본 태그들 안내 (읽기 전용) */}
+                  {PRESET_COLORS.filter(c => c.tag !== "").map((p) => (
+                    <div key={p.tag} className="flex items-center justify-between p-2.5 bg-white border border-zinc-100 rounded-lg opacity-60 grayscale-[0.5]">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.value }} />
+                        <span className="text-xs font-medium text-zinc-600 truncate">{p.tag}</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-zinc-400 uppercase">기본</span>
+                    </div>
+                  ))}
+
+                  {/* 사용자 커스텀 태그들 */}
+                  {settings.customTags.map((t) => (
+                    <div key={t.tag} className="flex items-center justify-between p-2.5 bg-white border border-blue-100 rounded-lg shadow-sm group">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                        <span className="text-xs font-bold text-blue-600 truncate">{t.tag}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteCustomTag(t.tag)}
+                        className="p-1 text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {settings.customTags.length === 0 && (
+                  <p className="text-[11px] text-zinc-400 text-center py-4 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+                    직접 태그를 추가해 보세요! 해당 단어가 포함되면 자동 색상이 적용됩니다.
+                  </p>
+                )}
+              </div>
+            </TabsContent>
           </div>
         </Tabs>
       </DialogContent>
     </Dialog>
   );
 }
+

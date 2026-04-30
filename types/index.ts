@@ -1,7 +1,13 @@
+export interface CustomTag {
+  tag: string;
+  color: string;
+}
+
 export interface Settings {
   startTime: number; // 5 = 05:00
   endTime: number;   // 24 = 24:00
   step: number;      // 30 = 30분 단위
+  customTags: CustomTag[]; // ← 신규: 사용자 정의 태그
 }
 
 export interface BrainDumpItem {
