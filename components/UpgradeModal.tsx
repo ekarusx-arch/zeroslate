@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Check, X, CalendarDays, BarChart3, Archive, Zap } from "lucide-react";
+import { Crown, Check, CalendarDays, BarChart3, Archive, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -123,15 +123,6 @@ export default function UpgradeModal({ open, onClose, featureName }: UpgradeModa
             </button>
           </div>
         </div>
-
-        {/* 닫기 */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
-          aria-label="닫기"
-        >
-          <X className="w-5 h-5" />
-        </button>
       </DialogContent>
     </Dialog>
   );
