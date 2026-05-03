@@ -95,15 +95,17 @@ const colorTags = [
 export default function GuideModal() {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          className="inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-semibold transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
-          aria-label="사용법 열기"
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          사용법
-        </button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <button
+            className="inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-semibold transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
+            aria-label="사용법 열기"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            사용법
+          </button>
+        }
+      />
       <DialogContent showCloseButton={false} className="sm:max-w-2xl p-0 border-none shadow-2xl bg-white overflow-hidden rounded-2xl">
         <Tabs defaultValue="basic" className="w-full flex flex-col max-h-[92vh]">
           {/* Header */}
@@ -115,11 +117,13 @@ export default function GuideModal() {
                 </div>
                 ZeroSlate 사용 가이드
               </DialogTitle>
-              <DialogClose asChild>
-                <button className="text-zinc-400 hover:text-zinc-600 transition-colors p-1">
-                  <X className="w-5 h-5" />
-                </button>
-              </DialogClose>
+              <DialogClose
+                render={
+                  <button className="text-zinc-400 hover:text-zinc-600 transition-colors p-1">
+                    <X className="w-5 h-5" />
+                  </button>
+                }
+              />
             </div>
             
             <TabsList className="bg-zinc-100/80 p-1 rounded-xl w-full">
@@ -223,11 +227,13 @@ export default function GuideModal() {
 
           {/* Footer */}
           <div className="p-5 pt-3 border-t shrink-0 bg-white">
-            <DialogClose asChild>
-              <Button className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-bold text-sm transition-all active:scale-[0.98]">
-                가이드 닫고 시작하기
-              </Button>
-            </DialogClose>
+            <DialogClose
+              render={
+                <Button className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-bold text-sm transition-all active:scale-[0.98]">
+                  가이드 닫고 시작하기
+                </Button>
+              }
+            />
           </div>
         </Tabs>
       </DialogContent>
