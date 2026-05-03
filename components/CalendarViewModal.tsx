@@ -186,33 +186,33 @@ export default function CalendarViewModal() {
     >
       {/* ── 헤더 (드래그 핸들) ── */}
       <div 
-        className="zs-calendar-header flex items-center justify-between px-5 py-4 border-b z-10 shrink-0 cursor-grab active:cursor-grabbing"
+        className="zs-calendar-header flex items-center justify-between px-5 py-3.5 border-b z-10 shrink-0 cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
       >
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center gap-3">
-            <div className="zs-calendar-icon w-8 h-8 rounded-lg flex items-center justify-center shadow-sm">
+            <div className="zs-calendar-icon w-8 h-8 rounded-xl flex items-center justify-center shadow-sm">
               <CalendarDays className="w-4 h-4" />
             </div>
-            <h2 className="zs-calendar-title text-lg font-bold truncate">
+            <h2 className="zs-calendar-title text-lg font-black truncate">
               {currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월
             </h2>
           </div>
           
-          <div className="zs-calendar-divider h-4 w-px" />
+          <div className="zs-calendar-divider h-5 w-px opacity-50" />
           
-          <div className="zs-calendar-nav flex items-center gap-1 p-1 rounded-lg">
-            <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="zs-calendar-nav-button w-7 h-7 rounded-md transition-all">
+          <div className="zs-calendar-nav flex items-center gap-0.5 p-1 rounded-xl">
+            <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="zs-calendar-nav-button w-7 h-7 rounded-lg transition-all">
               <ChevronLeft className="w-3.5 h-3.5" />
             </Button>
             <Button 
               variant="ghost" 
               onClick={() => setCurrentMonth(new Date())}
-              className="zs-calendar-nav-button h-7 px-2.5 text-[12px] font-semibold rounded-md transition-all"
+              className="zs-calendar-nav-button h-7 px-3 text-[12px] font-bold rounded-lg transition-all"
             >
               오늘
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => changeMonth(+1)} className="zs-calendar-nav-button w-7 h-7 rounded-md transition-all">
+            <Button variant="ghost" size="icon" onClick={() => changeMonth(+1)} className="zs-calendar-nav-button w-7 h-7 rounded-lg transition-all">
               <ChevronRight className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -224,7 +224,7 @@ export default function CalendarViewModal() {
             size="icon"
             onClick={syncVisibleMonth}
             disabled={!googleTokenConnected || isSyncing}
-            className="zs-calendar-tool-button w-8 h-8 rounded-md transition-colors"
+            className="zs-calendar-tool-button w-8 h-8 rounded-lg transition-colors"
             title="구글 캘린더 새로고침"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", isSyncing && "animate-spin")} />
@@ -233,9 +233,9 @@ export default function CalendarViewModal() {
             variant="ghost" 
             size="icon"
             onClick={() => setIsCalendarOpen(false)}
-            className="zs-calendar-tool-button w-8 h-8 rounded-md transition-colors hover:text-red-500"
+            className="zs-calendar-tool-button w-8 h-8 rounded-lg transition-colors hover:text-red-500 hover:bg-red-50"
           >
-            <X className="w-4.5 h-4.5" />
+            <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -288,15 +288,17 @@ export default function CalendarViewModal() {
                 </span>
               </div>
 
-              <div className="flex-1 space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-transparent group-hover:scrollbar-thumb-zinc-200 hover:scrollbar-thumb-zinc-300 pr-0.5 transition-colors">
+              <div className="flex-1 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-transparent group-hover:scrollbar-thumb-zinc-200 pr-0.5">
                 {daysEvents.map((event) => (
                   <div 
                     key={event.id}
-                    className="zs-calendar-event px-2 py-1 rounded-md border flex items-center gap-2 overflow-hidden shrink-0"
-                    style={{ borderColor: `${event.color || '#e4e4e7'}70` }}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg overflow-hidden shrink-0 transition-all hover:scale-[1.02]"
+                    style={{ 
+                      backgroundColor: `${event.color || '#6366f1'}15`,
+                      borderLeft: `3px solid ${event.color || '#6366f1'}`,
+                    }}
                   >
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color || '#a1a1aa' }} />
-                    <span className="text-[11px] font-semibold truncate">
+                    <span className="text-[11px] font-semibold truncate" style={{ color: event.color || '#6366f1' }}>
                       {event.summary}
                     </span>
                   </div>

@@ -46,41 +46,65 @@ const proFeatures = [
     title: "구글 캘린더 양방향 연동",
     body: "구글 일정을 불러오고, 오늘 작업 내용을 구글로 즉시 내보냅니다.",
     icon: CalendarSync,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "border-blue-100",
   },
   {
     title: "스마트 내일로 넘기기",
     body: "미처 끝내지 못한 할 일들을 클릭 한 번으로 내일로 이월합니다.",
     icon: FastForward,
+    color: "text-orange-600",
+    bg: "bg-orange-50",
+    border: "border-orange-100",
   },
   {
     title: "무제한 과거/미래 계획",
     body: "과거 기록 확인부터 미래 계획까지 자유롭게 날짜를 이동합니다.",
     icon: CalendarDays,
+    color: "text-violet-600",
+    bg: "bg-violet-50",
+    border: "border-violet-100",
   },
   {
     title: "전체 달력 뷰 (Full View)",
     body: "월간 달력 화면에서 한 달 전체의 일정을 시각적으로 관리합니다.",
     icon: Sparkles,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+    border: "border-emerald-100",
   },
   {
     title: "몰입(Focus) 모드 타이머",
     body: "중요한 일에만 집중할 수 있는 전용 타이머와 몰입 환경을 제공합니다.",
     icon: Trophy,
+    color: "text-red-600",
+    bg: "bg-red-50",
+    border: "border-red-100",
   },
   {
     title: "커스텀 테마 & 악센트",
-    body: "다양한 테마와 취향에 맞는 컬러로 나만의 워크스페이스를 만듭니다.",
+    body: "다양한 테마와 취향에 맞는 콜러로 나만의 워크스페이스를 만듭니다.",
     icon: Palette,
+    color: "text-pink-600",
+    bg: "bg-pink-50",
+    border: "border-pink-100",
   },
   {
     title: "스마트 자동 태깅 시스템",
     body: "해시태그 하나로 색상과 카테고리가 자동으로 관리됩니다.",
     icon: ListChecks,
+    color: "text-indigo-600",
+    bg: "bg-indigo-50",
+    border: "border-indigo-100",
   },
   {
     title: "성과 분석 리포트",
     body: "하루의 성과를 요약하고 시각화된 리포트로 성장도를 체크합니다.",
     icon: Sparkles,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    border: "border-amber-100",
   },
 ];
 
@@ -134,18 +158,18 @@ export default function GuideModal({
               />
             </div>
             
-            <TabsList className="bg-zinc-100/80 p-1 rounded-xl w-full">
+            <TabsList className="bg-zinc-100 p-1 rounded-xl w-full gap-1">
               <TabsTrigger 
                 value="basic" 
-                className="flex-1 text-xs font-bold py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
+                className="flex-1 text-xs font-bold py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all"
               >
                 기본 가이드
               </TabsTrigger>
               <TabsTrigger 
                 value="pro" 
-                className="flex-1 text-xs font-bold py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm flex items-center justify-center gap-1.5 transition-all"
+                className="flex-1 text-xs font-bold py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1.5 transition-all"
               >
-                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <Crown className="w-3.5 h-3.5" />
                 프리미엄 기능
               </TabsTrigger>
             </TabsList>
@@ -153,18 +177,28 @@ export default function GuideModal({
 
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-zinc-200">
-            <TabsContent value="basic" className="mt-0 space-y-4 outline-none focus:ring-0">
-              <div className="grid grid-cols-1 gap-2.5">
+            <TabsContent value="basic" className="mt-0 space-y-3 outline-none focus:ring-0">
+              <div className="grid grid-cols-1 gap-2">
                 {guideSteps.map((step, index) => {
                   const Icon = step.icon;
+                  const colors = [
+                    { num: "bg-blue-500", icon: "bg-blue-50 text-blue-600", border: "border-blue-100", hover: "hover:border-blue-200 hover:bg-blue-50/30" },
+                    { num: "bg-violet-500", icon: "bg-violet-50 text-violet-600", border: "border-violet-100", hover: "hover:border-violet-200 hover:bg-violet-50/30" },
+                    { num: "bg-emerald-500", icon: "bg-emerald-50 text-emerald-600", border: "border-emerald-100", hover: "hover:border-emerald-200 hover:bg-emerald-50/30" },
+                  ][index];
                   return (
-                    <div key={step.title} className="flex gap-4 rounded-xl border border-zinc-100 bg-zinc-50/30 p-3.5 transition-all hover:border-blue-100 hover:bg-blue-50/20 group">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-blue-500 shadow-sm border border-zinc-100 group-hover:scale-110 transition-transform">
-                        <Icon className="w-5 h-5" />
+                    <div key={step.title} className={`flex gap-4 rounded-xl border p-4 transition-all group ${colors.border} ${colors.hover} bg-white shadow-sm`}>
+                      <div className="flex flex-col items-center gap-2">
+                        <div className={`w-6 h-6 rounded-full ${colors.num} text-white text-[11px] font-black flex items-center justify-center shrink-0`}>
+                          {index + 1}
+                        </div>
+                        <div className={`w-10 h-10 shrink-0 rounded-xl ${colors.icon} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[13px] font-bold text-zinc-800">{index + 1}. {step.title}</p>
-                        <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500 font-medium">{step.body}</p>
+                      <div className="pt-0.5">
+                        <p className="text-[13px] font-bold text-zinc-800">{step.title}</p>
+                        <p className="mt-1 text-[12px] leading-relaxed text-zinc-500">{step.body}</p>
                       </div>
                     </div>
                   );
@@ -199,36 +233,46 @@ export default function GuideModal({
             </TabsContent>
 
             <TabsContent value="pro" className="mt-0 space-y-4 outline-none focus:ring-0">
-              <div className="rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 p-5 relative overflow-hidden shadow-lg shadow-zinc-200">
-                <Crown className="absolute -right-6 -top-6 w-28 h-28 text-white/5 rotate-12" />
+              <div className="rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-5 relative overflow-hidden shadow-xl">
+                <div className="absolute -right-8 -top-8 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl" />
+                <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-2xl" />
+                <Crown className="absolute right-4 top-4 w-20 h-20 text-amber-400/10" />
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Crown className="w-5 h-5 text-amber-400" />
-                    <h3 className="text-[15px] font-bold text-white">ZeroSlate Premium Features</h3>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 mb-3">
+                    <Crown className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Premium</span>
                   </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">프리미엄 기능으로 스마트한 일상을 경험하세요.</p>
+                  <h3 className="text-[16px] font-black text-white mb-1">ZeroSlate PRO</h3>
+                  <p className="text-[12px] text-zinc-400 leading-relaxed">생산성의 천장을 부수는 8가지 프리미엄 기능을 만나보세요.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 {proFeatures.map((feature) => {
                   const Icon = feature.icon;
                   return (
-                    <div key={feature.title} className="flex flex-col gap-2.5 rounded-xl border border-zinc-100 bg-white p-4 transition-all hover:border-amber-200 hover:shadow-md group">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform">
-                        <Icon className="w-5 h-5" />
+                    <div key={feature.title} className={`flex flex-col gap-3 rounded-xl border p-4 bg-white transition-all hover:shadow-md group ${feature.border}`}>
+                      <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${feature.bg} ${feature.color} group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-4.5 h-4.5" />
                       </div>
                       <div>
                         <p className="text-[12.5px] font-bold text-zinc-800 leading-tight">{feature.title}</p>
-                        <p className="mt-1 text-[10px] leading-relaxed text-zinc-500 font-medium">{feature.body}</p>
+                        <p className="mt-1 text-[10.5px] leading-relaxed text-zinc-500">{feature.body}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="text-center bg-zinc-50 rounded-xl py-2.5 border border-zinc-100">
-                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Upgrade your productivity today</p>
+              <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 p-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[13px] font-bold text-zinc-800">지금 PRO로 업그레이드하세요</p>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">무료로 시작하고 언제든지 업그레이드</p>
+                </div>
+                <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[12px] font-bold shrink-0 shadow-sm">
+                  <Crown className="w-3.5 h-3.5" />
+                  업그레이드
+                </div>
               </div>
             </TabsContent>
           </div>
