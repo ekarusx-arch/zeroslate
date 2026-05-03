@@ -198,7 +198,8 @@ const defaultSettings: Settings = {
 const PRO_ACCESS_EMAILS = new Set([
   "ekarusx@gmail.com",
   "ekarusx@naver.com",
-  "zeroslate.official@gmail.com"
+  "zeroslate.official@gmail.com",
+  "nahyeon.kim@mahanaim.com"
 ]);
 
 function getPlanForEmail(email?: string | null): UserPlan {
