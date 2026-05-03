@@ -28,16 +28,20 @@ export default function LoginPage() {
         });
         if (error) throw error;
       } else {
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${origin}/auth/callback`,
+          },
         });
         if (error) throw error;
         
         if (data?.user?.identities?.length === 0) {
           setError("이미 가입된 이메일입니다.");
         } else {
-          setMessage("가입이 완료되었습니다! (이메일 확인이 필요할 수 있습니다)");
+          setMessage("가입 확인 이메일이 발송되었습니다! 메일함을 확인해주세요.");
         }
       }
     } catch (err: unknown) {
