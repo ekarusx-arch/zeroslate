@@ -11,13 +11,23 @@ import {
   Plus,
   Zap,
   CheckCircle2,
-  Sparkles,
-  Loader2,
+  RotateCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PRESET_COLORS } from "@/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 // ── 개별 Brain Dump 드래그 아이템 ───────────────────────────
@@ -28,7 +38,6 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
-  const [isRefining, setIsRefining] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -68,31 +77,11 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
     const settings = useTimeboxerStore.getState().settings;
     const allTags = [...PRESET_COLORS, ...(settings.customTags || []).map(ct => ({ label: ct.tag, value: ct.color, tag: ct.tag }))];
     
-    const currentIndex = allTags.findIndex(p => p.value === (item.color || "#F4F4F5"));
+    const currentTagIndex = allTags.findIndex(p => p.tag && item.content.includes(p.tag));
+    const currentColorIndex = allTags.findIndex(p => p.value.toLowerCase() === (item.color || "#F4F4F5").toLowerCase());
+    const currentIndex = currentTagIndex >= 0 ? currentTagIndex : currentColorIndex;
     const nextIndex = (currentIndex + 1) % allTags.length;
     updateBrainDumpItem(item.id, { color: allTags[nextIndex].value });
-  };
-
-  const handleRefine = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isRefining) return;
-    
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/zeropilot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "refine", data: { content: item.content } })
-      });
-      const result = await res.json();
-      if (result.refined) {
-        updateBrainDumpItem(item.id, { content: result.refined });
-      }
-    } catch (err) {
-      console.error("AI Refine failed", err);
-    } finally {
-      setIsRefining(false);
-    }
   };
 
   return (
@@ -162,26 +151,6 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         </span>
       )}
 
-      {/* AI 다듬기 버튼 */}
-      {!item.isCompleted && (
-        <button
-          onClick={handleRefine}
-          disabled={isRefining}
-          className={`transition-all duration-150 shrink-0 ${
-            isRefining 
-            ? "text-blue-500 animate-spin" 
-            : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-zinc-300 hover:text-blue-500"
-          }`}
-          title="AI로 작업명 다듬기"
-        >
-          {isRefining ? (
-            <Loader2 className="w-3.5 h-3.5" />
-          ) : (
-            <Sparkles className="w-3.5 h-3.5" />
-          )}
-        </button>
-      )}
-
       {/* 삭제 버튼 */}
       <button
         onClick={() => deleteBrainDumpItem(item.id)}
@@ -201,6 +170,9 @@ export default function BrainDumpSection() {
   const [inputValue, setInputValue] = useState("");
   const brainDump = useTimeboxerStore((s) => s.brainDump);
   const addBrainDumpItem = useTimeboxerStore((s) => s.addBrainDumpItem);
+  const userPlan = useTimeboxerStore((s) => s.userPlan);
+  const openUpgradeModal = useTimeboxerStore((s) => s.openUpgradeModal);
+  const carryOverToTomorrow = useTimeboxerStore((s) => s.carryOverToTomorrow);
 
   const completedCount = brainDump.filter((i) => i.isCompleted).length;
   const pendingItems = brainDump.filter((i) => !i.isCompleted);
@@ -214,7 +186,9 @@ export default function BrainDumpSection() {
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleAdd();
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      handleAdd();
+    }
   };
 
   return (
@@ -256,6 +230,40 @@ export default function BrainDumpSection() {
           <Plus className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* 내일로 넘기기 버튼 (AlertDialog 사용으로 안정성 강화) */}
+      {pendingItems.length > 0 && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-bold hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
+            >
+              <RotateCw className="w-3 h-3" />
+              미완료 일과 내일로 넘기기
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>내일로 넘기기</AlertDialogTitle>
+              <AlertDialogDescription>
+                완료하지 못한 {pendingItems.length}개의 항목을 내일 브레인 덤프로 이동할까요?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                if (userPlan !== 'pro') {
+                  openUpgradeModal("미완료 일과 내일로 넘기기");
+                  return;
+                }
+                carryOverToTomorrow();
+              }}>
+                이동하기
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* 아이템 리스트 */}
       <div className="space-y-1.5 overflow-y-auto flex-1 pr-0.5">

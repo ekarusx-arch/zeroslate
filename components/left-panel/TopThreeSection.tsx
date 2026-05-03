@@ -65,7 +65,9 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
     const settings = useTimeboxerStore.getState().settings;
     const allTags = [...PRESET_COLORS, ...(settings.customTags || []).map(ct => ({ label: ct.tag, value: ct.color, tag: ct.tag }))];
     
-    const currentIndex = allTags.findIndex(p => p.value === (item.color || "#F4F4F5"));
+    const currentTagIndex = allTags.findIndex(p => p.tag && item.content.includes(p.tag));
+    const currentColorIndex = allTags.findIndex(p => p.value.toLowerCase() === (item.color || "#F4F4F5").toLowerCase());
+    const currentIndex = currentTagIndex >= 0 ? currentTagIndex : currentColorIndex;
     const nextIndex = (currentIndex + 1) % allTags.length;
     updateTopThreeItem(item.id, { color: allTags[nextIndex].value });
   };
@@ -189,7 +191,9 @@ export default function TopThreeSection() {
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleAdd();
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      handleAdd();
+    }
   };
 
   return (

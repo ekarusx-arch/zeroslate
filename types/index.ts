@@ -1,16 +1,24 @@
 // ── 유료화 플랜 ───────────────────────────────────────────────────
 export type UserPlan = 'free' | 'pro';
+export type ThemeId = 'classic' | 'glass' | 'midnight' | 'paper' | 'forest';
 
 // ── 구글 캘린더 이벤트 ────────────────────────────────────────────
 export interface GoogleCalendarEvent {
   id: string;
   summary: string;       // 이벤트 제목
+  calendarId?: string;
+  calendarSummary?: string;
+  googleEventId?: string;
+  date: string;          // "YYYY-MM-DD" 형식
   start: string;         // "HH:MM" 형식
   end: string;           // "HH:MM" 형식
+  startDateTime?: string;
+  endDateTime?: string;
   colorId?: string;      // 구글 캘린더 색상 ID
   color?: string;        // 색상 hex (API에서 변환)
   htmlLink?: string;     // 구글 캘린더 이벤트 링크
   isAllDay?: boolean;    // 종일 이벤트 여부
+  canEdit?: boolean;     // Google Calendar 수정 가능 여부
 }
 
 export interface CustomTag {
@@ -23,6 +31,8 @@ export interface Settings {
   endTime: number;   // 24 = 24:00
   step: number;      // 30 = 30분 단위
   customTags: CustomTag[]; // ← 신규: 사용자 정의 태그
+  theme: ThemeId;
+  customAccent?: string;
 }
 
 export interface BrainDumpItem {
@@ -30,26 +40,29 @@ export interface BrainDumpItem {
   content: string;
   isCompleted: boolean;
   createdAt: string;
-  color?: string; // ← 신규: 명시적 지정 색상
+  color?: string;
+  date?: string; // "YYYY-MM-DD"
 }
 
 export interface TopThreeItem {
   id: string;
   content: string;
-  isAssigned: boolean; // 타임라인에 배치됐는지
-  isCompleted: boolean; // 완료 여부
-  color?: string; // ← 신규: 명시적 지정 색상
+  isAssigned: boolean;
+  isCompleted: boolean;
+  color?: string;
+  date?: string; // "YYYY-MM-DD"
 }
 
 export interface TimeBlock {
   id: string;
-  taskId: string | null; // null이면 직접 그린 블록
+  taskId: string | null;
   content: string;
   startTime: string; // "09:00"
   endTime: string;   // "10:30"
   color: string;
   isCompleted: boolean;
-  memo?: string; // ← 신규: 상세 메모
+  memo?: string;
+  date?: string; // "YYYY-MM-DD"
 }
 
 export interface Routine {

@@ -11,26 +11,16 @@ import {
   ChevronLeft, 
   ChevronRight, 
   BarChart3, 
-  History 
+  Crown,
+  History,
+  Lock,
 } from "lucide-react";
 import AnalyticsView from "./AnalyticsView";
+import UpgradeModal from "@/components/UpgradeModal";
+import { formatMinutes, isArchiveLocked, toDateKey } from "@/utils/archive";
 
 function formatMonthLabel(date: Date) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
-}
-
-function toDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function formatMinutes(minutes: number) {
-  if (minutes < 60) return `${minutes}분`;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest > 0 ? `${hours}시간 ${rest}분` : `${hours}시간`;
 }
 
 function getScoreTone(log?: DailyLog) {
@@ -42,9 +32,11 @@ function getScoreTone(log?: DailyLog) {
 
 export default function ArchivePanel() {
   const dailyLogs = useTimeboxerStore((s) => s.dailyLogs);
+  const userPlan = useTimeboxerStore((s) => s.userPlan);
   const [activeTab, setActiveTab] = useState<"archive" | "analytics">("archive");
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => toDateKey(new Date()));
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const logsByDate = useMemo(
     () => new Map(dailyLogs.map((log) => [log.date, log])),
@@ -79,6 +71,8 @@ export default function ArchivePanel() {
   }, [visibleMonth]);
 
   const selectedLog = logsByDate.get(selectedDate);
+  const selectedLocked = isArchiveLocked(selectedDate, userPlan);
+  const hiddenLogCount = dailyLogs.filter((log) => isArchiveLocked(log.date, userPlan)).length;
 
   const moveMonth = (delta: number) => {
     setVisibleMonth(
@@ -109,6 +103,21 @@ export default function ArchivePanel() {
           통계
         </button>
       </div>
+
+      {userPlan !== "pro" && (
+        <button
+          onClick={() => setUpgradeOpen(true)}
+          className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-left transition-colors hover:bg-amber-100"
+        >
+          <span className="min-w-0">
+            <span className="block text-[11px] font-black text-amber-800">Free: 최근 7일 기록만 조회</span>
+            <span className="block truncate text-[10px] font-semibold text-amber-700/70">
+              {hiddenLogCount > 0 ? `잠긴 기록 ${hiddenLogCount}개` : "Pro에서 전체 기록과 누적 통계를 해제"}
+            </span>
+          </span>
+          <Crown className="h-4 w-4 shrink-0 text-amber-500" />
+        </button>
+      )}
 
       {activeTab === "archive" ? (
         <div className="flex flex-col gap-3 overflow-hidden flex-1">
@@ -146,21 +155,23 @@ export default function ArchivePanel() {
                 const dateKey = toDateKey(date);
                 const log = logsByDate.get(dateKey);
                 const isSelected = selectedDate === dateKey;
+                const locked = Boolean(log) && isArchiveLocked(dateKey, userPlan);
 
                 return (
                   <button
                     key={dateKey}
                     onClick={() => setSelectedDate(dateKey)}
-                    className={`aspect-square w-full flex flex-col items-center justify-center p-1 rounded-lg border transition-colors ${
+                    className={`relative aspect-square w-full flex flex-col items-center justify-center p-1 rounded-lg border transition-colors ${
                       getScoreTone(log)
                     } ${isSelected ? "ring-2 ring-blue-300" : ""} ${
                       inMonth ? "" : "opacity-40"
-                    }`}
+                    } ${locked ? "bg-zinc-50 text-zinc-400 border-zinc-200" : ""}`}
                   >
                     <span className="font-semibold text-sm leading-none mt-1.5">{date.getDate()}</span>
                     <span className="text-[10px] font-medium leading-none mt-1 h-[10px] text-black/40">
-                      {log ? `${log.blockCompletionRate}%` : ""}
+                      {log && !locked ? `${log.blockCompletionRate}%` : ""}
                     </span>
+                    {locked && <Lock className="absolute right-1 top-1 h-3 w-3 text-amber-500" />}
                   </button>
                 );
               })}
@@ -169,7 +180,23 @@ export default function ArchivePanel() {
 
           {/* 기록 요약 영역 */}
           <section className="flex-1 overflow-y-auto rounded-xl border border-zinc-100 p-4 bg-white shadow-sm min-h-0">
-            {selectedLog ? (
+            {selectedLog && selectedLocked ? (
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center text-center">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-black text-zinc-900">Pro 기록입니다</p>
+                <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-zinc-500">
+                  Free에서는 최근 7일 기록만 열람할 수 있습니다.
+                </p>
+                <button
+                  onClick={() => setUpgradeOpen(true)}
+                  className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-xs font-black text-white transition-colors hover:bg-zinc-800"
+                >
+                  전체 아카이브 열기
+                </button>
+              </div>
+            ) : selectedLog ? (
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-semibold text-zinc-800">
@@ -219,6 +246,12 @@ export default function ArchivePanel() {
           <AnalyticsView />
         </section>
       )}
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        featureName={activeTab === "analytics" ? "고급 통계 대시보드" : "무제한 아카이브 조회"}
+      />
     </div>
   );
 }

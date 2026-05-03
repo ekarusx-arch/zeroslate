@@ -1,22 +1,35 @@
 "use client";
 
-import { Crown } from "lucide-react";
+import { Crown, Zap } from "lucide-react";
+import { UserPlan } from "@/types";
 
-interface ProBadgeProps {
+interface PlanBadgeProps {
   size?: "sm" | "md";
+  plan?: UserPlan;
 }
 
-export function ProBadge({ size = "sm" }: ProBadgeProps) {
+export function PlanBadge({ size = "sm", plan = "free" }: PlanBadgeProps) {
+  if (plan === "pro") {
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full font-bold tracking-wide bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-sm ${
+          size === "sm" ? "text-[10px] px-2 py-0.5" : "text-[12px] px-2.5 py-1"
+        }`}
+      >
+        <Crown className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} />
+        PRO
+      </span>
+    );
+  }
+
   return (
     <span
-      className={`inline-flex items-center gap-0.5 rounded-full font-bold tracking-wide bg-gradient-to-r from-amber-400 to-orange-400 text-white ${
-        size === "sm"
-          ? "text-[9px] px-1.5 py-0.5"
-          : "text-[11px] px-2 py-1"
+      className={`inline-flex items-center gap-1 rounded-full font-bold tracking-wide bg-zinc-200 text-zinc-600 ${
+        size === "sm" ? "text-[10px] px-2 py-0.5" : "text-[12px] px-2.5 py-1"
       }`}
     >
-      <Crown className={size === "sm" ? "w-2.5 h-2.5" : "w-3 h-3"} />
-      PRO
+      <Zap className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} />
+      FREE
     </span>
   );
 }

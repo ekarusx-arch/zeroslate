@@ -31,6 +31,10 @@ function getTodayKey() {
   return `${year}-${month}-${day}`;
 }
 
+export function getTodayDateKey() {
+  return getTodayKey();
+}
+
 function getBlockMinutes(block: TimeBlock) {
   const [startHour, startMinute] = block.startTime.split(":").map(Number);
   const [endHour, endMinute] = block.endTime.split(":").map(Number);
@@ -40,6 +44,43 @@ function getBlockMinutes(block: TimeBlock) {
 function timeToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
+}
+
+function getLocalDateRange(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  return {
+    timeMin: new Date(year, month - 1, day).toISOString(),
+    timeMax: new Date(year, month - 1, day + 1).toISOString(),
+  };
+}
+
+function getDateKeyTime(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day).getTime();
+}
+
+function mergeGoogleCalendarEvents(
+  current: GoogleCalendarEvent[],
+  incoming: GoogleCalendarEvent[],
+  range?: { timeMin?: string; timeMax?: string }
+) {
+  if (!range?.timeMin || !range?.timeMax) return incoming;
+
+  const rangeStart = new Date(range.timeMin).getTime();
+  const rangeEnd = new Date(range.timeMax).getTime();
+  const outsideRange = current.filter((event) => {
+    const eventTime = getDateKeyTime(event.date);
+    return eventTime < rangeStart || eventTime >= rangeEnd;
+  });
+
+  const merged = new Map<string, GoogleCalendarEvent>();
+  for (const event of [...outsideRange, ...incoming]) {
+    merged.set(event.id, event);
+  }
+
+  return Array.from(merged.values()).sort((a, b) => {
+    return `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`);
+  });
 }
 
 function hasOverlap(newStart: string, newEnd: string, existing: TimeBlock[], excludeId?: string) {
@@ -85,17 +126,25 @@ interface TimeboxerState {
   dailyLogs: DailyLog[];
   colorIndex: number;
   userId: string | null;
+  selectedDate: string; // YYYY-MM-DD 형식
 
   // ── 유료화 ─────────────────────────────────────────────────────────
   userPlan: UserPlan;
   setUserPlan: (plan: UserPlan) => void;
+  isCalendarOpen: boolean;
+  setIsCalendarOpen: (open: boolean) => void;
+  isUpgradeModalOpen: boolean;
+  upgradeFeature: string;
+  openUpgradeModal: (feature: string) => void;
+  closeUpgradeModal: () => void;
+  setSelectedDate: (date: string) => void;
 
   // ── 구글 캘린더 ─────────────────────────────────────────────────────
   googleCalendarEvents: GoogleCalendarEvent[];
   googleTokenConnected: boolean;
   setGoogleCalendarEvents: (events: GoogleCalendarEvent[]) => void;
   setGoogleTokenConnected: (connected: boolean) => void;
-  syncGoogleCalendar: () => Promise<void>;
+  syncGoogleCalendar: (range?: { date?: string; timeMin?: string; timeMax?: string }) => Promise<void>;
 
   initialize: () => Promise<void>;
   updateSettings: (s: Partial<Settings>) => void;
@@ -132,7 +181,9 @@ interface TimeboxerState {
 
   saveTodayLog: () => void;
   carryOver: () => void;
+  carryOverToTomorrow: () => Promise<void>;
   resetAll: () => void;
+  fetchDateData: (date: string) => Promise<void>;
 }
 
 const defaultSettings: Settings = {
@@ -140,7 +191,19 @@ const defaultSettings: Settings = {
   endTime: 24,
   step: 30,
   customTags: [],
+  theme: "classic",
+  customAccent: "#2563EB",
 };
+
+const PRO_ACCESS_EMAILS = new Set([
+  "ekarusx@gmail.com",
+  "ekarusx@naver.com",
+  "zeroslate.official@gmail.com"
+]);
+
+function getPlanForEmail(email?: string | null): UserPlan {
+  return email && PRO_ACCESS_EMAILS.has(email.toLowerCase()) ? "pro" : "free";
+}
 
 function getColorForContent(content: string, customTags: any[] = []) {
   if (!Array.isArray(customTags)) return undefined;
@@ -159,6 +222,19 @@ function getColorForContent(content: string, customTags: any[] = []) {
   return undefined;
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function removeKnownTags(content: string, tags: Array<{ tag?: string }>) {
+  let nextContent = content;
+  for (const item of tags) {
+    if (!item.tag) continue;
+    nextContent = nextContent.replace(new RegExp(`\\s*${escapeRegExp(item.tag)}\\s*`, "g"), " ");
+  }
+  return nextContent.replace(/\s+/g, " ").trim();
+}
+
 // ── Store (Supabase 동기화 버전) ──────────────────────────────────────
 export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   settings: defaultSettings,
@@ -172,36 +248,113 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   pilotMessage: null,
   colorIndex: 0,
   userId: null,
+  selectedDate: getTodayKey(),
 
   // 유료화 초기 상태
   userPlan: 'free' as UserPlan,
-  setUserPlan: (plan) => set({ userPlan: plan }),
+  isCalendarOpen: false,
+  setIsCalendarOpen: (open) => set({ isCalendarOpen: open }),
+  isUpgradeModalOpen: false,
+  upgradeFeature: "",
+  openUpgradeModal: (feature) => set({ isUpgradeModalOpen: true, upgradeFeature: feature }),
+  closeUpgradeModal: () => set({ isUpgradeModalOpen: false }),
+  setSelectedDate: (date) => {
+    set({ selectedDate: date });
+    const state = get();
+    if (state.googleTokenConnected) {
+      state.syncGoogleCalendar({ date });
+    }
+    state.fetchDateData(date);
+  },
+  setUserPlan: (plan) => {
+    const { userId } = get();
+    if (userId) {
+      localStorage.setItem(`zeroslate_plan_${userId}`, plan);
+    }
+    set({ userPlan: plan });
+  },
 
   // 구글 캘린더 초기 상태
   googleCalendarEvents: [],
   googleTokenConnected: false,
   setGoogleCalendarEvents: (events) => set({ googleCalendarEvents: events }),
-  setGoogleTokenConnected: (connected) => set({ googleTokenConnected: connected }),
-  syncGoogleCalendar: async () => {
-    const { googleTokenConnected } = get();
-    if (!googleTokenConnected) return;
-    try {
-      const res = await fetch('/api/calendar/sync');
-      if (!res.ok) {
-        get().setGoogleTokenConnected(false);
-        return;
+  setGoogleTokenConnected: (connected) => {
+    const { userId } = get();
+    if (userId) {
+      const key = `zeroslate_google_connected_${userId}`;
+      if (connected) {
+        localStorage.setItem(key, "true");
+      } else {
+        localStorage.removeItem(key);
       }
-      const data = await res.json();
-      get().setGoogleCalendarEvents(data.events || []);
+    }
+    set({ googleTokenConnected: connected });
+  },
+  syncGoogleCalendar: async (range) => {
+    try {
+      const params = new URLSearchParams();
+      let { userId } = get();
+      // After OAuth redirect, initialize() may not have set store userId yet; session still has uid.
+      if (!userId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        userId = session?.user?.id ?? null;
+      }
+      if (userId) params.set("userId", userId);
+      
+      const resolvedRange = range?.date ? getLocalDateRange(range.date) : range;
+      if (resolvedRange?.timeMin) params.set("timeMin", resolvedRange.timeMin);
+      if (resolvedRange?.timeMax) params.set("timeMax", resolvedRange.timeMax);
+
+      const res = await fetch(
+        `/api/calendar/sync${params.toString() ? `?${params.toString()}` : ""}`,
+        { credentials: "include" }
+      );
+      if (res.ok) {
+        const { events, timeMin, timeMax } = await res.json();
+        console.log("✅ Google Calendar Synced:", events);
+        set((state) => ({
+          googleCalendarEvents: mergeGoogleCalendarEvents(
+            state.googleCalendarEvents,
+            events || [],
+            { timeMin: timeMin || resolvedRange?.timeMin, timeMax: timeMax || resolvedRange?.timeMax }
+          ),
+        }));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (data?.needsReauth || res.status === 401 || res.status === 403) {
+          get().setGoogleTokenConnected(false);
+        }
+      }
     } catch (err) {
       console.error('캘린더 동기화 실패:', err);
     }
+  },
+  fetchDateData: async (date) => {
+    const { userId } = get();
+    if (!userId) return;
+
+    // 데이터를 가져오기 전에 현재 상태를 비워줌 (데이터 혼선 방지)
+    set({ brainDump: [], topThree: [], timeBlocks: [] });
+
+    const [bd, tt, tb] = await Promise.all([
+      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", date),
+      supabase.from("top_three").select("*").eq("user_id", userId).eq("date", date),
+      supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", date),
+    ]);
+
+    set({
+      brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at, date: r.date })),
+      topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color, date: r.date })),
+      timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo, date: r.date })),
+    });
   },
 
   initialize: async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const userId = session.user.id;
+    const accountPlan = getPlanForEmail(session.user.email);
+    const today = getTodayKey();
     
     // 1. 로컬 스토리지에서 우선 로드 (즉각적인 UI 반영)
     const localSettings = localStorage.getItem(`zeroslate_settings_${userId}`);
@@ -210,11 +363,11 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (localSettings) set({ settings: JSON.parse(localSettings) });
     if (localRoutines) set({ routines: JSON.parse(localRoutines) });
 
-    // 2. Supabase에서 최신 데이터 불러오기
+    // 2. Supabase에서 공통 설정 및 오늘 데이터 불러오기
     const [bd, tt, tb, dl, rt, st] = await Promise.all([
-      supabase.from("brain_dumps").select("*").eq("user_id", userId),
-      supabase.from("top_three").select("*").eq("user_id", userId),
-      supabase.from("time_blocks").select("*").eq("user_id", userId),
+      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", today),
+      supabase.from("top_three").select("*").eq("user_id", userId).eq("date", today),
+      supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", today),
       supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("routines").select("*").eq("user_id", userId),
       supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle()
@@ -234,6 +387,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     // 한번 더 강제 확인
     if (!finalSettings.customTags) finalSettings.customTags = [];
+    if (!finalSettings.theme) finalSettings.theme = "classic";
 
     const finalRoutines = rt.data && rt.data.length > 0 ? (rt.data || []).map(r => ({ 
       id: r.id, 
@@ -246,25 +400,39 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     set({
       userId,
+      userPlan: accountPlan,
       settings: finalSettings,
       routines: finalRoutines,
-      brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
-      topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color })),
-      timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo })),
+      brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at, date: r.date })),
+      topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color, date: r.date })),
+      timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo, date: r.date })),
       dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean),
     });
 
     // 구글 캘린더 연동 상태 체크
     const localGoogleConnected = localStorage.getItem(`zeroslate_google_connected_${userId}`);
-    if (localGoogleConnected === 'true') {
+    const googleStatus = await fetch(`/api/calendar/status?userId=${userId}`, {
+      cache: "no-store",
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .catch(() => ({ connected: false }));
+
+    if (localGoogleConnected === 'true' || googleStatus.connected) {
+      localStorage.setItem(`zeroslate_google_connected_${userId}`, "true");
       set({ googleTokenConnected: true });
       get().syncGoogleCalendar();
+    } else {
+      set({ googleTokenConnected: false });
     }
 
-    // 유료 플랜 상태 체크 (추후 Supabase 연동)
+    // 유료 플랜 상태 최종 확정 (로컬 기록이 pro면 pro 유지)
     const localPlan = localStorage.getItem(`zeroslate_plan_${userId}`);
-    if (localPlan === 'pro') {
+    if (accountPlan === "pro" || localPlan === 'pro' || (get().userPlan === 'pro')) {
       set({ userPlan: 'pro' });
+      localStorage.setItem(`zeroslate_plan_${userId}`, "pro");
+    } else {
+      set({ userPlan: 'free' });
     }
   },
 
@@ -289,19 +457,35 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     }
   },
 
-  // ── Brain Dump ──
   addBrainDumpItem: async (content) => {
-    const { userId } = get();
+    const { userId, selectedDate, settings } = get();
     if (!userId) return;
     
-    // 해시태그 기반 색상 자동 지정
-    const color = getColorForContent(content, get().settings.customTags);
-
-    const id = crypto.randomUUID();
-    const newItem: BrainDumpItem = { id, content, isCompleted: false, createdAt: new Date().toISOString(), color };
-    
-    set((state) => ({ brainDump: [...state.brainDump, newItem] }));
-    await supabase.from("brain_dumps").insert({ id, user_id: userId, content, is_completed: false, created_at: newItem.createdAt, color });
+    try {
+      const color = getColorForContent(content, settings.customTags);
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newItem: BrainDumpItem = { 
+        id, 
+        content, 
+        isCompleted: false, 
+        createdAt: new Date().toISOString(), 
+        color, 
+        date: selectedDate 
+      };
+      
+      set((state) => ({ brainDump: [...state.brainDump, newItem] }));
+      await supabase.from("brain_dumps").insert({ 
+        id, 
+        user_id: userId, 
+        content, 
+        is_completed: false, 
+        created_at: newItem.createdAt, 
+        color, 
+        date: selectedDate 
+      });
+    } catch (err) {
+      console.error("Failed to add brain dump item:", err);
+    }
   },
 
   updateBrainDumpItem: async (id, updates) => {
@@ -318,11 +502,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       let newContent = updates.content ?? item.content;
       
       // 기존 프레셋/커스텀 태그들 제거
-      for (const t of allTags) {
-        if (t.tag) {
-          newContent = newContent.replace(t.tag, "").trim();
-        }
-      }
+      newContent = removeKnownTags(newContent, allTags);
       
       // 새 태그 추가
       if (newPreset?.tag) {
@@ -378,17 +558,34 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   // ── Top Three ──
   addTopThreeItem: async (content) => {
-    const { userId } = get();
+    const { userId, selectedDate, settings } = get();
     if (!userId) return;
 
-    // 해시태그 기반 색상 자동 지정
-    const color = getColorForContent(content, get().settings.customTags);
-
-    const id = crypto.randomUUID();
-    const newItem: TopThreeItem = { id, content, isAssigned: false, isCompleted: false, color };
-    
-    set((state) => ({ topThree: [...state.topThree, newItem] }));
-    await supabase.from("top_three").insert({ id, user_id: userId, content, is_assigned: false, is_completed: false, color });
+    try {
+      const color = getColorForContent(content, settings.customTags);
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newItem: TopThreeItem = { 
+        id, 
+        content, 
+        isAssigned: false, 
+        isCompleted: false, 
+        color, 
+        date: selectedDate 
+      };
+      
+      set((state) => ({ topThree: [...state.topThree, newItem] }));
+      await supabase.from("top_three").insert({ 
+        id, 
+        user_id: userId, 
+        content, 
+        is_assigned: false, 
+        is_completed: false, 
+        color, 
+        date: selectedDate 
+      });
+    } catch (err) {
+      console.error("Failed to add top three item:", err);
+    }
   },
 
   updateTopThreeItem: async (id, updates) => {
@@ -404,11 +601,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
       
-      for (const t of allTags) {
-        if (t.tag) {
-          newContent = newContent.replace(t.tag, "").trim();
-        }
-      }
+      newContent = removeKnownTags(newContent, allTags);
       
       if (newPreset?.tag) {
         newContent = `${newContent} ${newPreset.tag}`.trim();
@@ -489,7 +682,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     }
 
     const id = crypto.randomUUID();
-    const newBlock: TimeBlock = { ...block, id, color, isCompleted: false, memo: "" };
+    const date = state.selectedDate;
+    const newBlock: TimeBlock = { ...block, id, color, isCompleted: false, memo: "", date };
     
     const newBlocks = [...state.timeBlocks, newBlock];
     const newTopThree = syncTopThreeAssigned(state.topThree, newBlocks);
@@ -497,7 +691,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     set({ timeBlocks: newBlocks, topThree: newTopThree, colorIndex: state.colorIndex + 1 });
     
     await supabase.from("time_blocks").insert({
-      id, user_id: userId, task_id: block.taskId, content: block.content, start_time: block.startTime, end_time: block.endTime, color, is_completed: false, memo: ""
+      id, user_id: userId, task_id: block.taskId, content: block.content, start_time: block.startTime, end_time: block.endTime, color, is_completed: false, memo: "", date
     });
     
     // Update assigned status in DB if it changed
@@ -740,10 +934,77 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     // DB 리셋
     if (state.userId) {
       await Promise.all([
-        supabase.from("time_blocks").delete().eq("user_id", state.userId),
-        supabase.from("top_three").delete().eq("user_id", state.userId),
+        supabase.from("time_blocks").delete().eq("user_id", state.userId).eq("date", state.selectedDate),
+        supabase.from("top_three").delete().eq("user_id", state.userId).eq("date", state.selectedDate),
         supabase.from("brain_dumps").delete().in("id", completedIds)
       ]);
+    }
+  },
+
+  carryOverToTomorrow: async () => {
+    const state = get();
+    const { userId, selectedDate, brainDump, topThree } = state;
+    if (!userId) return;
+
+    const incompleteBrainDump = brainDump.filter(item => !item.isCompleted);
+    const incompleteTopThree = topThree.filter(item => !item.isCompleted);
+    
+    if (incompleteBrainDump.length === 0 && incompleteTopThree.length === 0) {
+      window.alert("넘길 미완료 항목이 없습니다.");
+      return;
+    }
+
+    // 내일 날짜 계산
+    const current = new Date(selectedDate);
+    current.setDate(current.getDate() + 1);
+    const tomorrow = current.toISOString().split('T')[0];
+
+    try {
+      // 1. 브레인 덤프 항목들 날짜 변경
+      if (incompleteBrainDump.length > 0) {
+        const bdIds = incompleteBrainDump.map(t => t.id);
+        const { error: bdError } = await supabase
+          .from("brain_dumps")
+          .update({ date: tomorrow })
+          .in("id", bdIds);
+        
+        if (bdError) throw bdError;
+      }
+
+      // 2. Top 3 항목들을 내일의 브레인 덤프로 이동 (Top 3는 초기화되므로 브레인 덤프로 옮김)
+      if (incompleteTopThree.length > 0) {
+        const ttItems = incompleteTopThree.map(t => ({
+          user_id: userId,
+          content: t.content,
+          is_completed: false,
+          color: t.color,
+          date: tomorrow,
+          created_at: new Date().toISOString()
+        }));
+        
+        const { error: ttError } = await supabase
+          .from("brain_dumps")
+          .insert(ttItems);
+        
+        if (ttError) throw ttError;
+
+        // 3. 오늘 날짜의 해당 Top 3 항목들 삭제 (DB 반영)
+        const ttIds = incompleteTopThree.map(t => t.id);
+        const { error: delError } = await supabase
+          .from("top_three")
+          .delete()
+          .in("id", ttIds);
+        
+        if (delError) throw delError;
+      }
+
+      // 4. 현재 날짜 데이터 다시 불러오기 (UI 동기화 보장)
+      await get().fetchDateData(selectedDate);
+
+      window.alert(`✅ ${incompleteBrainDump.length + incompleteTopThree.length}개의 미완료 항목이 내일(${tomorrow})로 이동되었습니다.`);
+    } catch (err) {
+      console.error("Carry over failed:", err);
+      window.alert("항목을 이동하는 중 오류가 발생했습니다. DB 마이그레이션(date 컬럼 추가)이 완료되었는지 확인해 주세요.");
     }
   },
 

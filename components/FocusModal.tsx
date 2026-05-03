@@ -3,19 +3,23 @@
 import { useState, useEffect, useRef } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Wind, CloudRain, Coffee, CheckCircle2, X } from "lucide-react";
+import { createAmbientSoundController, AmbientSoundController, AmbientSoundId } from "@/utils/audio";
+import { Wind, CloudRain, Coffee, CheckCircle2, X, Lock, Music2, Waves } from "lucide-react";
 
 const AMBIENT_SOUNDS = [
-  { id: "none", label: "없음", icon: Wind, url: "" },
-  { id: "rain", label: "빗소리", icon: CloudRain, url: "https://assets.mixkit.co/active_storage/sfx/2432/2432-preview.mp3" },
-  { id: "cafe", label: "카페", icon: Coffee, url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
-];
+  { id: "none", label: "없음", icon: Wind, isPro: false },
+  { id: "rain", label: "빗소리", icon: CloudRain, isPro: false },
+  { id: "cafe", label: "카페", icon: Coffee, isPro: true },
+  { id: "deep", label: "딥워크", icon: Waves, isPro: true },
+  { id: "lofi", label: "로파이", icon: Music2, isPro: true },
+] as const;
 
 export default function FocusModal() {
   const activeFocusId = useTimeboxerStore((s) => s.activeFocusId);
   const setFocusId = useTimeboxerStore((s) => s.setFocusId);
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const toggleTimeBlock = useTimeboxerStore((s) => s.toggleTimeBlock);
+  const userPlan = useTimeboxerStore((s) => s.userPlan);
 
   const block = timeBlocks.find((b) => b.id === activeFocusId);
 
@@ -23,7 +27,8 @@ export default function FocusModal() {
   const [totalTime, setTotalTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeSound, setActiveSound] = useState("none");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [soundNotice, setSoundNotice] = useState<string | null>(null);
+  const audioRef = useRef<AmbientSoundController | null>(null);
 
   useEffect(() => {
     if (!block) return;
@@ -51,23 +56,23 @@ export default function FocusModal() {
 
   useEffect(() => {
     if (activeSound === "none") {
-      if (audioRef.current) audioRef.current.pause();
+      audioRef.current?.stop();
       setIsPlaying(false);
       return;
     }
-    const sound = AMBIENT_SOUNDS.find((s) => s.id === activeSound);
-    if (sound?.url) {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(sound.url);
-        audioRef.current.loop = true;
-      } else {
-        audioRef.current.src = sound.url;
-      }
-      if (isPlaying) {
-        audioRef.current.play().catch(() => {});
-      }
+
+    if (!isPlaying) {
+      audioRef.current?.stop();
+      return;
     }
+
+    if (!audioRef.current) audioRef.current = createAmbientSoundController();
+    audioRef.current.start(activeSound as AmbientSoundId).catch(() => {});
   }, [activeSound, isPlaying]);
+
+  useEffect(() => {
+    return () => audioRef.current?.dispose();
+  }, []);
 
   const formatTime = (s: number) => {
     const h = Math.floor(s / 3600);
@@ -89,7 +94,10 @@ export default function FocusModal() {
 
   return (
     <Dialog open={!!activeFocusId} onOpenChange={(open) => !open && setFocusId(null)}>
-      <DialogContent className="max-w-md w-full bg-[#0d0d0f] border border-white/[0.06] text-white p-0 overflow-hidden shadow-2xl z-[100] rounded-3xl">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-md w-full bg-[#0d0d0f] border border-white/[0.06] text-white p-0 overflow-hidden shadow-2xl z-[100] rounded-3xl"
+      >
         {!block ? (
           <div className="flex items-center justify-center h-80">
             <div className="w-8 h-8 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin" />
@@ -176,33 +184,51 @@ export default function FocusModal() {
             <div className="mx-7 mt-6 h-px bg-white/[0.05]" />
 
             {/* 앰비언트 사운드 */}
-            <div className="flex items-center justify-center gap-3 px-7 py-5">
+            <div className="grid grid-cols-5 gap-2 px-7 py-5">
               {AMBIENT_SOUNDS.map((sound) => {
                 const Icon = sound.icon;
                 const isActive = activeSound === sound.id;
+                const isLocked = sound.isPro && userPlan !== "pro";
                 return (
                   <button
                     key={sound.id}
                     onClick={() => {
+                      if (isLocked) {
+                        setSoundNotice("카페, 딥워크, 로파이는 Premium 집중 사운드입니다.");
+                        return;
+                      }
                       if (activeSound === sound.id) {
                         setIsPlaying(!isPlaying);
                       } else {
                         setActiveSound(sound.id);
-                        setIsPlaying(true);
+                        setIsPlaying(sound.id !== "none");
                       }
                     }}
-                    className={`flex-1 flex flex-col items-center gap-2 py-3.5 rounded-2xl border transition-all duration-300 ${
+                    className={`relative flex min-h-[78px] flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-300 ${
                       isActive
                         ? "border-blue-500/40 bg-blue-500/10 text-blue-400"
-                        : "border-white/[0.05] bg-white/[0.03] text-zinc-600 hover:text-zinc-400 hover:border-white/10"
+                        : isLocked
+                          ? "border-white/[0.04] bg-white/[0.02] text-zinc-700"
+                          : "border-white/[0.05] bg-white/[0.03] text-zinc-600 hover:text-zinc-400 hover:border-white/10"
                     }`}
+                    title={isLocked ? "Premium 집중 사운드" : `${sound.label} 사운드`}
                   >
+                    {isLocked && (
+                      <span className="absolute right-2 top-2 text-zinc-600">
+                        <Lock className="h-3 w-3" />
+                      </span>
+                    )}
                     <Icon className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{sound.label}</span>
+                    <span className="text-[10px] font-bold tracking-tight">{sound.label}</span>
                   </button>
                 );
               })}
             </div>
+            {soundNotice && (
+              <div className="mx-7 -mt-2 mb-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-center text-[11px] font-semibold text-blue-200">
+                {soundNotice}
+              </div>
+            )}
 
             {/* 완료 버튼 */}
             <div className="px-7 pb-7">

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/AuthProvider";
+import CssRecovery from "@/components/CssRecovery";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,8 +24,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" className="zeroslate-css-pending" suppressHydrationWarning>
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              html.zeroslate-css-pending body {
+                opacity: 0;
+                animation: zeroslate-reveal-fallback 0s linear 1.2s forwards;
+              }
+              html.zeroslate-css-ready body {
+                opacity: 1;
+                transition: opacity 120ms ease;
+              }
+              @keyframes zeroslate-reveal-fallback {
+                to {
+                  opacity: 1;
+                }
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <CssRecovery />
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>

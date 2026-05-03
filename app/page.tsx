@@ -11,9 +11,10 @@ import {
   useSensors,
   closestCenter,
 } from "@dnd-kit/core";
+import { PlanBadge } from "@/components/ProBadge";
 import { useAuth } from "@/components/AuthProvider";
-import { LogOut, User as UserIcon, CalendarDays, Check, RotateCw } from "lucide-react";
-import { useTimeboxerStore } from "@/store/useTimeboxerStore";
+import { LogOut, User as UserIcon, CalendarDays, Calendar as CalendarIcon, Check, RotateCw, GripVertical, RefreshCw, Timer, UploadCloud, ChevronLeft, ChevronRight } from "lucide-react";
+import { getTodayDateKey, useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { BrainDumpItem, TopThreeItem } from "@/types";
 import TopThreeSection from "@/components/left-panel/TopThreeSection";
 import BrainDumpSection from "@/components/left-panel/BrainDumpSection";
@@ -27,7 +28,9 @@ import FocusModal from "@/components/FocusModal";
 import ZeroPilot from "@/components/zeropilot/ZeroPilot";
 import LandingPage from "@/components/LandingPage";
 import UpgradeModal from "@/components/UpgradeModal";
-import { ProBadge } from "@/components/ProBadge";
+import CalendarViewModal from "@/components/CalendarViewModal";
+import GooglePushFeedback from "@/components/GooglePushFeedback";
+import FocusTimer from "@/components/FocusTimer";
 
 import {
   AlertDialog,
@@ -40,8 +43,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { GripVertical, RefreshCw, Timer } from "lucide-react";
-
 // 드래그 오버레이용 미니 카드
 function DragPreview({ label }: { label: string }) {
   return (
@@ -59,7 +60,7 @@ function ResetDialog() {
     <AlertDialog>
       <AlertDialogTrigger
         id="reset-button"
-        className="inline-flex items-center gap-2 h-8 px-3 text-xs rounded-md border border-zinc-200 bg-white text-zinc-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors font-medium"
+        className="inline-flex items-center gap-1.5 h-[33px] px-[14px] text-xs rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all font-semibold whitespace-nowrap shrink-0 active:scale-95 shadow-sm"
       >
         <RefreshCw className="w-3.5 h-3.5" />
         초기화
@@ -85,12 +86,17 @@ function ResetDialog() {
   );
 }
 
-// 오늘 날짜 포맷
-function getTodayLabel() {
-  const now = new Date();
+// 특정 날짜 라벨 포맷
+function getDateLabel(dateStr: string) {
+  const date = new Date(dateStr);
   const days = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`;
 }
+
+type PushFeedback =
+  | { type: "success"; message: string; syncedAt: string }
+  | { type: "warning"; message: string; syncedAt?: string }
+  | { type: "error"; message: string };
 
 // ─────────────────────────────────────────────────────────────────────
 // 메인 페이지
@@ -102,20 +108,61 @@ export default function Home() {
   const googleTokenConnected = useTimeboxerStore((s) => s.googleTokenConnected);
   const setGoogleTokenConnected = useTimeboxerStore((s) => s.setGoogleTokenConnected);
   const syncGoogleCalendar = useTimeboxerStore((s) => s.syncGoogleCalendar);
+  const selectedDate = useTimeboxerStore((s) => s.selectedDate);
+  const setIsCalendarOpen = useTimeboxerStore((s) => s.setIsCalendarOpen);
+  const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
+  const isUpgradeModalOpen = useTimeboxerStore((s) => s.isUpgradeModalOpen);
+  const upgradeFeature = useTimeboxerStore((s) => s.upgradeFeature);
+  const openUpgradeModal = useTimeboxerStore((s) => s.openUpgradeModal);
+  const closeUpgradeModal = useTimeboxerStore((s) => s.closeUpgradeModal);
+
+  const isTodaySelected = selectedDate === getTodayDateKey();
   const { user, signOut } = useAuth();
 
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [calSyncing, setCalSyncing] = useState(false);
+  const [googlePushing, setGooglePushing] = useState(false);
+  const [pushFeedback, setPushFeedback] = useState<PushFeedback | null>(null);
+  
+  const changeDate = (days: number) => {
+    if (userPlan !== 'pro') {
+      openUpgradeModal("미래/과거 계획 세우기");
+      return;
+    }
+    const current = new Date(selectedDate);
+    current.setDate(current.getDate() + days);
+    useTimeboxerStore.getState().setSelectedDate(current.toISOString().split('T')[0]);
+  };
+
+  const goToToday = () => {
+    useTimeboxerStore.getState().setSelectedDate(getTodayDateKey());
+  };
+
+  const googleAuthUrl = user?.id ? `/api/auth/google?userId=${user.id}` : "/api/auth/google";
+
+  useEffect(() => {
+    document.documentElement.dataset.zsTheme = settings.theme || "classic";
+    if (settings.customAccent) {
+      document.documentElement.style.setProperty("--zs-accent", settings.customAccent);
+    } else {
+      document.documentElement.style.removeProperty("--zs-accent");
+    }
+  }, [settings.customAccent, settings.theme]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !user) return;
+    const saved = localStorage.getItem(`zeroslate_google_push_${user.id}_${selectedDate}`);
+    setPushFeedback(saved ? JSON.parse(saved) : null);
+  }, [selectedDate, user]);
 
   // URL 파라미터로 구글 연동 성공 여부 확인
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('google_connected') === 'true') {
-      const userId = useTimeboxerStore.getState().userId;
+      const userId = useTimeboxerStore.getState().userId || user?.id;
       if (userId) localStorage.setItem(`zeroslate_google_connected_${userId}`, 'true');
       setGoogleTokenConnected(true);
-      syncGoogleCalendar();
+      syncGoogleCalendar({ date: useTimeboxerStore.getState().selectedDate });
       // URL 파라미터 제거
       window.history.replaceState({}, '', '/');
     }
@@ -124,20 +171,103 @@ export default function Home() {
       console.warn('구글 연동 오류:', error);
       window.history.replaceState({}, '', '/');
     }
-  }, [setGoogleTokenConnected, syncGoogleCalendar]);
+  }, [setGoogleTokenConnected, syncGoogleCalendar, user]);
 
-  const handleCalendarSync = async () => {
+  const pushTodayBlocksToGoogle = async () => {
     if (userPlan !== 'pro') {
-      setUpgradeOpen(true);
+      openUpgradeModal("Google Calendar로 보내기");
       return;
     }
     if (!googleTokenConnected) {
-      window.location.href = '/api/auth/google';
+      window.location.href = googleAuthUrl;
+      return;
+    }
+    if (timeBlocks.length === 0) {
+      setPushFeedback({
+        type: "warning",
+        message: "보낼 타임블록이 없습니다.",
+      });
+      return;
+    }
+
+    setGooglePushing(true);
+    setPushFeedback(null);
+    try {
+      const res = await fetch('/api/calendar/push', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: selectedDate,
+          userId: user?.id || useTimeboxerStore.getState().userId,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          blocks: timeBlocks.map((block) => ({
+            id: block.id,
+            content: block.content,
+            startTime: block.startTime,
+            endTime: block.endTime,
+            color: block.color,
+            memo: block.memo,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data?.needsReauth || res.status === 401 || res.status === 403) {
+          const userId = useTimeboxerStore.getState().userId;
+          if (userId) localStorage.removeItem(`zeroslate_google_connected_${userId}`);
+          setGoogleTokenConnected(false);
+          window.location.href = googleAuthUrl;
+          return;
+        }
+        throw new Error(data?.error || 'google_calendar_push_failed');
+      }
+
+      const result = await res.json();
+      await syncGoogleCalendar({ date: selectedDate });
+      const totalChanged = result.created + result.updated + result.deleted;
+      const message = result.failed > 0
+        ? `일부만 반영됨 · 성공 ${totalChanged}개 · 실패 ${result.failed}개`
+        : `Google 반영 완료 · 생성 ${result.created} · 수정 ${result.updated} · 삭제 ${result.deleted}`;
+      const feedback: PushFeedback = {
+        type: result.failed > 0 ? "warning" : "success",
+        message,
+        syncedAt: result.syncedAt || new Date().toISOString(),
+      };
+      setPushFeedback(feedback);
+      const userId = useTimeboxerStore.getState().userId;
+      if (userId) {
+        localStorage.setItem(`zeroslate_google_push_${userId}_${selectedDate}`, JSON.stringify(feedback));
+      }
+    } catch (error: any) {
+      console.error('Google Calendar 내보내기 실패:', error);
+      setPushFeedback({
+        type: "error",
+        message: error.message === 'google_calendar_push_failed' 
+          ? "Google 반영 실패 · 다시 승인 후 시도해주세요."
+          : `반영 실패: ${error.message || "알 수 없는 오류"}`,
+      });
+    } finally {
+      setGooglePushing(false);
+    }
+  };
+
+  const handleCalendarSync = async () => {
+    if (userPlan !== 'pro') {
+      openUpgradeModal("고급 캘린더 동기화");
+      return;
+    }
+    if (!googleTokenConnected) {
+      window.location.href = googleAuthUrl;
       return;
     }
     setCalSyncing(true);
-    await syncGoogleCalendar();
-    setCalSyncing(false);
+    try {
+      await syncGoogleCalendar({ date: selectedDate });
+    } finally {
+      setCalSyncing(false);
+    }
   };
 
   const [activeItem, setActiveItem] = useState<{
@@ -223,11 +353,13 @@ export default function Home() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-[#F7F8FA]">
+      <div className="zs-app-shell min-h-screen lg:h-screen lg:overflow-hidden flex flex-col">
 
+        <FocusTimer />
+        
         {/* ── 헤더 ── */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-zinc-200">
-          <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <header className="zs-app-header sticky top-0 z-30 backdrop-blur-md border-b">
+          <div className="max-w-[1500px] mx-auto px-6 sm:px-8 h-[58px] flex items-center justify-between gap-6">
             {/* 로고 */}
             <div className="flex items-center gap-2.5 shrink-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-sm">
@@ -239,35 +371,76 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 날짜 */}
-            <p className="text-sm text-zinc-500 font-medium hidden sm:block">
-              📅 {getTodayLabel()}
-            </p>
+
+            {/* 날짜 내비게이션 */}
+            <div className="flex items-center gap-3 bg-zinc-100/50 px-2 py-1 rounded-xl border border-zinc-200/50 hidden md:flex">
+              <button
+                onClick={() => changeDate(-1)}
+                className="p-1 hover:bg-white hover:shadow-sm rounded-lg transition-all text-zinc-500 hover:text-zinc-900"
+                title="이전 날짜"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <button 
+                onClick={goToToday}
+                className={`text-xs font-bold px-2 py-1 rounded-lg transition-all ${
+                  isTodaySelected 
+                    ? "text-blue-600 bg-white shadow-sm" 
+                    : "text-zinc-500 hover:text-zinc-900 hover:bg-white/50"
+                }`}
+              >
+                {getDateLabel(selectedDate)}
+              </button>
+
+              <button
+                onClick={() => changeDate(1)}
+                className="p-1 hover:bg-white hover:shadow-sm rounded-lg transition-all text-zinc-500 hover:text-zinc-900"
+                title="다음 날짜"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
 
             {/* 액션 버튼들 */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* 전체 달력 보기 버튼 (Pro 전용) */}
+              <button
+                onClick={() => {
+                  if (userPlan === 'pro') setIsCalendarOpen(true);
+                  else {
+                    openUpgradeModal("전체 달력 보기");
+                  }
+                }}
+                className="relative inline-flex items-center justify-center w-[33px] h-[33px] rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 transition-all shadow-sm shrink-0"
+                title="전체 달력 보기"
+              >
+                <CalendarIcon className="w-4 h-4" />
+                {userPlan !== 'pro' && <div className="absolute top-0 right-0 w-2 h-2 bg-amber-400 rounded-full border-2 border-white" />}
+              </button>
+
               {/* 구글 캘린더 연동 버튼 */}
               <button
                 onClick={handleCalendarSync}
-                className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs font-semibold transition-all ${
-                  googleTokenConnected
-                    ? 'border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50'
+                className={`inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border text-xs font-semibold transition-all shrink-0 whitespace-nowrap active:scale-95 ${
+                  userPlan === 'pro' && googleTokenConnected
+                    ? 'border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-100/70 shadow-sm'
+                    : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 shadow-sm'
                 }`}
-                title={googleTokenConnected ? '캘린더 동기화' : '구글 캘린더 연동'}
+                title={userPlan === 'pro' && googleTokenConnected ? 'Google 일정 불러오기와 오늘 작업 보내기' : '고급 캘린더 동기화'}
                 disabled={calSyncing}
               >
                 {calSyncing ? (
                   <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                ) : googleTokenConnected ? (
+                ) : userPlan === 'pro' && googleTokenConnected ? (
                   <Check className="w-3.5 h-3.5 text-blue-500" />
                 ) : (
                   <CalendarDays className="w-3.5 h-3.5" />
                 )}
                 <span className="hidden sm:inline">
-                  {googleTokenConnected ? '캘린더 동기화됨' : '캘린더 연동'}
+                  {userPlan === 'pro' && googleTokenConnected ? '캘린더 동기화' : '캘린더 연동'}
                 </span>
-                {userPlan !== 'pro' && <ProBadge />}
+                {userPlan !== 'pro' && <PlanBadge plan="pro" />}
               </button>
 
               <SettingsModal />
@@ -278,10 +451,11 @@ export default function Home() {
               
               {/* 유저 프로필 & 로그아웃 */}
               {user && (
-                <div className="flex items-center gap-2 ml-2 pl-2 border-l border-zinc-200">
-                  <div className="flex items-center gap-1.5 px-2 py-1.5 bg-zinc-100 rounded-md">
+                <div className="flex items-center gap-2 pl-4 border-l border-zinc-200 ml-2">
+                  <PlanBadge size="sm" plan={userPlan} />
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 rounded-lg shrink-0">
                     <UserIcon className="w-3.5 h-3.5 text-zinc-500" />
-                    <span className="text-xs font-medium text-zinc-700 hidden md:inline-block max-w-[120px] truncate">
+                    <span className="text-xs font-medium text-zinc-600 truncate max-w-[150px]">
                       {user.email}
                     </span>
                   </div>
@@ -328,15 +502,36 @@ export default function Home() {
                 </p>
               </div>
               
-              {routines.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {routines.length > 0 && (
+                  <button
+                    onClick={applyRoutines}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[11px] font-bold hover:bg-blue-100 transition-colors border border-blue-100"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    루틴 불러오기
+                  </button>
+                )}
+
                 <button
-                  onClick={applyRoutines}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[11px] font-bold hover:bg-blue-100 transition-colors border border-blue-100"
+                  onClick={pushTodayBlocksToGoogle}
+                  disabled={googlePushing}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-all active:scale-95 ${
+                    googleTokenConnected && userPlan === "pro"
+                      ? "border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+                  } ${googlePushing ? "opacity-70" : ""}`}
+                  title="현재 타임라인을 Google Calendar로 보내기"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  루틴 불러오기
+                  {googlePushing ? (
+                    <RotateCw className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <UploadCloud className="h-3 w-3" />
+                  )}
+                  Google로 보내기
+                  {userPlan !== "pro" && <PlanBadge plan="pro" />}
                 </button>
-              )}
+              </div>
             </div>
 
             {/* 스크롤 영역 */}
@@ -360,10 +555,20 @@ export default function Home() {
 
       <FocusModal />
       <ZeroPilot />
+      <CalendarViewModal />
       <UpgradeModal
-        open={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        featureName="구글 캘린더 동기화"
+        open={isUpgradeModalOpen}
+        onClose={closeUpgradeModal}
+        featureName={upgradeFeature}
+      />
+      <GooglePushFeedback 
+        feedback={pushFeedback} 
+        onClose={() => {
+          setPushFeedback(null);
+          if (user?.id) {
+            localStorage.removeItem(`zeroslate_google_push_${user.id}_${selectedDate}`);
+          }
+        }} 
       />
     </DndContext>
   );

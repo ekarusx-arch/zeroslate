@@ -12,18 +12,63 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
-import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette } from "lucide-react";
-import { PRESET_COLORS, Routine } from "@/types";
+import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette, Lock, Sparkles } from "lucide-react";
+import { PRESET_COLORS, Routine, ThemeId } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const START_OPTIONS = Array.from({ length: 13 }, (_, i) => i + 0); // 0~12시
 const END_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 16);  // 16~24시
-const STEP_OPTIONS = [15, 30, 60];
+const STEP_OPTIONS = [5, 15, 30, 60];
+const THEME_OPTIONS: Array<{
+  id: ThemeId;
+  label: string;
+  description: string;
+  isPro: boolean;
+  swatches: string[];
+}> = [
+  {
+    id: "classic",
+    label: "Classic",
+    description: "기본 작업 화면",
+    isPro: false,
+    swatches: ["#F7F8FA", "#FFFFFF", "#2563EB"],
+  },
+  {
+    id: "glass",
+    label: "Glass",
+    description: "맑고 가벼운 유리 표면",
+    isPro: true,
+    swatches: ["#EEF5F8", "#FFFFFFAA", "#0EA5E9"],
+  },
+  {
+    id: "midnight",
+    label: "Midnight",
+    description: "밤 작업용 다크 스킨",
+    isPro: true,
+    swatches: ["#0C0F14", "#111827", "#60A5FA"],
+  },
+  {
+    id: "paper",
+    label: "Paper",
+    description: "차분한 노트 질감",
+    isPro: true,
+    swatches: ["#F8F6F1", "#FFFDF8", "#B45309"],
+  },
+  {
+    id: "forest",
+    label: "Forest",
+    description: "눈이 편한 녹색 톤",
+    isPro: true,
+    swatches: ["#F2F7F3", "#FBFDF9", "#15803D"],
+  },
+];
+const ACCENT_PRESETS = ["#2563EB", "#0EA5E9", "#8B5CF6", "#F97316", "#15803D", "#DC2626"];
 
 export default function SettingsModal() {
   const settings = useTimeboxerStore((s) => s.settings);
   const updateSettings = useTimeboxerStore((s) => s.updateSettings);
+  const userPlan = useTimeboxerStore((s) => s.userPlan);
   const routines = useTimeboxerStore((s) => s.routines);
   const addRoutine = useTimeboxerStore((s) => s.addRoutine);
   const deleteRoutine = useTimeboxerStore((s) => s.deleteRoutine);
@@ -45,6 +90,7 @@ export default function SettingsModal() {
   // 새 커스텀 태그 상태
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(PRESET_COLORS[1].value);
+  const [themeNotice, setThemeNotice] = useState<string | null>(null);
 
   // 루틴 수정 상태
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,10 +126,16 @@ export default function SettingsModal() {
   };
 
   const handleAddCustomTag = () => {
+    if (userPlan !== "pro") {
+      setThemeNotice("스마트 태그 추가와 커스텀 색상은 Pro 플랜에서 사용할 수 있습니다.");
+      return;
+    }
+
     if (!newTagName.trim()) return;
     const tag = newTagName.startsWith("#") ? newTagName.trim() : `#${newTagName.trim()}`;
     if (settings.customTags?.some(t => t.tag === tag)) return;
 
+    setThemeNotice(null);
     updateSettings({
       customTags: [...(settings.customTags || []), { tag, color: newTagColor }]
     });
@@ -94,6 +146,26 @@ export default function SettingsModal() {
     updateSettings({
       customTags: (settings.customTags || []).filter(t => t.tag !== tag)
     });
+  };
+
+  const handleSelectTheme = (theme: ThemeId, isPro: boolean) => {
+    if (isPro && userPlan !== "pro") {
+      setThemeNotice("Premium 테마는 Pro 플랜에서 사용할 수 있습니다.");
+      return;
+    }
+
+    setThemeNotice(null);
+    updateSettings({ theme });
+  };
+
+  const handleSelectAccent = (color: string) => {
+    if (userPlan !== "pro") {
+      setThemeNotice("커스텀 포인트 컬러는 Pro 플랜에서 사용할 수 있습니다.");
+      return;
+    }
+
+    setThemeNotice(null);
+    updateSettings({ customAccent: color });
   };
 
   const handleStartEdit = (r: Routine) => {
@@ -120,14 +192,14 @@ export default function SettingsModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger
-        className="inline-flex items-center gap-2 h-8 px-3 rounded-md border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-medium transition-colors"
+        className="inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-semibold transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
         aria-label="설정 열기"
       >
         <Settings2 className="w-3.5 h-3.5" />
         설정
       </DialogTrigger>
 
-      <DialogContent className="max-w-md h-[650px] flex flex-col p-0 overflow-hidden bg-white border-none shadow-2xl">
+      <DialogContent className="max-w-lg h-[680px] flex flex-col p-0 overflow-hidden bg-white border-none shadow-2xl">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Settings2 className="w-4 h-4 text-zinc-500" />
@@ -147,6 +219,9 @@ export default function SettingsModal() {
               <TabsTrigger value="tags" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
                 <Tag className="w-3.5 h-3.5 mr-1" /> 스마트 태그
               </TabsTrigger>
+              <TabsTrigger value="theme" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                <Sparkles className="w-3.5 h-3.5 mr-1" /> 테마
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -156,7 +231,7 @@ export default function SettingsModal() {
                 {/* 시작 시간 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700">타임라인 시작 시각</label>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2.5">
                     {START_OPTIONS.map((h) => (
                       <button
                         key={h}
@@ -176,7 +251,7 @@ export default function SettingsModal() {
                 {/* 종료 시간 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700">타임라인 종료 시각</label>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2.5">
                     {END_OPTIONS.map((h) => (
                       <button
                         key={h}
@@ -196,7 +271,7 @@ export default function SettingsModal() {
                 {/* 슬롯 단위 */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700">시간 슬롯 단위</label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     {STEP_OPTIONS.map((s) => (
                       <button
                         key={s}
@@ -220,7 +295,7 @@ export default function SettingsModal() {
                 <Button
                   onClick={handleSaveSettings}
                   disabled={!isValid}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 h-11 rounded-xl font-bold"
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 h-11 rounded-xl font-bold mt-10"
                 >
                   변경사항 적용
                 </Button>
@@ -434,10 +509,32 @@ export default function SettingsModal() {
 
             <TabsContent value="tags" className="mt-0 space-y-6">
               {/* 커스텀 태그 추가 폼 */}
-              <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 space-y-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Plus className="w-3.5 h-3.5 text-zinc-500" />
-                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">새 스마트 태그</span>
+              <div className={`relative overflow-hidden rounded-xl border p-4 space-y-4 ${
+                userPlan === "pro" ? "border-zinc-100 bg-zinc-50" : "border-amber-200 bg-amber-50/40"
+              }`}>
+                {userPlan !== "pro" && (
+                  <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-white/80 px-3 py-2 text-amber-800">
+                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                      <Lock className="h-3.5 w-3.5" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-black">스마트 태그 커스터마이징은 Pro 기능입니다.</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-amber-700/80">기본 태그 색상은 계속 사용할 수 있어요.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-3.5 h-3.5 text-zinc-500" />
+                    <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">새 스마트 태그</span>
+                  </div>
+                  {userPlan !== "pro" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-2 py-1 text-[10px] font-black text-white">
+                      <Lock className="h-3 w-3" />
+                      PRO
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex gap-2">
@@ -446,13 +543,19 @@ export default function SettingsModal() {
                     onChange={(e) => setNewTagName(e.target.value)}
                     placeholder="예: #공부, #미팅"
                     className="h-10 text-sm bg-white flex-1"
+                    readOnly={userPlan !== "pro"}
+                    onFocus={() => {
+                      if (userPlan !== "pro") {
+                        setThemeNotice("스마트 태그 추가와 커스텀 색상은 Pro 플랜에서 사용할 수 있습니다.");
+                      }
+                    }}
                   />
                   <Button
                     onClick={handleAddCustomTag}
-                    disabled={!newTagName.trim()}
+                    disabled={userPlan === "pro" && !newTagName.trim()}
                     className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg text-sm font-bold shrink-0"
                   >
-                    추가
+                    {userPlan === "pro" ? "추가" : <Lock className="h-4 w-4" />}
                   </Button>
                 </div>
 
@@ -462,7 +565,14 @@ export default function SettingsModal() {
                     {PRESET_COLORS.filter(c => c.tag !== "").map((c) => (
                       <button
                         key={c.value}
-                        onClick={() => setNewTagColor(c.value)}
+                        onClick={() => {
+                          if (userPlan !== "pro") {
+                            setThemeNotice("태그 색상 커스터마이징은 Pro 플랜에서 사용할 수 있습니다.");
+                            return;
+                          }
+                          setThemeNotice(null);
+                          setNewTagColor(c.value);
+                        }}
                         className={`w-6 h-6 rounded-full border-2 transition-transform ${
                           newTagColor === c.value ? "scale-110 border-zinc-400" : "border-transparent"
                         }`}
@@ -475,7 +585,14 @@ export default function SettingsModal() {
                         type="color"
                         id="customTagColor"
                         value={newTagColor}
-                        onChange={(e) => setNewTagColor(e.target.value)}
+                        onChange={(e) => {
+                          if (userPlan !== "pro") {
+                            setThemeNotice("태그 색상 커스터마이징은 Pro 플랜에서 사용할 수 있습니다.");
+                            return;
+                          }
+                          setThemeNotice(null);
+                          setNewTagColor(e.target.value);
+                        }}
                         className="sr-only"
                       />
                       <label
@@ -535,10 +652,147 @@ export default function SettingsModal() {
 
                 {(!settings.customTags || settings.customTags.length === 0) && (
                   <p className="text-[11px] text-zinc-400 text-center py-4 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
-                    직접 태그를 추가해 보세요! 해당 단어가 포함되면 자동 색상이 적용됩니다.
+                    {userPlan === "pro"
+                      ? "직접 태그를 추가해 보세요! 해당 단어가 포함되면 자동 색상이 적용됩니다."
+                      : "Pro에서 직접 태그와 색상을 추가하면 단어에 맞춰 자동 색상이 적용됩니다."}
                   </p>
                 )}
               </div>
+
+              {themeNotice && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                  {themeNotice}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="theme" className="mt-0 space-y-5">
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-zinc-800">작업 화면 테마</p>
+                <p className="text-xs text-zinc-500">앱 전체 표면과 패널 분위기를 바꿉니다.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {THEME_OPTIONS.map((theme) => {
+                  const isActive = (settings.theme || "classic") === theme.id;
+                  const isLocked = theme.isPro && userPlan !== "pro";
+
+                  return (
+                    <button
+                      key={theme.id}
+                      onClick={() => handleSelectTheme(theme.id, theme.isPro)}
+                      className={`relative overflow-hidden rounded-2xl border p-3 text-left transition-all ${
+                        isActive
+                          ? "border-blue-400 bg-blue-50/70 shadow-sm"
+                          : isLocked
+                            ? "border-zinc-100 bg-zinc-50/70 opacity-80"
+                            : "border-zinc-100 bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                      }`}
+                    >
+                      <div
+                        className="relative mb-3 h-20 rounded-xl border border-black/5"
+                        style={{
+                          background: `linear-gradient(135deg, ${theme.swatches[0]}, ${theme.swatches[1]})`,
+                        }}
+                      >
+                        <div className="flex h-full items-end gap-1.5 p-2">
+                          {theme.swatches.map((color) => (
+                            <span
+                              key={color}
+                              className="h-7 w-7 rounded-full border-[3px] border-white shadow-[0_2px_10px_rgba(15,23,42,0.22),0_0_0_1px_rgba(15,23,42,0.18)] ring-1 ring-black/10"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                        {isLocked && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/35 backdrop-blur-[1px]">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-3 py-1.5 text-[10px] font-black text-white shadow-lg">
+                              <Lock className="h-3 w-3" />
+                              PRO
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold text-zinc-800">{theme.label}</p>
+                          <p className="mt-0.5 text-[11px] font-medium text-zinc-500">{theme.description}</p>
+                        </div>
+                        {isLocked ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-2 py-1 text-[10px] font-black text-white shadow-sm">
+                            <Lock className="h-3 w-3" />
+                            PRO
+                          </span>
+                        ) : isActive ? (
+                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-zinc-800">커스텀 포인트 컬러</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">체크, 강조선, 주요 액션 컬러를 내 취향에 맞춥니다.</p>
+                  </div>
+                  {userPlan !== "pro" && (
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-zinc-400 shadow-sm">
+                      <Lock className="h-3.5 w-3.5" />
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {ACCENT_PRESETS.map((color) => {
+                    const isActive = (settings.customAccent || "#2563EB").toLowerCase() === color.toLowerCase();
+
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => handleSelectAccent(color)}
+                        className={`relative h-9 w-9 rounded-full border-[3px] border-white shadow-[0_2px_10px_rgba(15,23,42,0.18),0_0_0_1px_rgba(15,23,42,0.16)] transition-transform hover:scale-105 ${
+                          isActive ? "scale-110 ring-2 ring-blue-400 ring-offset-2" : ""
+                        }`}
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      >
+                        {isActive && <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow" />}
+                      </button>
+                    );
+                  })}
+
+                  <div className="relative flex items-center gap-2">
+                    <input
+                      type="color"
+                      id="customAccentColor"
+                      value={settings.customAccent || "#2563EB"}
+                      onChange={(e) => handleSelectAccent(e.target.value)}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="customAccentColor"
+                      className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-600 shadow-sm transition-all hover:bg-zinc-50"
+                      title="직접 색상 선택"
+                    >
+                      <Palette className="h-4 w-4" style={{ color: settings.customAccent || "#2563EB" }} />
+                    </label>
+                    <span className="text-[11px] font-mono font-bold uppercase text-zinc-500">
+                      {settings.customAccent || "#2563EB"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {themeNotice && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                  {themeNotice}
+                </div>
+              )}
             </TabsContent>
           </div>
         </Tabs>
@@ -546,4 +800,3 @@ export default function SettingsModal() {
     </Dialog>
   );
 }
-

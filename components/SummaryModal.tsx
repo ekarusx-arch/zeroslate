@@ -143,7 +143,7 @@ export default function SummaryModal() {
     }}>
       <DialogTrigger
         id="summary-modal-trigger"
-        className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-colors shadow-sm ml-2"
+        className="inline-flex items-center gap-1.5 h-[33px] px-[16px] rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-all shadow-md whitespace-nowrap shrink-0 active:scale-95"
       >
         🚀 하루 마감하기
       </DialogTrigger>
