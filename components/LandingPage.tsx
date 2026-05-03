@@ -491,7 +491,7 @@ export default function LandingPage({ onOpenGuide }: { onOpenGuide?: () => void 
                   무료로 시작하기
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <span className="text-white/30 text-sm">설치 없음 · 신용카드 불필요</span>
+                <span className="text-white/30 text-sm">별도 설치 없이 · 바로 시작</span>
               </div>
             </div>
           </div>
