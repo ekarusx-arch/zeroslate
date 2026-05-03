@@ -179,14 +179,12 @@ function TimeSlot({
   minute,
   showHourLabel,
   slotHeight,
-  onStartDraw,
 }: {
   slotId: string;
   hour: number;
   minute: number;
   showHourLabel: boolean;
   slotHeight: number;
-  onStartDraw?: (hour: number, minute: number) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
 
@@ -290,7 +288,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             hour={slot.hour}
             minute={slot.minute}
             showHourLabel={showHourLabel}
-            // onStartDraw 제거됨
+            slotHeight={slotHeight}
           />
         );
       })}
