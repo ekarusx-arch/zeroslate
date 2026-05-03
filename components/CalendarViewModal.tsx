@@ -292,13 +292,13 @@ export default function CalendarViewModal() {
                 {daysEvents.map((event) => (
                   <div 
                     key={event.id}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg overflow-hidden shrink-0 transition-all hover:scale-[1.02]"
+                    className="flex items-center gap-1.5 px-2 py-[3px] rounded-lg overflow-hidden shrink-0 transition-all hover:scale-[1.02]"
                     style={{ 
-                      backgroundColor: `${event.color || '#6366f1'}15`,
+                      backgroundColor: `${event.color || '#6366f1'}18`,
                       borderLeft: `3px solid ${event.color || '#6366f1'}`,
                     }}
                   >
-                    <span className="text-[11px] font-semibold truncate" style={{ color: event.color || '#6366f1' }}>
+                    <span className="text-[11px] font-semibold truncate text-zinc-800">
                       {event.summary}
                     </span>
                   </div>
