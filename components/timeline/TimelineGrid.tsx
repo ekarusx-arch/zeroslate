@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { getTodayDateKey, useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { GoogleCalendarEvent, Settings } from "@/types";
@@ -17,11 +17,6 @@ import {
 
 const ROW_HEIGHT_30 = 48; // 30분당 기준 높이
 
-function minutesToTimeString(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
 
 function timeToMinutes(time: string) {
   const [hour, minute] = time.split(":").map(Number);
@@ -191,7 +186,7 @@ function TimeSlot({
   minute: number;
   showHourLabel: boolean;
   slotHeight: number;
-  onStartDraw: (hour: number, minute: number) => void;
+  onStartDraw?: (hour: number, minute: number) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
 
@@ -200,9 +195,6 @@ function TimeSlot({
       ref={setNodeRef}
       className={`time-slot flex relative ${isOver ? "bg-blue-100/60" : ""}`}
       style={{ height: `${slotHeight}px` }}
-      onMouseDown={(e) => {
-        if (e.button === 0) onStartDraw(hour, minute);
-      }}
     >
       {/* 시간 레이블 - 정시만 표시 */}
       <div className="w-14 shrink-0 flex items-start justify-end pr-3 pt-1">
@@ -230,7 +222,6 @@ function TimeSlot({
 // ─────────────────────────────────────────────────────────────────────
 export default function TimelineGrid({ settings }: { settings: Settings }) {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
-  const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
   const googleCalendarEvents = useTimeboxerStore((s) => s.googleCalendarEvents);
   const selectedDate = useTimeboxerStore((s) => s.selectedDate);
   const [editingEvent, setEditingEvent] = useState<GoogleCalendarEvent | null>(null);
@@ -239,7 +230,6 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 직접 그리기 상태
-  const [drawing, setDrawing] = useState<boolean>(false);
 
   // 슬롯 높이 계산 (30분당 ROW_HEIGHT_30 기준)
   const slotHeight = (settings.step / 30) * ROW_HEIGHT_30;
@@ -300,8 +290,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             hour={slot.hour}
             minute={slot.minute}
             showHourLabel={showHourLabel}
-            slotHeight={slotHeight}
-            onStartDraw={() => {}} // 기능 제거됨
+            // onStartDraw 제거됨
           />
         );
       })}
