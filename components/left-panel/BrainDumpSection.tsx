@@ -234,14 +234,16 @@ export default function BrainDumpSection() {
       {/* 내일로 넘기기 버튼 (AlertDialog 사용으로 안정성 강화) */}
       {pendingItems.length > 0 && (
         <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-bold hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
-            >
-              <RotateCw className="w-3 h-3" />
-              미완료 일과 내일로 넘기기
-            </button>
-          </AlertDialogTrigger>
+          <AlertDialogTrigger
+            render={
+              <button
+                className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-bold hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
+              >
+                <RotateCw className="w-3 h-3" />
+                미완료 일과 내일로 넘기기
+              </button>
+            }
+          />
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>내일로 넘기기</AlertDialogTitle>
