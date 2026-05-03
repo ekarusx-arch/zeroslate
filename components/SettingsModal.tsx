@@ -75,7 +75,6 @@ const THEME_OPTIONS: Array<{
     gradient: "linear-gradient(135deg, #e8f4eb 0%, #f2f7f3 50%, #eaf2ec 100%)",
   },
 ];
-const ACCENT_PRESETS = ["#2563EB", "#0EA5E9", "#8B5CF6", "#F97316", "#15803D", "#DC2626"];
 
 export default function SettingsModal() {
   const settings = useTimeboxerStore((s) => s.settings);
@@ -168,16 +167,6 @@ export default function SettingsModal() {
 
     setThemeNotice(null);
     updateSettings({ theme });
-  };
-
-  const handleSelectAccent = (color: string) => {
-    if (userPlan !== "pro") {
-      setThemeNotice("커스텀 포인트 컬러는 Pro 플랜에서 사용할 수 있습니다.");
-      return;
-    }
-
-    setThemeNotice(null);
-    updateSettings({ customAccent: color });
   };
 
   const handleStartEdit = (r: Routine) => {
