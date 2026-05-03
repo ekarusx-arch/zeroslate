@@ -275,7 +275,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
       <div
         ref={containerRef}
         className="relative select-none pb-8"
-        style={{ cursor: drawing ? "ns-resize" : "default" }}
+        style={{ cursor: "default" }}
       >
       {/* 슬롯 행 */}
       {slots.map((slot) => {
