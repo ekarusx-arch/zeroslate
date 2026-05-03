@@ -252,31 +252,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
     }
   }
 
-  // ── 마우스 드래그로 직접 블록 그리기 ──────────────────────────────
-  const handleStartDraw = useCallback(
-    (hour: number, minute: number) => {
-      if (!containerRef.current) return;
-      const startMin = hour * 60 + minute;
-      const endMin = startMin + settings.step; // 슬롯 단위만큼 기본 생성
-
-      addTimeBlock({
-        taskId: null,
-        content: "새 블록",
-        startTime: minutesToTimeString(startMin),
-        endTime: minutesToTimeString(endMin),
-      });
-
-      setDrawing(true);
-
-      const onMouseUp = () => {
-        window.removeEventListener("mouseup", onMouseUp);
-        setDrawing(false);
-      };
-
-      window.addEventListener("mouseup", onMouseUp);
-    },
-    [addTimeBlock, settings.step]
-  );
+  // ── 타임라인 클릭 생성 기능 제거됨 (드래그 앤 드롭만 사용) ────────────────────────
 
   const allDayEvents = googleCalendarEvents.filter((event) => event.date === selectedDate && event.isAllDay);
   const timeEvents = googleCalendarEvents.filter((event) => event.date === selectedDate && !event.isAllDay);
@@ -325,7 +301,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             minute={slot.minute}
             showHourLabel={showHourLabel}
             slotHeight={slotHeight}
-            onStartDraw={handleStartDraw}
+            onStartDraw={() => {}} // 기능 제거됨
           />
         );
       })}
