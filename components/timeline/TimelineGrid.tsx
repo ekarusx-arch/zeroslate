@@ -275,7 +275,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
 
       window.addEventListener("mouseup", onMouseUp);
     },
-    [addTimeBlock, isTodaySelected, settings.step]
+    [addTimeBlock, settings.step]
   );
 
   const allDayEvents = googleCalendarEvents.filter((event) => event.date === selectedDate && event.isAllDay);

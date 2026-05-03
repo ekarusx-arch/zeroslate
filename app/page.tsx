@@ -240,13 +240,14 @@ export default function Home() {
       if (userId) {
         localStorage.setItem(`zeroslate_google_push_${userId}_${selectedDate}`, JSON.stringify(feedback));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Google Calendar 내보내기 실패:', error);
+      const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류";
       setPushFeedback({
         type: "error",
-        message: error.message === 'google_calendar_push_failed' 
+        message: errorMessage === 'google_calendar_push_failed' 
           ? "Google 반영 실패 · 다시 승인 후 시도해주세요."
-          : `반영 실패: ${error.message || "알 수 없는 오류"}`,
+          : `반영 실패: ${errorMessage}`,
       });
     } finally {
       setGooglePushing(false);
