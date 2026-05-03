@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Brain, CalendarDays, Sparkles, Timer, Zap } from "lucide-react";
+import { ArrowRight, Brain, CalendarDays, Sparkles, Timer, Zap, CalendarSync, FastForward, Palette, Crown, ListChecks } from "lucide-react";
 
 // ─── 유틸리티 컴포넌트 ───────────────────────────────────────────
 
@@ -139,6 +139,7 @@ const FEATURES = [
     border: "border-blue-500/20",
     title: "Brain Dump",
     desc: "머릿속 생각을 모두 쏟아내세요. 정리하려 하지 말고, 그냥 흘러가게 두세요.",
+    plan: "free"
   },
   {
     icon: CalendarDays,
@@ -147,15 +148,62 @@ const FEATURES = [
     border: "border-violet-500/20",
     title: "타임박싱",
     desc: "드래그 한 번으로 할 일을 타임라인에 배치. 하루가 구체적인 계획이 됩니다.",
+    plan: "free"
+  },
+  {
+    icon: CalendarSync,
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    title: "구글 캘린더 동기화",
+    desc: "양방향 실시간 동기화로 외부 일정과 ZeroSlate 계획을 하나로 통합하세요.",
+    plan: "pro"
+  },
+  {
+    icon: FastForward,
+    color: "text-orange-400",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+    title: "스마트 내일로 넘기기",
+    desc: "미처 끝내지 못한 일들을 클릭 한 번으로 내일 타임라인에 즉시 이월합니다.",
+    plan: "pro"
   },
   {
     icon: Sparkles,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/20",
-    title: "AI 자동화",
-    desc: "스마트 태그, AI 다듬기, 생산성 분석까지. 당신의 보조 두뇌가 되어드립니다.",
+    title: "AI 성과 분석 리포트",
+    desc: "나의 시간 사용 패턴을 AI가 분석하여 주간/월간 성장 보고서를 생성합니다.",
+    plan: "pro"
   },
+  {
+    icon: Timer,
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+    border: "border-red-500/20",
+    title: "몰입(Focus) 타이머",
+    desc: "오직 하나의 작업에만 집중할 수 있는 전용 타이머와 몰입 환경을 제공합니다.",
+    plan: "pro"
+  },
+  {
+    icon: Palette,
+    color: "text-pink-400",
+    bg: "bg-pink-500/10",
+    border: "border-pink-500/20",
+    title: "커스텀 테마 & 컬러",
+    desc: "나만의 취향이 담긴 테마와 악센트 컬러로 워크스페이스를 아름답게 꾸미세요.",
+    plan: "pro"
+  },
+  {
+    icon: ListChecks,
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/20",
+    title: "자동 태깅 시스템",
+    desc: "해시태그 하나로 작업 카테고리와 색상이 자동으로 관리되어 정리가 빨라집니다.",
+    plan: "pro"
+  }
 ];
 
 // ─── 메인 랜딩 페이지 ─────────────────────────────────────────────
@@ -303,22 +351,38 @@ export default function LandingPage({ onOpenGuide }: { onOpenGuide?: () => void 
           </div>
 
           {/* 카드 그리드 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {FEATURES.map(({ icon: Icon, color, bg, border, title, desc }) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {FEATURES.map(({ icon: Icon, color, bg, border, title, desc, plan }) => (
               <div
                 key={title}
-                className="group relative p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300 overflow-hidden"
+                className={`group relative p-6 rounded-2xl border bg-white/[0.02] backdrop-blur-sm transition-all duration-300 overflow-hidden ${
+                  plan === 'pro' 
+                    ? 'border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/[0.04]' 
+                    : 'border-white/[0.08] hover:border-white/[0.12] hover:bg-white/[0.04]'
+                }`}
               >
+                {/* PRO 배지 */}
+                {plan === 'pro' && (
+                  <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                    <Crown className="w-2.5 h-2.5 text-amber-500" />
+                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Pro</span>
+                  </div>
+                )}
+
                 {/* 아이콘 */}
                 <div className={`w-12 h-12 rounded-xl ${bg} border ${border} flex items-center justify-center mb-6`}>
                   <Icon className={`w-6 h-6 ${color}`} />
                 </div>
 
                 <h3 className="text-lg font-bold text-white mb-3">{title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed font-medium">{desc}</p>
+                <p className="text-white/50 text-[13px] leading-relaxed font-medium">{desc}</p>
 
                 {/* 호버 시 그라디언트 오버레이 */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-white/[0.02] to-transparent" />
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
+                  plan === 'pro' 
+                    ? 'bg-gradient-to-br from-amber-500/[0.02] to-transparent' 
+                    : 'bg-gradient-to-br from-white/[0.02] to-transparent'
+                }`} />
               </div>
             ))}
           </div>
