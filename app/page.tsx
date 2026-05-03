@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { PlanBadge } from "@/components/ProBadge";
 import { useAuth } from "@/components/AuthProvider";
-import { LogOut, User as UserIcon, CalendarDays, Calendar as CalendarIcon, Check, RotateCw, GripVertical, RefreshCw, Timer, UploadCloud, ChevronLeft, ChevronRight } from "lucide-react";
+import { LogOut, CalendarDays, Calendar as CalendarIcon, Check, RotateCw, GripVertical, RefreshCw, Timer, UploadCloud, ChevronLeft, ChevronRight } from "lucide-react";
 import { getTodayDateKey, useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { BrainDumpItem, TopThreeItem } from "@/types";
 import TopThreeSection from "@/components/left-panel/TopThreeSection";
@@ -380,21 +380,21 @@ export default function Home() {
 
 
             {/* 날짜 내비게이션 */}
-            <div className="flex items-center gap-3 bg-zinc-100/50 px-2 py-1 rounded-xl border border-zinc-200/50 hidden md:flex">
+            <div className="flex items-center gap-1 bg-white/70 px-1.5 py-1 rounded-xl border border-zinc-200/80 shadow-sm hidden md:flex">
               <button
                 onClick={() => changeDate(-1)}
-                className="p-1 hover:bg-white hover:shadow-sm rounded-lg transition-all text-zinc-500 hover:text-zinc-900"
+                className="p-1.5 hover:bg-zinc-100 rounded-lg transition-all text-zinc-400 hover:text-zinc-700"
                 title="이전 날짜"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               
               <button 
                 onClick={goToToday}
-                className={`text-xs font-bold px-2 py-1 rounded-lg transition-all ${
+                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
                   isTodaySelected 
-                    ? "text-blue-600 bg-white shadow-sm" 
-                    : "text-zinc-500 hover:text-zinc-900 hover:bg-white/50"
+                    ? "text-blue-600 bg-blue-50 shadow-sm" 
+                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
                 }`}
               >
                 {getDateLabel(selectedDate)}
@@ -402,10 +402,10 @@ export default function Home() {
 
               <button
                 onClick={() => changeDate(1)}
-                className="p-1 hover:bg-white hover:shadow-sm rounded-lg transition-all text-zinc-500 hover:text-zinc-900"
+                className="p-1.5 hover:bg-zinc-100 rounded-lg transition-all text-zinc-400 hover:text-zinc-700"
                 title="다음 날짜"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -458,20 +458,22 @@ export default function Home() {
               
               {/* 유저 프로필 & 로그아웃 */}
               {user && (
-                <div className="flex items-center gap-2 pl-4 border-l border-zinc-200 ml-2">
+                <div className="flex items-center gap-1.5 pl-3 border-l border-zinc-200 ml-1">
                   <PlanBadge size="sm" plan={userPlan} />
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 rounded-lg shrink-0">
-                    <UserIcon className="w-3.5 h-3.5 text-zinc-500" />
-                    <span className="text-xs font-medium text-zinc-600 truncate max-w-[150px]">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-100/80 hover:bg-zinc-100 rounded-lg shrink-0 transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-black text-white">{user.email?.[0]?.toUpperCase()}</span>
+                    </div>
+                    <span className="text-xs font-medium text-zinc-600 truncate max-w-[130px] hidden sm:block">
                       {user.email}
                     </span>
                   </div>
                   <button
                     onClick={signOut}
-                    className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="로그아웃"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
@@ -498,15 +500,13 @@ export default function Home() {
           {/* 중앙 타임라인 */}
           <section className="flex-1 panel-card overflow-hidden flex flex-col min-h-[520px] lg:min-h-0 lg:min-w-[400px]">
             {/* 타임라인 헤더 */}
-            <div className="px-4 py-3 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 shrink-0">
-              <div className="flex flex-col gap-0.5">
-                <h2 className="text-sm font-semibold text-zinc-800 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-400 pulse-dot" />
-                  타임라인
-                </h2>
-                <p className="text-[10px] text-zinc-500">
-                  클릭 & 드래그로 블록 생성 · 왼쪽에서 드래그하여 배치
-                </p>
+            <div className="px-5 py-3.5 border-b border-zinc-100/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shrink-0 bg-white/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-2 rounded-full bg-red-400 pulse-dot" />
+                <div>
+                  <h2 className="text-sm font-bold text-zinc-800">타임라인</h2>
+                  <p className="text-[10px] text-zinc-400 font-medium">Left에서 드래그하여 시간을 배치하세요</p>
+                </div>
               </div>
               
               <div className="flex flex-wrap items-center gap-2">

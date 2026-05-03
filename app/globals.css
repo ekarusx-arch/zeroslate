@@ -24,12 +24,12 @@
     --input: 220 13% 91%;
     --ring: 221 83% 53%;
     --radius: 0.625rem;
-    --zs-app-bg: #F7F8FA;
-    --zs-header-bg: rgba(255, 255, 255, 0.82);
-    --zs-header-border: rgba(228, 228, 231, 0.72);
+    --zs-app-bg: #F0F2F7;
+    --zs-header-bg: rgba(255, 255, 255, 0.90);
+    --zs-header-border: rgba(210, 215, 230, 0.80);
     --zs-panel-bg: #ffffff;
-    --zs-panel-border: #e4e4e7;
-    --zs-panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --zs-panel-border: #e2e5ed;
+    --zs-panel-shadow: 0 2px 12px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04);
     --zs-soft-surface: #f4f4f5;
     --zs-text: #18181b;
     --zs-muted: #71717a;
@@ -127,7 +127,9 @@
 
   .zs-app-shell {
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.34), transparent 320px),
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(59, 130, 246, 0.05) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(255,255,255,0.50), transparent 280px),
       var(--zs-app-bg);
     color: var(--zs-text);
     transition: background-color 180ms ease, color 180ms ease;
