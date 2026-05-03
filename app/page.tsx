@@ -115,6 +115,7 @@ export default function Home() {
   const upgradeFeature = useTimeboxerStore((s) => s.upgradeFeature);
   const openUpgradeModal = useTimeboxerStore((s) => s.openUpgradeModal);
   const closeUpgradeModal = useTimeboxerStore((s) => s.closeUpgradeModal);
+  const [landingGuideOpen, setLandingGuideOpen] = useState(false);
 
   const isTodaySelected = selectedDate === getTodayDateKey();
   const { user, signOut } = useAuth();
@@ -344,7 +345,12 @@ export default function Home() {
   const applyRoutines = useTimeboxerStore((s) => s.applyRoutines);
 
   if (!user) {
-    return <LandingPage />;
+    return (
+      <>
+        <LandingPage onOpenGuide={() => setLandingGuideOpen(true)} />
+        <GuideModal open={landingGuideOpen} onOpenChange={setLandingGuideOpen} />
+      </>
+    );
   }
 
   return (

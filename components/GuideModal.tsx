@@ -92,20 +92,28 @@ const colorTags = [
   { tag: "#미팅", label: "회의", color: "bg-[#FCA5A5]", textColor: "text-red-700" },
 ];
 
-export default function GuideModal() {
+export default function GuideModal({ 
+  open, 
+  onOpenChange 
+}: { 
+  open?: boolean; 
+  onOpenChange?: (open: boolean) => void;
+}) {
   return (
-    <Dialog>
-      <DialogTrigger
-        render={
-          <button
-            className="inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-semibold transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
-            aria-label="사용법 열기"
-          >
-            <HelpCircle className="w-3.5 h-3.5" />
-            사용법
-          </button>
-        }
-      />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {!open && (
+        <DialogTrigger
+          render={
+            <button
+              className="inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border border-zinc-200 bg-white text-xs text-zinc-600 hover:bg-zinc-50 font-semibold transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
+              aria-label="사용법 열기"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              사용법
+            </button>
+          }
+        />
+      )}
       <DialogContent showCloseButton={false} className="sm:max-w-2xl p-0 border-none shadow-2xl bg-white overflow-hidden rounded-2xl">
         <Tabs defaultValue="basic" className="w-full flex flex-col max-h-[92vh]">
           {/* Header */}

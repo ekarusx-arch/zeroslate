@@ -160,7 +160,7 @@ const FEATURES = [
 
 // ─── 메인 랜딩 페이지 ─────────────────────────────────────────────
 
-export default function LandingPage() {
+export default function LandingPage({ onOpenGuide }: { onOpenGuide?: () => void }) {
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white overflow-x-hidden">
       <Noise />
@@ -183,15 +183,24 @@ export default function LandingPage() {
 
           {/* 네비 링크 */}
           <nav className="hidden md:flex items-center gap-6">
-            {["기능", "소개", "시작하기"].map((item) => (
-              <a
-                key={item}
-                href="#"
-                className="text-sm text-white/50 hover:text-white transition-colors duration-200"
-              >
-                {item}
-              </a>
-            ))}
+            <button
+              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+              className="text-sm text-white/50 hover:text-white transition-colors duration-200"
+            >
+              기능
+            </button>
+            <button
+              onClick={() => document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" })}
+              className="text-sm text-white/50 hover:text-white transition-colors duration-200"
+            >
+              소개
+            </button>
+            <button
+              onClick={() => document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" })}
+              className="text-sm text-white/50 hover:text-white transition-colors duration-200"
+            >
+              시작하기
+            </button>
           </nav>
 
           {/* 액션 버튼 */}
@@ -214,7 +223,7 @@ export default function LandingPage() {
       </header>
 
       {/* ── 히어로 섹션 ── */}
-      <section className="relative z-10 pt-24 pb-8 px-6 text-center">
+      <section id="hero" className="relative z-10 pt-24 pb-8 px-6 text-center">
         <div className="max-w-4xl mx-auto space-y-7">
           {/* 배지 */}
           <div className="flex justify-center">
@@ -240,6 +249,21 @@ export default function LandingPage() {
             불필요한 고민은 ZeroSlate가 대신 정리합니다.
           </p>
 
+          {/* 가이드 유도 문구 상세화 및 강화 */}
+          <div className="pt-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+            <button 
+              onClick={onOpenGuide}
+              className="group inline-flex items-center gap-2.5 text-sm text-white/50 hover:text-white transition-all duration-300 bg-white/[0.03] hover:bg-white/[0.08] px-5 py-2.5 rounded-full border border-white/5 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] backdrop-blur-sm"
+            >
+              <div className="relative">
+                <Sparkles className="w-4 h-4 text-blue-400 group-hover:scale-125 transition-transform" />
+                <div className="absolute inset-0 bg-blue-400/40 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="font-medium">복잡한 하루를 0순위로 만드는 법? <span className="text-blue-400 group-hover:text-blue-300 transition-colors">8가지 핵심 기능</span>을 확인해 보세요</span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
+            </button>
+          </div>
+
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link
@@ -260,7 +284,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 특징 섹션 ── */}
-      <section className="relative z-10 py-32 px-6">
+      <section id="features" className="relative z-10 py-32 px-6">
         <div className="max-w-6xl mx-auto">
           {/* 섹션 헤더 */}
           <div className="text-center mb-16 space-y-4">
@@ -302,7 +326,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA 배너 ── */}
-      <section className="relative z-10 py-32 px-6">
+      <section id="cta" className="relative z-10 py-32 px-6">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <div className="relative inline-block">
             <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-2xl" />
