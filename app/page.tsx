@@ -147,7 +147,13 @@ export default function Home() {
     } else {
       document.documentElement.style.removeProperty("--zs-accent");
     }
-  }, [settings.customAccent, settings.theme]);
+    // 배경 분위기 클래스 적용
+    const moods = ["sunset", "ocean", "aurora", "rose", "forest"];
+    moods.forEach(m => document.documentElement.classList.remove(`zs-bg-mood-${m}`));
+    if (settings.bgMood && settings.bgMood !== "none") {
+      document.documentElement.classList.add(`zs-bg-mood-${settings.bgMood}`);
+    }
+  }, [settings.customAccent, settings.theme, settings.bgMood]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !user) return;

@@ -143,6 +143,62 @@
       var(--zs-app-bg);
   }
 
+  /* ── 배경 분위기 (BgMood) ── */
+  .zs-bg-mood-sunset .zs-app-shell {
+    background:
+      radial-gradient(ellipse 70% 50% at 90% 0%, rgba(251, 146, 60, 0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 10% 20%, rgba(244, 114, 182, 0.10) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(251, 191, 36, 0.06) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,0.50), transparent 280px),
+      var(--zs-app-bg) !important;
+  }
+
+  .zs-bg-mood-ocean .zs-app-shell {
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 85% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 30% 100%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,0.50), transparent 280px),
+      var(--zs-app-bg) !important;
+  }
+
+  .zs-bg-mood-aurora .zs-app-shell {
+    background:
+      radial-gradient(ellipse 60% 45% at 20% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 80% 10%, rgba(20, 184, 166, 0.10) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 50% 90%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,0.50), transparent 280px),
+      var(--zs-app-bg) !important;
+  }
+
+  .zs-bg-mood-rose .zs-app-shell {
+    background:
+      radial-gradient(ellipse 65% 50% at 90% 5%, rgba(244, 63, 94, 0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 5% 30%, rgba(251, 113, 133, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 60% 100%, rgba(236, 72, 153, 0.05) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,0.50), transparent 280px),
+      var(--zs-app-bg) !important;
+  }
+
+  .zs-bg-mood-forest .zs-app-shell {
+    background:
+      radial-gradient(ellipse 65% 50% at 15% 0%, rgba(34, 197, 94, 0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 85% 20%, rgba(132, 204, 22, 0.07) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 40% 100%, rgba(21, 128, 61, 0.05) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,0.50), transparent 280px),
+      var(--zs-app-bg) !important;
+  }
+
+  /* Midnight + Mood 조합 */
+  .zs-bg-mood-aurora html[data-zs-theme="midnight"] .zs-app-shell,
+  html[data-zs-theme="midnight"] .zs-bg-mood-aurora .zs-app-shell {
+    background:
+      radial-gradient(ellipse 60% 45% at 20% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 80% 10%, rgba(20, 184, 166, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 50% 90%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+      var(--zs-app-bg) !important;
+  }
+
   .zs-app-header {
     background: var(--zs-header-bg);
     border-color: var(--zs-header-border);

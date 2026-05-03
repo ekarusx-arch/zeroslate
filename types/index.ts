@@ -33,6 +33,7 @@ export interface Settings {
   customTags: CustomTag[]; // ← 신규: 사용자 정의 태그
   theme: ThemeId;
   customAccent?: string;
+  bgMood?: string; // 배경 분위기: "none" | "sunset" | "ocean" | "aurora" | "forest" | "rose"
 }
 
 export interface BrainDumpItem {
