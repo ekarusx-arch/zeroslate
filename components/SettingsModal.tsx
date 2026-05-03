@@ -24,43 +24,55 @@ const THEME_OPTIONS: Array<{
   id: ThemeId;
   label: string;
   description: string;
+  emoji: string;
   isPro: boolean;
   swatches: string[];
+  gradient: string;
 }> = [
   {
     id: "classic",
     label: "Classic",
     description: "기본 작업 화면",
+    emoji: "☀️",
     isPro: false,
-    swatches: ["#F7F8FA", "#FFFFFF", "#2563EB"],
+    swatches: ["#F0F2F7", "#FFFFFF", "#2563EB"],
+    gradient: "linear-gradient(135deg, #F0F2F7 0%, #E8ECF4 50%, #dde3ef 100%)",
   },
   {
     id: "glass",
     label: "Glass",
     description: "맑고 가벼운 유리 표면",
+    emoji: "🔮",
     isPro: true,
     swatches: ["#EEF5F8", "#FFFFFFAA", "#0EA5E9"],
+    gradient: "linear-gradient(135deg, #daeeff 0%, #eef5fb 50%, #f0f8ff 100%)",
   },
   {
     id: "midnight",
     label: "Midnight",
     description: "밤 작업용 다크 스킨",
+    emoji: "🌙",
     isPro: true,
     swatches: ["#0C0F14", "#111827", "#60A5FA"],
+    gradient: "linear-gradient(135deg, #0c0f14 0%, #111827 50%, #1a2540 100%)",
   },
   {
     id: "paper",
     label: "Paper",
     description: "차분한 노트 질감",
+    emoji: "📄",
     isPro: true,
     swatches: ["#F8F6F1", "#FFFDF8", "#B45309"],
+    gradient: "linear-gradient(135deg, #f8f4eb 0%, #fffdf8 50%, #fdf6e3 100%)",
   },
   {
     id: "forest",
     label: "Forest",
     description: "눈이 편한 녹색 톤",
+    emoji: "🌿",
     isPro: true,
     swatches: ["#F2F7F3", "#FBFDF9", "#15803D"],
+    gradient: "linear-gradient(135deg, #e8f4eb 0%, #f2f7f3 50%, #eaf2ec 100%)",
   },
 ];
 const ACCENT_PRESETS = ["#2563EB", "#0EA5E9", "#8B5CF6", "#F97316", "#15803D", "#DC2626"];
@@ -676,57 +688,88 @@ export default function SettingsModal() {
                 {THEME_OPTIONS.map((theme) => {
                   const isActive = (settings.theme || "classic") === theme.id;
                   const isLocked = theme.isPro && userPlan !== "pro";
+                  const isDark = theme.id === "midnight";
 
                   return (
                     <button
                       key={theme.id}
                       onClick={() => handleSelectTheme(theme.id, theme.isPro)}
-                      className={`relative overflow-hidden rounded-2xl border p-3 text-left transition-all ${
+                      className={`relative overflow-hidden rounded-2xl border p-3 text-left transition-all group ${
                         isActive
-                          ? "border-blue-400 bg-blue-50/70 shadow-sm"
+                          ? isDark
+                            ? "border-blue-500/50 bg-zinc-900 shadow-lg shadow-blue-900/20"
+                            : "border-blue-400 bg-blue-50/70 shadow-sm"
                           : isLocked
-                            ? "border-zinc-100 bg-zinc-50/70 opacity-80"
+                            ? "border-zinc-100 bg-zinc-50/70 opacity-80 hover:opacity-100"
                             : "border-zinc-100 bg-white hover:border-blue-200 hover:bg-blue-50/30"
                       }`}
                     >
+                      {/* 테마 프리뷰 */}
                       <div
-                        className="relative mb-3 h-20 rounded-xl border border-black/5"
-                        style={{
-                          background: `linear-gradient(135deg, ${theme.swatches[0]}, ${theme.swatches[1]})`,
-                        }}
+                        className="relative mb-3 h-20 rounded-xl overflow-hidden"
+                        style={{ background: theme.gradient }}
                       >
-                        <div className="flex h-full items-end gap-1.5 p-2">
+                        {/* 다크 테마 스타 효과 */}
+                        {isDark && (
+                          <>
+                            <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 30%, rgba(96,165,250,0.15) 0%, transparent 60%)" }} />
+                            <div className="absolute top-2 right-3 w-1 h-1 rounded-full bg-blue-400/60" />
+                            <div className="absolute top-4 right-7 w-0.5 h-0.5 rounded-full bg-blue-300/40" />
+                            <div className="absolute top-3 right-10 w-1 h-1 rounded-full bg-violet-400/40" />
+                          </>
+                        )}
+                        {/* 미니 패널 실루엣 */}
+                        <div className="absolute inset-2 rounded-lg flex gap-1">
+                          <div className="w-8 rounded-md" style={{ background: isDark ? "rgba(17,24,39,0.9)" : "rgba(255,255,255,0.7)", border: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}` }} />
+                          <div className="flex-1 rounded-md" style={{ background: isDark ? "rgba(17,24,39,0.7)" : "rgba(255,255,255,0.5)", border: `1px solid ${isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"}` }}>
+                            <div className="m-1.5 h-1.5 rounded-full" style={{ background: theme.swatches[2], opacity: 0.8, width: "40%" }} />
+                            <div className="mx-1.5 mt-1 h-1 rounded-full bg-current opacity-10" style={{ width: "60%" }} />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-2 left-2 flex gap-1">
                           {theme.swatches.map((color) => (
                             <span
                               key={color}
-                              className="h-7 w-7 rounded-full border-[3px] border-white shadow-[0_2px_10px_rgba(15,23,42,0.22),0_0_0_1px_rgba(15,23,42,0.18)] ring-1 ring-black/10"
+                              className="h-5 w-5 rounded-full border-[2px] border-white shadow-md"
                               style={{ backgroundColor: color }}
                             />
                           ))}
                         </div>
                         {isLocked && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/35 backdrop-blur-[1px]">
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-3 py-1.5 text-[10px] font-black text-white shadow-lg">
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-[2px]">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-[10px] font-black text-white shadow-lg">
                               <Lock className="h-3 w-3" />
-                              PRO
+                              PRO 전용
+                            </span>
+                          </div>
+                        )}
+                        {isActive && (
+                          <div className="absolute top-2 right-2">
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white shadow-md">
+                              <Check className="h-3 w-3" />
                             </span>
                           </div>
                         )}
                       </div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-bold text-zinc-800">{theme.label}</p>
-                          <p className="mt-0.5 text-[11px] font-medium text-zinc-500">{theme.description}</p>
+
+                      {/* 테마 정보 */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base">{theme.emoji}</span>
+                          <div>
+                            <p className={`text-sm font-bold ${isActive && isDark ? "text-white" : "text-zinc-800"}`}>{theme.label}</p>
+                            <p className={`text-[11px] font-medium ${isActive && isDark ? "text-zinc-400" : "text-zinc-500"}`}>{theme.description}</p>
+                          </div>
                         </div>
                         {isLocked ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-2 py-1 text-[10px] font-black text-white shadow-sm">
-                            <Lock className="h-3 w-3" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-1 text-[10px] font-black text-white shadow-sm">
+                            <Lock className="h-2.5 w-2.5" />
                             PRO
                           </span>
                         ) : isActive ? (
-                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white">
-                            <Check className="h-3.5 w-3.5" />
-                          </span>
+                          <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${
+                            isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-600"
+                          }`}>✓ 적용중</span>
                         ) : null}
                       </div>
                     </button>

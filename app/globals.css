@@ -51,16 +51,16 @@
 
   html[data-zs-theme="midnight"] {
     color-scheme: dark;
-    --zs-app-bg: #0c0f14;
-    --zs-header-bg: rgba(15, 23, 42, 0.82);
-    --zs-header-border: rgba(71, 85, 105, 0.5);
-    --zs-panel-bg: #111827;
-    --zs-panel-border: #243244;
-    --zs-panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.26);
-    --zs-soft-surface: #172033;
-    --zs-text: #e5edf7;
-    --zs-muted: #94a3b8;
-    --zs-accent: #60a5fa;
+    --zs-app-bg: #080b10;
+    --zs-header-bg: rgba(10, 14, 22, 0.92);
+    --zs-header-border: rgba(255, 255, 255, 0.07);
+    --zs-panel-bg: #0f1520;
+    --zs-panel-border: rgba(255, 255, 255, 0.07);
+    --zs-panel-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
+    --zs-soft-surface: #141c2c;
+    --zs-text: #e8f0fe;
+    --zs-muted: #8ba3c7;
+    --zs-accent: #6eb3fa;
   }
 
   html[data-zs-theme="paper"] {
@@ -135,6 +135,14 @@
     transition: background-color 180ms ease, color 180ms ease;
   }
 
+  html[data-zs-theme="midnight"] .zs-app-shell {
+    background:
+      radial-gradient(ellipse 70% 40% at 15% 0%, rgba(96, 179, 250, 0.08) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 35% at 85% 5%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 50% 100%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
+      var(--zs-app-bg);
+  }
+
   .zs-app-header {
     background: var(--zs-header-bg);
     border-color: var(--zs-header-border);
@@ -178,36 +186,42 @@
 
   html[data-zs-theme="midnight"] .panel-card {
     @apply text-zinc-100;
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+
+  html[data-zs-theme="midnight"] .panel-card:hover {
+    border-color: rgba(255, 255, 255, 0.10);
   }
 
   html[data-zs-theme="midnight"] .panel-card input,
   html[data-zs-theme="midnight"] .panel-card textarea {
-    color: #e5edf7;
+    color: #e8f0fe;
   }
 
   html[data-zs-theme="midnight"] .text-zinc-800,
   html[data-zs-theme="midnight"] .text-zinc-900 {
-    color: #e5edf7;
+    color: #e8f0fe;
   }
 
   html[data-zs-theme="midnight"] .text-zinc-700,
   html[data-zs-theme="midnight"] .text-zinc-600,
   html[data-zs-theme="midnight"] .text-zinc-500 {
-    color: #94a3b8;
+    color: #8ba3c7;
   }
 
   html[data-zs-theme="midnight"] .bg-white {
-    background-color: #111827;
+    background-color: #0f1520;
   }
 
   html[data-zs-theme="midnight"] .bg-zinc-50,
   html[data-zs-theme="midnight"] .bg-zinc-100 {
-    background-color: #172033;
+    background-color: #141c2c;
   }
 
   html[data-zs-theme="midnight"] .border-zinc-100,
   html[data-zs-theme="midnight"] .border-zinc-200 {
-    border-color: #243244;
+    border-color: rgba(255,255,255,0.07);
   }
 
   .zs-calendar-modal {
