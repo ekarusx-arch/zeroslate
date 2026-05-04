@@ -78,7 +78,7 @@ export default function StatsModal() {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
+      } catch {
         // 취소 등 에러 시 클립보드 폴백
         copyToClipboard(shareUrl);
       }
