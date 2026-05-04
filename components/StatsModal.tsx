@@ -126,7 +126,7 @@ export default function StatsModal() {
           </button>
         } />
 
-        <DialogContent className="max-w-[1100px] w-[95vw] max-h-[90vh] overflow-hidden bg-white border-none shadow-[0_32px_80px_-12px_rgba(0,0,0,0.2)] p-0 rounded-[28px] flex flex-col">
+        <DialogContent className="!w-[1100px] !max-w-[1100px] max-h-[90vh] overflow-hidden bg-white border-none shadow-[0_32px_80px_-12px_rgba(0,0,0,0.2)] p-0 rounded-[28px] flex flex-col">
 
           {/* ── 공통 헤더 ── */}
           <ReportHeader />
