@@ -51,12 +51,14 @@ export default function StatsModal() {
 
   return (
     <Dialog onOpenChange={(open) => { if (open) loadData(); }}>
-      <DialogTrigger asChild>
-        <button className="flex items-center gap-1.5 h-[33px] px-3 py-1.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-600 text-xs font-bold transition-all active:scale-95 shadow-sm border border-zinc-200/50">
-          <BarChart3 className="w-3.5 h-3.5 text-blue-500" />
-          통계 리포트
-        </button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <button className="flex items-center gap-1.5 h-[33px] px-3 py-1.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-600 text-xs font-bold transition-all active:scale-95 shadow-sm border border-zinc-200/50">
+            <BarChart3 className="w-3.5 h-3.5 text-blue-500" />
+            통계 리포트
+          </button>
+        }
+      />
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-zinc-200 shadow-2xl p-0 gap-0">
         <DialogHeader className="p-6 pb-4 border-b border-zinc-100 bg-zinc-50/50">
           <div className="flex items-center justify-between">
