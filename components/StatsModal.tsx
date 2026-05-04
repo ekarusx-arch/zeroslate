@@ -59,7 +59,7 @@ export default function StatsModal() {
           </button>
         }
       />
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-zinc-200 shadow-2xl p-0 gap-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-zinc-200 shadow-2xl p-0 gap-0">
         <DialogHeader className="p-6 pb-4 border-b border-zinc-100 bg-zinc-50/50">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2.5 text-zinc-800 font-black tracking-tight">
