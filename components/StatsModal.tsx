@@ -134,7 +134,7 @@ export default function StatsModal() {
                         </Pie>
                         <ChartTooltip 
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px', fontWeight: 'bold' }}
-                          formatter={(value: any) => formatMinutes(Number(value))}
+                          formatter={(value: number | string) => formatMinutes(Number(value))}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -165,7 +165,7 @@ export default function StatsModal() {
                       <ChartTooltip 
                         cursor={{ fill: '#F1F5F9' }}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px', fontWeight: 'bold' }}
-                        formatter={(value: any) => [`${formatMinutes(Number(value))}`, '몰입 시간']}
+                        formatter={(value: number | string) => [`${formatMinutes(Number(value))}`, '몰입 시간']}
                       />
                       <Bar 
                         dataKey="minutes" 
