@@ -238,10 +238,19 @@ export default function ZeroPilot() {
   };
 
   return (
-    <div className="fixed bottom-24 lg:bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
-      {/* Pilot 대화창 */}
+    <>
+      {/* 모바일 뒷배경 딤 */}
       {isOpen && (
-        <div className="w-[calc(100vw-3rem)] sm:w-80 max-h-[min(760px,calc(100vh-7rem))] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-zinc-100 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4">
+        <div 
+          className="fixed inset-0 bg-black/20 z-[90] lg:hidden backdrop-blur-sm transition-opacity" 
+          onClick={() => setIsOpen(false)} 
+        />
+      )}
+
+      {/* Pilot 대화창 (모바일 바텀 시트 / 데스크탑 플로팅) */}
+      {isOpen && (
+        <div className="fixed z-[100] bottom-0 left-0 right-0 lg:bottom-[5rem] lg:right-6 lg:left-auto flex flex-col lg:items-end animate-in slide-in-from-bottom-8 duration-300">
+          <div className="w-full lg:w-80 h-[85vh] lg:h-auto lg:max-h-[min(760px,calc(100vh-7rem))] bg-white rounded-t-[2rem] lg:rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-t lg:border border-zinc-100 overflow-hidden flex flex-col">
           {/* 헤더 */}
           <div className="p-4 bg-zinc-900 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -305,19 +314,19 @@ export default function ZeroPilot() {
                   </div>
                 )}
                 {analysis && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-xl bg-zinc-50 p-2 text-center">
-                        <p className="text-[10px] font-bold text-zinc-400">남은 작업</p>
-                        <p className="mt-1 text-base font-black text-zinc-900">{analysis.stats.pending}</p>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="rounded-2xl bg-zinc-50 p-3 flex sm:flex-col items-center justify-between sm:justify-center border border-zinc-100/50">
+                        <p className="text-[11px] font-bold text-zinc-500">남은 작업</p>
+                        <p className="mt-0 sm:mt-1 text-lg font-black text-zinc-900">{analysis.stats.pending}개</p>
                       </div>
-                      <div className="rounded-xl bg-zinc-50 p-2 text-center">
-                        <p className="text-[10px] font-bold text-zinc-400">미배치</p>
-                        <p className="mt-1 text-base font-black text-zinc-900">{analysis.stats.unassigned}</p>
+                      <div className="rounded-2xl bg-zinc-50 p-3 flex sm:flex-col items-center justify-between sm:justify-center border border-zinc-100/50">
+                        <p className="text-[11px] font-bold text-zinc-500">미배치</p>
+                        <p className="mt-0 sm:mt-1 text-lg font-black text-zinc-900">{analysis.stats.unassigned}개</p>
                       </div>
-                      <div className="rounded-xl bg-zinc-50 p-2 text-center">
-                        <p className="text-[10px] font-bold text-zinc-400">부하</p>
-                        <p className="mt-1 text-base font-black text-zinc-900">{analysis.stats.loadRate}%</p>
+                      <div className="rounded-2xl bg-zinc-50 p-3 flex sm:flex-col items-center justify-between sm:justify-center border border-zinc-100/50">
+                        <p className="text-[11px] font-bold text-zinc-500">스케줄 부하</p>
+                        <p className="mt-0 sm:mt-1 text-lg font-black text-zinc-900">{analysis.stats.loadRate}%</p>
                       </div>
                     </div>
 
@@ -366,15 +375,15 @@ export default function ZeroPilot() {
                   </div>
                 )}
                 {patternReport && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-xl bg-zinc-50 p-3 text-center">
-                        <p className="text-[10px] font-bold text-zinc-400">평균 완료율</p>
-                        <p className="mt-1 text-lg font-black text-zinc-900">{patternReport.averageRate}%</p>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="rounded-2xl bg-zinc-50 p-3 flex sm:flex-col items-center justify-between sm:justify-center border border-zinc-100/50">
+                        <p className="text-[11px] font-bold text-zinc-500">평균 완료율</p>
+                        <p className="mt-0 sm:mt-1 text-lg font-black text-zinc-900">{patternReport.averageRate}%</p>
                       </div>
-                      <div className="rounded-xl bg-zinc-50 p-3 text-center">
-                        <p className="text-[10px] font-bold text-zinc-400">분석 로그</p>
-                        <p className="mt-1 text-lg font-black text-zinc-900">{patternReport.logCount}개</p>
+                      <div className="rounded-2xl bg-zinc-50 p-3 flex sm:flex-col items-center justify-between sm:justify-center border border-zinc-100/50">
+                        <p className="text-[11px] font-bold text-zinc-500">분석된 로그</p>
+                        <p className="mt-0 sm:mt-1 text-lg font-black text-zinc-900">{patternReport.logCount}일치</p>
                       </div>
                     </div>
 
@@ -510,15 +519,21 @@ export default function ZeroPilot() {
         </div>
       )}
 
-      {/* 메인 버튼 */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-110 active:scale-95 ${
-          isOpen ? "bg-zinc-900 text-white" : "bg-blue-600 text-white"
-        }`}
-      >
-        {isOpen ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6 animate-pulse" />}
-      </button>
-    </div>
+      {/* 플로팅 액션 버튼 (항상 우측 하단 고정) */}
+      <div className="fixed bottom-24 lg:bottom-6 right-6 z-[100]">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative zs-pilot-btn flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-[0_8px_30px_rgba(59,130,246,0.3)] bg-gradient-to-br from-blue-500 to-indigo-600 text-white transition-transform hover:scale-105 active:scale-95"
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+          
+          {/* 빛나는 이펙트 */}
+          <div className="absolute inset-0 rounded-full border border-white/20" />
+          {!isOpen && (
+            <div className="absolute -inset-1 animate-pulse rounded-full bg-blue-400/20" />
+          )}
+        </button>
+      </div>
+    </>
   );
 }
