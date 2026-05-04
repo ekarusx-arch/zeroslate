@@ -182,6 +182,7 @@ function TimeSlot({
   minute,
   showHourLabel,
   slotHeight,
+  isAssigningMode,
   onClick,
 }: {
   slotId: string;
