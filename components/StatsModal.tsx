@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import {
   Dialog,
@@ -9,8 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { BarChart3, PieChart as PieChartIcon, TrendingUp, Calendar, Clock, CheckCircle2, ChevronRight } from "lucide-react";
+import { BarChart3, PieChart as PieChartIcon, TrendingUp, Calendar, Clock, CheckCircle2 } from "lucide-react";
 import {
   PieChart,
   Pie,
