@@ -17,7 +17,12 @@ import {
   Clock, 
   Target,
   ArrowUpRight,
-  Info
+  Sparkles,
+  Share2,
+  Download,
+  Zap,
+  ArrowUp,
+  BrainCircuit
 } from "lucide-react";
 import {
   PieChart,
@@ -59,98 +64,125 @@ export default function StatsModal() {
   };
 
   const score = data?.totalMinutes ? Math.round((data.completedMinutes / data.totalMinutes) * 100) : 0;
+  const growthRate = 12; // 데모용 성장률
 
   return (
     <Dialog onOpenChange={(open) => { if (open) loadData(); }}>
       <DialogTrigger
         render={
-          <button className="flex items-center gap-2 h-9 px-4 rounded-lg bg-zinc-900 text-white text-xs font-bold transition-all hover:bg-zinc-800 active:scale-95 shadow-lg shadow-zinc-200">
-            <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
-            통계 리포트
+          <button className="flex items-center gap-2 h-9 px-4 rounded-xl bg-zinc-900 text-white text-xs font-bold transition-all hover:bg-zinc-800 hover:scale-[1.02] active:scale-95 shadow-xl shadow-zinc-200 group">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400 group-hover:animate-pulse" />
+            AI 리포트
           </button>
         }
       />
-      <DialogContent className="max-w-[1200px] w-[95vw] sm:max-w-[1200px] max-h-[92vh] overflow-hidden bg-white border-none shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] p-0 rounded-3xl flex flex-col">
-        {/* 헤더 섹션 - 수평 밸런스 강조 */}
-        <div className="px-12 py-10 border-b border-zinc-50 shrink-0 bg-zinc-50/30">
-          <div className="flex items-start justify-between gap-12">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.4)]" />
-                <span className="text-[11px] font-black text-blue-600 uppercase tracking-[0.3em]">AI Intelligence Engine</span>
+      <DialogContent className="max-w-[1200px] w-[95vw] sm:max-w-[1200px] max-h-[94vh] overflow-hidden bg-white border-none shadow-[0_48px_96px_-12px_rgba(0,0,0,0.18)] p-0 rounded-[32px] flex flex-col">
+        {/* 상단 툴바 */}
+        <div className="absolute top-6 right-16 flex items-center gap-2 z-50">
+           <button className="p-2.5 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-all">
+              <Share2 className="w-4 h-4" />
+           </button>
+           <button className="p-2.5 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-all">
+              <Download className="w-4 h-4" />
+           </button>
+        </div>
+
+        {/* 프리미엄 헤더 섹션 */}
+        <div className="px-16 py-12 border-b border-zinc-50 shrink-0 bg-gradient-to-b from-zinc-50/50 to-white">
+          <div className="flex items-end justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-600/20">
+                  Weekly Intelligence
+                </div>
+                <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                  <ArrowUp className="w-3 h-3" />
+                  {growthRate}% 성장 중
+                </div>
               </div>
-              <DialogTitle className="text-4xl font-bold text-zinc-900 tracking-tight leading-tight">
-                최근 7일 생산성 리포트
+              <DialogTitle className="text-5xl font-bold text-zinc-900 tracking-tighter leading-tight">
+                Productivity <span className="text-zinc-300">Insights</span>
               </DialogTitle>
-              <p className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                데이터 기반의 주간 퍼포먼스 분석 결과입니다.
+              <p className="text-sm font-medium text-zinc-400 max-w-md leading-relaxed">
+                사용자님의 지난 7일간의 몰입 데이터를 AI가 분석한 결과입니다. <br/>
+                상위 5%의 몰입 패턴을 유지하고 계시네요.
               </p>
             </div>
             
-            <div className="flex flex-col items-end gap-1 px-8 py-5 bg-white rounded-2xl shadow-sm border border-zinc-100 min-w-[200px]">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Weekly Score</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-6xl font-black text-zinc-900 tracking-tighter leading-none">{score}</span>
-                <span className="text-2xl font-bold text-zinc-200 tracking-tighter">%</span>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-blue-600/20 blur-3xl group-hover:bg-blue-600/30 transition-all" />
+              <div className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full bg-white border-[12px] border-zinc-50 shadow-inner">
+                <svg className="absolute inset-0 w-full h-full -rotate-90 p-1">
+                  <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#F8FAFC" strokeWidth="8" />
+                  <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#2563EB" strokeWidth="8" strokeDasharray="100" strokeDashoffset={100 - score} strokeLinecap="round" className="transition-all duration-1000" />
+                </svg>
+                <span className="text-5xl font-black text-zinc-900 tracking-tighter">{score}</span>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Total Score</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 메인 콘텐츠 영역 */}
-        <div className="flex-1 overflow-y-auto px-12 py-12 space-y-16">
+        {/* 메인 콘텐츠 스크롤 영역 */}
+        <div className="flex-1 overflow-y-auto px-16 py-12 space-y-20">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-5">
-              <div className="w-10 h-10 border-[3px] border-zinc-100 border-t-blue-600 rounded-full animate-spin" />
-              <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">Analyzing your momentum...</p>
+            <div className="flex flex-col items-center justify-center py-32 gap-6">
+              <div className="relative w-12 h-12">
+                 <div className="absolute inset-0 border-4 border-zinc-100 rounded-full" />
+                 <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+              <p className="text-xs font-black text-zinc-400 uppercase tracking-[0.3em]">Decoding Momentum...</p>
             </div>
           ) : data ? (
             <>
-              {/* 핵심 지표 - 완벽한 수평 정렬 그리드 */}
-              <div className="grid grid-cols-3 gap-16">
-                <div className="relative pl-6 border-l-2 border-blue-600 space-y-2">
+              {/* 핵심 인사이트 그리드 */}
+              <div className="grid grid-cols-4 gap-12">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 text-zinc-400">
                     <Clock className="w-4 h-4" />
-                    <span className="text-[11px] font-black uppercase tracking-widest">Total Focus</span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.25em]">Focus Volume</span>
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-zinc-900 tracking-tight">{formatMinutes(data.completedMinutes)}</span>
-                    <span className="text-xs font-bold text-zinc-300">/ {formatMinutes(data.totalMinutes)} planned</span>
-                  </div>
+                  <div className="text-3xl font-bold text-zinc-900 tracking-tight">{formatMinutes(data.completedMinutes)}</div>
+                  <p className="text-[10px] font-bold text-zinc-400">전체 계획의 {score}% 달성</p>
                 </div>
                 
-                <div className="relative pl-6 border-l-2 border-zinc-100 space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 text-zinc-400">
-                    <Target className="w-4 h-4" />
-                    <span className="text-[11px] font-black uppercase tracking-widest">Accuracy</span>
+                    <Zap className="w-4 h-4" />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.25em]">Peak Velocity</span>
                   </div>
-                  <div className="text-4xl font-bold text-zinc-900 tracking-tight">{score}%</div>
+                  <div className="text-3xl font-bold text-zinc-900 tracking-tight">3.2h / day</div>
+                  <p className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3" /> 지난주 대비 0.5h 증가
+                  </p>
                 </div>
 
-                <div className="relative pl-6 border-l-2 border-zinc-100 space-y-2">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-[11px] font-black uppercase tracking-widest">Status</span>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-zinc-800 leading-tight">
-                      {score >= 70 ? "Excellent Flow" : score >= 40 ? "Steady Growth" : "Need Momentum"}
+                <div className="col-span-2 p-8 rounded-3xl bg-zinc-900 text-white relative overflow-hidden group">
+                  <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-blue-500/20 blur-3xl group-hover:bg-blue-500/30 transition-all" />
+                  <div className="relative z-10 flex items-start gap-5">
+                    <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md">
+                      <BrainCircuit className="w-6 h-6 text-blue-400" />
                     </div>
-                    <p className="text-[11px] font-bold text-zinc-400 mt-1 uppercase tracking-tight">상위 10%의 생산성 그룹</p>
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-black text-white tracking-widest uppercase opacity-50">AI Logic Comment</h4>
+                      <p className="text-lg font-bold leading-tight">
+                        {score >= 80 ? "가장 창의적인 에너지가 발산된 한 주입니다. 수요일의 몰입 패턴을 유지하세요." : "일관된 시작 시간이 부족합니다. 다음 주에는 오전 루틴을 10분만 당겨볼까요?"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* 차트 섹션 - 너비 확장 활용 */}
-              <div className="grid grid-cols-5 gap-16 items-start">
-                {/* 파이 차트 (2/5 비중) */}
-                <div className="col-span-2 space-y-8">
-                  <div className="flex items-center gap-3 border-b border-zinc-50 pb-4">
-                    <PieChartIcon className="w-5 h-5 text-blue-500" />
-                    <h3 className="text-sm font-black text-zinc-900 uppercase tracking-widest">Category Split</h3>
+              {/* 비주얼 트렌드 섹션 */}
+              <div className="grid grid-cols-3 gap-16">
+                <div className="col-span-1 space-y-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black text-zinc-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <PieChartIcon className="w-4 h-4 text-zinc-300" />
+                      Activity Split
+                    </h3>
                   </div>
-                  <div className="h-[320px] w-full bg-zinc-50/30 rounded-3xl p-6 relative flex items-center justify-center">
+                  <div className="h-[300px] w-full flex items-center justify-center relative bg-zinc-50/50 rounded-[40px] border border-zinc-100">
                     {data.pieData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -160,7 +192,7 @@ export default function StatsModal() {
                             cy="50%"
                             innerRadius={90}
                             outerRadius={120}
-                            paddingAngle={6}
+                            paddingAngle={8}
                             dataKey="value"
                             stroke="none"
                           >
@@ -169,52 +201,50 @@ export default function StatsModal() {
                             ))}
                           </Pie>
                           <ChartTooltip 
-                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 12px 32px rgba(0,0,0,0.1)', fontSize: '12px', fontWeight: 'bold' }}
+                            contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontSize: '13px', fontWeight: 'bold' }}
                             formatter={(value: any) => formatMinutes(Number(value || 0))}
                           />
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="flex flex-col items-center gap-2 text-zinc-300">
-                        <PieChartIcon className="w-8 h-8 opacity-20" />
-                        <span className="text-xs font-bold italic">No data analyzed</span>
-                      </div>
+                      <div className="text-xs font-bold text-zinc-300">No data</div>
                     )}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Categories</span>
-                       <span className="text-3xl font-black text-zinc-900">{data.pieData.length}</span>
-                    </div>
                   </div>
                 </div>
 
-                {/* 막대 차트 (3/5 비중) */}
-                <div className="col-span-3 space-y-8">
-                  <div className="flex items-center gap-3 border-b border-zinc-50 pb-4">
-                    <Calendar className="w-5 h-5 text-violet-500" />
-                    <h3 className="text-sm font-black text-zinc-900 uppercase tracking-widest">Daily Momentum</h3>
+                <div className="col-span-2 space-y-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black text-zinc-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-zinc-300" />
+                      Focus Momentum
+                    </h3>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
+                      <div className="w-2 h-2 rounded-full bg-blue-600" />
+                      Focus Time (Minutes)
+                    </div>
                   </div>
-                  <div className="h-[320px] w-full bg-white border border-zinc-100 rounded-3xl p-8 shadow-sm">
+                  <div className="h-[300px] w-full">
                      <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.barData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="0" vertical={false} stroke="#F8FAFC" />
+                        <CartesianGrid strokeDasharray="0" vertical={false} stroke="#F1F5F9" />
                         <XAxis 
                           dataKey="date" 
                           axisLine={false} 
                           tickLine={false} 
-                          tick={{ fontSize: 11, fontWeight: '800', fill: '#CBD5E1' }}
+                          tick={{ fontSize: 11, fontWeight: '800', fill: '#94A3B8' }}
                           dy={15}
                         />
                         <YAxis hide />
                         <ChartTooltip 
-                          cursor={{ fill: '#F8FAFC', radius: 10 }}
-                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 12px 32px rgba(0,0,0,0.1)', fontSize: '12px', fontWeight: 'bold' }}
-                          formatter={(value: any) => [`${formatMinutes(Number(value || 0))}`, 'Focus']}
+                          cursor={{ fill: '#F8FAFC', radius: 16 }}
+                          contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', fontSize: '13px', fontWeight: 'bold' }}
+                          formatter={(value: any) => [`${formatMinutes(Number(value || 0))}`, 'Minutes']}
                         />
                         <Bar 
                           dataKey="minutes" 
                           fill="#2563EB" 
-                          radius={[6, 6, 6, 6]} 
-                          barSize={28}
+                          radius={[12, 12, 12, 12]} 
+                          barSize={32}
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -222,61 +252,50 @@ export default function StatsModal() {
                 </div>
               </div>
 
-              {/* 상세 정보 리스트 - 가독성 극대화 */}
-              <div className="space-y-8 pb-8">
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-6">
-                   <div className="flex items-center gap-3">
-                    <BarChart3 className="w-6 h-6 text-zinc-900" />
-                    <h3 className="text-xl font-bold text-zinc-900 tracking-tight">Category Breakdown</h3>
-                   </div>
-                   <div className="px-4 py-1.5 bg-zinc-100 rounded-lg text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                      Detailed Metrics
-                   </div>
+              {/* 상세 심층 분석 */}
+              <div className="space-y-12">
+                <div className="flex items-center gap-6">
+                  <h3 className="text-2xl font-black text-zinc-900 tracking-tighter">Tag Deep-Dive</h3>
+                  <div className="h-px flex-1 bg-zinc-100" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-20 gap-y-8">
-                  {data.pieData.map((tag) => (
-                    <div key={tag.name} className="flex items-center justify-between group py-2">
-                      <div className="flex items-center gap-5">
-                        <div className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]" style={{ backgroundColor: tag.color }} />
+                <div className="grid grid-cols-2 gap-x-24 gap-y-10">
+                  {data.pieData.map((tag, idx) => (
+                    <div key={tag.name} className="flex items-center justify-between group cursor-default">
+                      <div className="flex items-center gap-6">
+                        <div className="text-xl font-black text-zinc-200 group-hover:text-blue-600/20 transition-all">0{idx + 1}</div>
                         <div>
-                           <span className="text-sm font-bold text-zinc-900 block leading-none mb-1">{tag.name}</span>
-                           <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Productivity Tag</span>
+                           <span className="text-lg font-bold text-zinc-800 block leading-none mb-2">{tag.name}</span>
+                           <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Growth +2%</span>
+                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-8">
-                        <div className="text-right">
-                           <span className="text-lg font-black text-zinc-900 tracking-tighter block leading-none">{formatMinutes(tag.value)}</span>
-                           <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mt-1 inline-block">
-                              {Math.round((tag.value / data.completedMinutes) * 100)}% Share
-                           </span>
+                      <div className="flex flex-col items-end">
+                        <span className="text-2xl font-black text-zinc-900 tracking-tighter leading-none mb-1">{formatMinutes(tag.value)}</span>
+                        <div className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">
+                           {Math.round((tag.value / data.completedMinutes) * 100)}% distribution
                         </div>
-                        <ArrowUpRight className="w-5 h-5 text-zinc-200 group-hover:text-blue-600 transition-all group-hover:translate-x-1 group-hover:-translate-y-1" />
                       </div>
                     </div>
                   ))}
-                  {data.pieData.length === 0 && (
-                    <div className="col-span-2 py-20 flex flex-col items-center justify-center bg-zinc-50 rounded-[40px] border-2 border-dashed border-zinc-100">
-                       <TrendingUp className="w-12 h-12 text-zinc-100 mb-4" />
-                       <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Build your history for deep analysis</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </>
           ) : null}
           
-          {/* 푸터 섹션 */}
-          <div className="flex items-center justify-between pt-12 border-t border-zinc-100 text-zinc-300">
-             <div className="flex items-center gap-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">ZeroSlate Intelligence</span>
-                <div className="w-1 h-1 rounded-full bg-zinc-200" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Version 2.4.0</span>
+          {/* 푸터 */}
+          <div className="flex items-center justify-between pt-16 border-t border-zinc-50">
+             <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-blue-600">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.3em]">Rising Momentum</span>
+                </div>
+                <div className="w-1 h-4 bg-zinc-100 rounded-full" />
+                <p className="text-[10px] font-bold text-zinc-300">© 2026 ZeroSlate Inc. AI Analysis Powered by Vision Engine.</p>
              </div>
-             <div className="flex gap-8">
-                <button className="text-[10px] font-black uppercase tracking-widest hover:text-zinc-900 transition-colors">Export Analytics</button>
-                <button className="text-[10px] font-black uppercase tracking-widest hover:text-zinc-900 transition-colors">Data Privacy</button>
-             </div>
+             <ArrowUpRight className="w-5 h-5 text-zinc-200" />
           </div>
         </div>
       </DialogContent>
