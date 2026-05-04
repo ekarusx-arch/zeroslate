@@ -494,8 +494,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   fetchStatsData: async () => {
     const { userId, settings } = get();
-    if (!userId) return { pieData: [], barData: [], totalMinutes: 0, completedMinutes: 0 };
-
+    
     const today = new Date();
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -503,13 +502,16 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       return d.toISOString().split("T")[0];
     });
 
-    const { data: blocks, error } = await supabase
-      .from("time_blocks")
-      .select("*")
-      .eq("user_id", userId)
-      .in("date", last7Days);
-
-    if (error || !blocks) return { pieData: [], barData: [], totalMinutes: 0, completedMinutes: 0 };
+    let blocks: any[] = [];
+    if (userId) {
+      const { data, error } = await supabase
+        .from("time_blocks")
+        .select("*")
+        .eq("user_id", userId)
+        .in("date", last7Days);
+      
+      if (!error && data) blocks = data;
+    }
 
     const tagStats: Record<string, { minutes: number; color: string }> = {};
     const dailyStats: Record<string, number> = {};
@@ -518,27 +520,51 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     let totalMinutes = 0;
     let completedMinutes = 0;
 
-    blocks.forEach(b => {
-      const [sh, sm] = b.start_time.split(":").map(Number);
-      const [eh, em] = b.end_time.split(":").map(Number);
-      const diff = (eh * 60 + em) - (sh * 60 + sm);
-      
-      if (diff <= 0) return;
-
-      totalMinutes += diff;
-      if (b.is_completed) {
-        completedMinutes += diff;
-        dailyStats[b.date] += diff;
-
-        const color = getColorForContent(b.content, settings.customTags);
-        const tag = (settings.customTags || []).find(t => t.color === color)?.tag || "기타";
+    // 실제 데이터 집계
+    if (blocks.length > 0) {
+      blocks.forEach(b => {
+        const [sh, sm] = b.start_time.split(":").map(Number);
+        const [eh, em] = b.end_time.split(":").map(Number);
+        const diff = (eh * 60 + em) - (sh * 60 + sm);
         
-        if (!tagStats[tag]) {
-          tagStats[tag] = { minutes: 0, color: color || "#CBD5E1" };
+        if (diff <= 0) return;
+
+        totalMinutes += diff;
+        if (b.is_completed) {
+          completedMinutes += diff;
+          dailyStats[b.date] += diff;
+
+          const color = getColorForContent(b.content, settings.customTags);
+          const tag = (settings.customTags || []).find(t => t.color === color)?.tag || "기타";
+          
+          if (!tagStats[tag]) {
+            tagStats[tag] = { minutes: 0, color: color || "#CBD5E1" };
+          }
+          tagStats[tag].minutes += diff;
         }
-        tagStats[tag].minutes += diff;
-      }
-    });
+      });
+    }
+
+    // 데이터가 하나도 없을 경우 데모 데이터 생성 (사용자 체험용)
+    if (totalMinutes === 0) {
+      const demoTags = [
+        { name: "업무", color: "#3B82F6", min: 120, max: 240 },
+        { name: "자기계발", color: "#8B5CF6", min: 60, max: 120 },
+        { name: "운동", color: "#10B981", min: 45, max: 60 },
+        { name: "독서", color: "#F59E0B", min: 30, max: 90 },
+      ];
+
+      totalMinutes = 2100; // 약 35시간
+      completedMinutes = 1750; // 약 29시간
+
+      demoTags.forEach(t => {
+        tagStats[t.name] = { minutes: Math.floor(Math.random() * (t.max - t.min) + t.min) * 5, color: t.color };
+      });
+
+      last7Days.forEach(d => {
+        dailyStats[d] = Math.floor(Math.random() * 150 + 180);
+      });
+    }
 
     const pieData = Object.entries(tagStats).map(([name, data]) => ({
       name,
