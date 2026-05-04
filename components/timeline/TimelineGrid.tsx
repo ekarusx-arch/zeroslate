@@ -331,7 +331,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
         <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 text-white rounded-full shadow-2xl border border-white/10 backdrop-blur-md">
             <div className="w-2 h-2 rounded-full animate-pulse bg-blue-500" />
-            <span className="text-[11px] font-bold truncate max-w-[120px]">"{assigningTask.content}" 배치 중...</span>
+            <span className="text-[11px] font-bold truncate max-w-[120px]">&quot;{assigningTask.content}&quot; 배치 중...</span>
             <div className="w-px h-3 bg-white/20" />
             <button 
               onClick={() => setAssigningTask(null)}
