@@ -52,7 +52,7 @@ export default function GoalBanner() {
             <span className="text-[10px] font-bold text-zinc-400">Main Focus</span>
           </div>
           <p className="text-sm font-black text-zinc-800 truncate leading-tight">
-            {currentGoal.content || currentGoal.title}
+            {currentGoal.title}
           </p>
         </div>
       </div>
