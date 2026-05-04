@@ -63,6 +63,9 @@ export default function TimeBlock({
 
   // ── 드래그/리사이징 로컬 상태 ──
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobileEditing, setIsMobileEditing] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const touchStartY = useRef<number>(0);
   const [localStart, setLocalStart] = useState(timeStringToMinutes(block.startTime));
   const [localEnd, setLocalEnd] = useState(timeStringToMinutes(block.endTime));
 
@@ -281,6 +284,102 @@ export default function TimeBlock({
     ]
   );
 
+  // ── 모바일 터치 핸들러 ──────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if ((e.target as HTMLElement).closest("button, input, [data-handle]")) return;
+    
+    touchStartY.current = e.touches[0].clientY;
+    
+    // 롱프레스 타이머 시작 (500ms)
+    longPressTimer.current = setTimeout(() => {
+      setIsMobileEditing(true);
+      if (window.navigator.vibrate) window.navigator.vibrate(50);
+    }, 500);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentY = e.touches[0].clientY;
+    
+    // 움직임이 크면 롱프레스 취소 (스크롤 의도)
+    if (!isMobileEditing && Math.abs(currentY - touchStartY.current) > 10) {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
+
+    if (isMobileEditing) {
+      e.preventDefault(); // 스크롤 방지
+      const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
+      const relY = currentY - containerTop;
+      const blockDuration = localEnd - localStart;
+      
+      const newStartRaw = timelineStartMinutes + pxToMinutes(relY - (blockDuration / 2 / 30) * ROW_HEIGHT);
+      const maxStartMin = timelineEndMinutes - blockDuration;
+      const newStart = Math.min(maxStartMin, Math.max(timelineStartMinutes, newStartRaw));
+      
+      setLocalStart(newStart);
+      setLocalEnd(newStart + blockDuration);
+      setIsDragging(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (isMobileEditing) {
+      setIsMobileEditing(false);
+      setIsDragging(false);
+      
+      // 스토어 업데이트
+      if (localStart !== timeStringToMinutes(block.startTime)) {
+        updateTimeBlock(block.id, {
+          startTime: minutesToTimeString(localStart),
+          endTime: minutesToTimeString(localEnd),
+        });
+      }
+    }
+  };
+
+  // ── 모바일 하단 핸들 터치 리사이즈 ──
+  const handleBottomTouchResize = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setIsMobileEditing(true);
+    setIsDragging(true);
+
+    const onTouchMove = (te: TouchEvent) => {
+      te.preventDefault();
+      const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
+      const relY = te.touches[0].clientY - containerTop;
+      const newEndRaw = timelineStartMinutes + pxToMinutes(relY);
+      const newEnd = Math.min(
+        timelineEndMinutes,
+        Math.max(localStart + MIN_BLOCK_MINUTES, newEndRaw)
+      );
+      setLocalEnd(newEnd);
+    };
+
+    const onTouchEnd = () => {
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      
+      setIsMobileEditing(false);
+      setIsDragging(false);
+      
+      if (localEnd !== timeStringToMinutes(block.endTime)) {
+        updateTimeBlock(block.id, {
+          endTime: minutesToTimeString(localEnd),
+        });
+      }
+    };
+
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+  };
+
   const handleSaveMemo = () => {
     updateTimeBlock(block.id, { memo: tempMemo });
     setIsMemoOpen(false);
@@ -311,13 +410,21 @@ export default function TimeBlock({
       onMouseDown={(e) => {
         handleBlockDrag(e);
       }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onClick={(e) => {
+        if (isMobileEditing) return;
         if (!(e.target as HTMLElement).closest("button, input, [data-handle]")) {
           setTempMemo(block.memo || "");
           setIsMemoOpen(true);
         }
       }}
     >
+      {/* 모바일 편집 모드 시각적 효과 */}
+      {isMobileEditing && (
+        <div className="absolute inset-0 z-20 border-2 border-white/50 rounded-xl pointer-events-none bg-white/10" />
+      )}
       {/* 상단 리사이즈 핸들 */}
       <div
         data-handle="top"
@@ -405,10 +512,13 @@ export default function TimeBlock({
       {/* 하단 리사이즈 핸들 */}
       <div
         data-handle="bottom"
-        className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        className={`absolute bottom-0 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center transition-opacity z-30 ${
+          isMobileEditing || isHovered ? "opacity-100" : "opacity-0"
+        }`}
         onMouseDown={handleBottomResize}
+        onTouchStart={handleBottomTouchResize}
       >
-        <div className="w-8 h-0.5 bg-white/60 rounded-full" />
+        <div className={`w-12 h-1 rounded-full shadow-sm transition-all ${isMobileEditing ? "bg-white scale-x-125" : "bg-white/60"}`} />
       </div>
     </div>
 

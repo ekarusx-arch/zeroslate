@@ -189,6 +189,7 @@ function TimeSlot({
   minute: number;
   showHourLabel: boolean;
   slotHeight: number;
+  isAssigningMode?: boolean;
   onClick?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
@@ -197,9 +198,24 @@ function TimeSlot({
     <div
       ref={setNodeRef}
       onClick={onClick}
-      className={`time-slot flex relative cursor-pointer sm:cursor-default ${isOver ? "bg-blue-100/60" : ""}`}
+      className={`time-slot flex relative transition-all duration-300 ${
+        isOver ? "bg-blue-100/60" : ""
+      } ${
+        isAssigningMode 
+          ? "cursor-pointer hover:bg-blue-50/50 bg-blue-50/20 active:bg-blue-100/40" 
+          : "cursor-pointer sm:cursor-default"
+      }`}
       style={{ height: `${slotHeight}px` }}
     >
+      {/* 배치 모드일 때의 안내 효과 */}
+      {isAssigningMode && (
+        <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Tap to Place</span>
+          </div>
+        </div>
+      )}
       {/* 시간 레이블 - 정시만 표시 */}
       <div className="w-14 shrink-0 flex items-start justify-end pr-3 pt-1">
         {showHourLabel && (
@@ -301,6 +317,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             minute={slot.minute}
             showHourLabel={showHourLabel}
             slotHeight={slotHeight}
+            isAssigningMode={!!assigningTask}
             onClick={() => {
               if (assigningTask) {
                 const startTime = `${String(slot.hour).padStart(2, "0")}:${String(slot.minute).padStart(2, "0")}`;
@@ -327,19 +344,34 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
         );
       })}
 
-      {/* 수동 배치 모드 배너 */}
+      {/* 수동 배치 모드 배너 - 하단 중앙 배치로 모바일 편의성 개선 */}
       {assigningTask && (
-        <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 text-white rounded-full shadow-2xl border border-white/10 backdrop-blur-md">
-            <div className="w-2 h-2 rounded-full animate-pulse bg-blue-500" />
-            <span className="text-[11px] font-bold truncate max-w-[120px]">&quot;{assigningTask.content}&quot; 배치 중...</span>
-            <div className="w-px h-3 bg-white/20" />
-            <button 
-              onClick={() => setAssigningTask(null)}
-              className="text-[10px] font-black uppercase text-zinc-400 hover:text-white transition-colors"
-            >
-              취소
-            </button>
+        <div className="fixed bottom-24 left-4 right-4 z-[60] animate-in fade-in zoom-in slide-in-from-bottom-8 duration-500">
+          <div className="mx-auto max-w-[400px] flex items-center justify-between gap-4 px-5 py-4 bg-zinc-900/90 backdrop-blur-xl text-white rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-white/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_#3b82f6]" />
+                </div>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-0.5 leading-none">Assigning Task</span>
+                <span className="text-sm font-bold truncate leading-none">&quot;{assigningTask.content}&quot;</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-px h-8 bg-white/10 mx-1" />
+              <button 
+                onClick={() => setAssigningTask(null)}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 active:scale-95 rounded-xl text-xs font-black uppercase text-zinc-400 hover:text-white transition-all"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+          {/* 타임라인 안내 텍스트 */}
+          <div className="text-center mt-3">
+             <p className="text-[11px] font-black text-zinc-900 bg-white/80 backdrop-blur-sm inline-block px-3 py-1 rounded-full shadow-sm">원하는 시간 칸을 터치하세요</p>
           </div>
         </div>
       )}
