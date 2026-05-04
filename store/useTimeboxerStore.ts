@@ -173,6 +173,12 @@ interface TimeboxerState {
 
   // ── 장기 목표 (Goals) ──────────────────────────────────────────────
   goals: Goal[];
+
+  // 모바일/PC 스케줄링 배치 모드
+  assigningTask: { id: string; content: string; color?: string; type: 'focus' | 'braindump' } | null;
+  setAssigningTask: (task: { id: string; content: string; color?: string; type: 'focus' | 'braindump' } | null) => void;
+  selectedSlotTime: { hour: number; minute: number } | null;
+  setSelectedSlotTime: (time: { hour: number; minute: number } | null) => void;
   fetchGoals: () => Promise<void>;
   addGoal: (title: string, type: GoalType, color?: string) => Promise<void>;
   updateGoal: (id: string, updates: Partial<Goal>) => Promise<void>;
@@ -271,6 +277,11 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   userId: null,
   selectedDate: getTodayKey(),
   goals: [],
+
+  assigningTask: null,
+  setAssigningTask: (task) => set({ assigningTask: task }),
+  selectedSlotTime: null,
+  setSelectedSlotTime: (time) => set({ selectedSlotTime: time }),
 
   // 유료화 초기 상태
   userPlan: 'free' as UserPlan,

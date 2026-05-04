@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   RotateCw,
   Timer,
+  Calendar,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
   const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const settings = useTimeboxerStore((s) => s.settings);
+  const setAssigningTask = useTimeboxerStore((s) => s.setAssigningTask);
+  const assigningTask = useTimeboxerStore((s) => s.assigningTask);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
@@ -128,6 +131,20 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
     alert("남은 시간에 빈 30분 슬롯이 없습니다.");
   };
 
+  const handleManualAssign = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (assigningTask?.id === item.id) {
+      setAssigningTask(null);
+    } else {
+      setAssigningTask({
+        id: item.id,
+        content: item.content,
+        color: item.color,
+        type: 'braindump'
+      });
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -195,15 +212,27 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         </span>
       )}
 
-      {/* 모바일 타임라인 빠른 배치 버튼 */}
-      <button
-        onClick={handleQuickAssign}
-        className="lg:hidden text-zinc-400 hover:text-blue-500 transition-all duration-150 shrink-0 bg-zinc-50 p-1.5 rounded-lg border border-zinc-100 shadow-sm active:scale-95"
-        aria-label="타임라인에 30분 배치"
-        title="타임라인 빈 시간에 자동 배치"
-      >
-        <Timer className="w-3.5 h-3.5" />
-      </button>
+      {/* 시간 배치 버튼 */}
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={handleManualAssign}
+          className={`p-1.5 rounded-lg transition-all ${
+            assigningTask?.id === item.id
+              ? "bg-blue-500 text-white shadow-sm scale-110"
+              : "text-zinc-400 hover:text-blue-500 hover:bg-blue-50"
+          }`}
+          title="타임라인에 직접 배치하기"
+        >
+          <Calendar className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={handleQuickAssign}
+          className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+          title="다음 빈 시간에 빠른 배치"
+        >
+          <Timer className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
       {/* 삭제 버튼 */}
       <button

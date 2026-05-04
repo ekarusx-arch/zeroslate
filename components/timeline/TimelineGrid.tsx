@@ -228,9 +228,13 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const googleCalendarEvents = useTimeboxerStore((s) => s.googleCalendarEvents);
   const selectedDate = useTimeboxerStore((s) => s.selectedDate);
+  const selectedSlotTime = useTimeboxerStore((s) => s.selectedSlotTime);
+  const setSelectedSlotTime = useTimeboxerStore((s) => s.setSelectedSlotTime);
+  const assigningTask = useTimeboxerStore((s) => s.assigningTask);
+  const setAssigningTask = useTimeboxerStore((s) => s.setAssigningTask);
+  const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
   const [editingEvent, setEditingEvent] = useState<GoogleCalendarEvent | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [selectedSlotTime, setSelectedSlotTime] = useState<{ hour: number; minute: number } | null>(null);
   const isTodaySelected = selectedDate === getTodayDateKey();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -255,8 +259,8 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
 
   return (
     <>
-      {/* ── 종일 일정 헤더 영역 (오늘이 아닐 때만 표시) ── */}
-      {!isTodaySelected && allDayEvents.length > 0 && (
+      {/* ── 종일 일정 헤더 영역 ── */}
+      {allDayEvents.length > 0 && (
         <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-zinc-100 pl-14 pr-4 py-2 flex flex-col gap-1.5 shadow-sm">
           {allDayEvents.map(event => (
             <div
@@ -298,7 +302,22 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             showHourLabel={showHourLabel}
             slotHeight={slotHeight}
             onClick={() => {
-              if (window.innerWidth < 768) {
+              if (assigningTask) {
+                const startTime = `${String(slot.hour).padStart(2, "0")}:${String(slot.minute).padStart(2, "0")}`;
+                const endTotalMin = slot.hour * 60 + slot.minute + 30;
+                const endH = Math.floor(endTotalMin / 60);
+                const endM = endTotalMin % 60;
+                const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+
+                addTimeBlock({
+                  taskId: assigningTask.id,
+                  content: assigningTask.content,
+                  startTime,
+                  endTime,
+                  date: selectedDate,
+                });
+                setAssigningTask(null);
+              } else if (window.innerWidth < 768) {
                 setSelectedSlotTime({ hour: slot.hour, minute: slot.minute });
                 setQuickAddOpen(true);
               }
@@ -306,6 +325,23 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
           />
         );
       })}
+
+      {/* 수동 배치 모드 배너 */}
+      {assigningTask && (
+        <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 text-white rounded-full shadow-2xl border border-white/10 backdrop-blur-md">
+            <div className="w-2 h-2 rounded-full animate-pulse bg-blue-500" />
+            <span className="text-[11px] font-bold truncate max-w-[120px]">"{assigningTask.content}" 배치 중...</span>
+            <div className="w-px h-3 bg-white/20" />
+            <button 
+              onClick={() => setAssigningTask(null)}
+              className="text-[10px] font-black uppercase text-zinc-400 hover:text-white transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 타임 블록 렌더링 */}
       {timeBlocks.map((block) => (
@@ -322,8 +358,8 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
         </div>
       ))}
 
-      {/* 구글 캘린더 이벤트 렌더링 (오늘이 아닐 때만 풀 레이아웃으로 표시) */}
-      {!isTodaySelected && timeEvents.map((event) => {
+      {/* 구글 캘린더 이벤트 렌더링 */}
+      {timeEvents.map((event) => {
         const [startH, startM] = event.start.split(":").map(Number);
         const [endH, endM] = event.end.split(":").map(Number);
         const startMinutes = startH * 60 + startM;

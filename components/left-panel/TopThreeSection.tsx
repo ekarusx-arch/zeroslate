@@ -5,7 +5,7 @@ import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { TopThreeItem as TopThreeItemType } from "@/types";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, AlertTriangle, Plus, Target, Check } from "lucide-react";
+import { GripVertical, Trash2, AlertTriangle, Plus, Target, Check, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,8 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
   const deleteTopThreeItem = useTimeboxerStore((s) => s.deleteTopThreeItem);
   const toggleTopThreeItem = useTimeboxerStore((s) => s.toggleTopThreeItem);
   const updateTopThreeItem = useTimeboxerStore((s) => s.updateTopThreeItem);
+  const setAssigningTask = useTimeboxerStore((s) => s.setAssigningTask);
+  const assigningTask = useTimeboxerStore((s) => s.assigningTask);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
@@ -64,6 +66,20 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
     const cycleTag = useTimeboxerStore.getState().cycleTag;
     const newContent = cycleTag(item.content);
     updateTopThreeItem(item.id, { content: newContent });
+  };
+
+  const handleManualAssign = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (assigningTask?.id === item.id) {
+      setAssigningTask(null);
+    } else {
+      setAssigningTask({
+        id: item.id,
+        content: item.content,
+        color: item.color,
+        type: 'focus'
+      });
+    }
   };
 
   return (
@@ -153,6 +169,19 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
       {item.isCompleted && (
         <Check className="w-3.5 h-3.5 text-violet-400 shrink-0" />
       )}
+
+      {/* 시간 배치 버튼 */}
+      <button
+        onClick={handleManualAssign}
+        className={`opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg transition-all ${
+          assigningTask?.id === item.id
+            ? "bg-violet-500 text-white shadow-sm scale-110"
+            : "text-zinc-400 hover:text-violet-500 hover:bg-violet-50"
+        }`}
+        title="타임라인에 직접 배치하기"
+      >
+        <Calendar className="w-3.5 h-3.5" />
+      </button>
 
       {/* 삭제 버튼 */}
       <button
