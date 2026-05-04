@@ -673,20 +673,23 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     let finalUpdates = { ...updates };
 
-    // 색상이 변경되었다면 해시태그도 연동
+    // 1. 색상이 변경되었다면 해시태그도 연동
     if (updates.color !== undefined) {
       const allTags = state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }));
       const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
-      
-      // 기존 태그들 제거
       newContent = removeKnownTags(newContent, allTags);
-      
-      // 새 태그 추가
       if (newPreset?.tag) {
         newContent = `${newContent} ${newPreset.tag}`.trim();
       }
       finalUpdates.content = newContent;
+    } 
+    // 2. 내용만 변경되었다면 텍스트에서 태그 감지하여 색상 업데이트
+    else if (updates.content !== undefined) {
+      const detectedColor = getColorForContent(updates.content, state.settings.customTags);
+      if (detectedColor) {
+        finalUpdates.color = detectedColor;
+      }
     }
 
     set((state) => ({
@@ -774,18 +777,23 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     let finalUpdates = { ...updates };
 
-    // 색상이 변경되었다면 해시태그도 연동
+    // 1. 색상이 변경되었다면 해시태그도 연동
     if (updates.color !== undefined) {
       const allTags = state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }));
       const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
-      
       newContent = removeKnownTags(newContent, allTags);
-      
       if (newPreset?.tag) {
         newContent = `${newContent} ${newPreset.tag}`.trim();
       }
       finalUpdates.content = newContent;
+    }
+    // 2. 내용만 변경되었다면 텍스트에서 태그 감지하여 색상 업데이트
+    else if (updates.content !== undefined) {
+      const detectedColor = getColorForContent(updates.content, state.settings.customTags);
+      if (detectedColor) {
+        finalUpdates.color = detectedColor;
+      }
     }
 
     set((state) => ({
@@ -893,17 +901,60 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       }
     }
     
-    set((s) => ({ timeBlocks: s.timeBlocks.map((b) => b.id === id ? { ...b, ...patch } : b) }));
+    let finalPatch = { ...patch };
+
+    // 1. 내용 변경 시 태그 감지 및 색상 업데이트
+    if (patch.content !== undefined && patch.color === undefined) {
+      const detectedColor = getColorForContent(patch.content, state.settings.customTags);
+      if (detectedColor) {
+        finalPatch.color = detectedColor;
+      }
+    }
+    // 2. 색상 변경 시 내용에 태그 자동 추가
+    else if (patch.color !== undefined) {
+      const allTags = state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }));
+      const newPreset = allTags.find(p => p.value === patch.color);
+      let newContent = patch.content ?? state.timeBlocks.find(b => b.id === id)?.content ?? "";
+      newContent = removeKnownTags(newContent, allTags);
+      if (newPreset?.tag) {
+        newContent = `${newContent} ${newPreset.tag}`.trim();
+      }
+      finalPatch.content = newContent;
+    }
+    
+    set((s) => ({ 
+      timeBlocks: s.timeBlocks.map((b) => b.id === id ? { ...b, ...finalPatch } : b) 
+    }));
     
     const dbUpdates: any = {};
-    if (patch.startTime) dbUpdates.start_time = patch.startTime;
-    if (patch.endTime) dbUpdates.end_time = patch.endTime;
-    if (patch.content) dbUpdates.content = patch.content;
-    if (patch.color) dbUpdates.color = patch.color;
-    if (patch.memo !== undefined) dbUpdates.memo = patch.memo;
+    if (finalPatch.startTime) dbUpdates.start_time = finalPatch.startTime;
+    if (finalPatch.endTime) dbUpdates.end_time = finalPatch.endTime;
+    if (finalPatch.content) dbUpdates.content = finalPatch.content;
+    if (finalPatch.color) dbUpdates.color = finalPatch.color;
+    if (finalPatch.memo !== undefined) dbUpdates.memo = finalPatch.memo;
     
     if (Object.keys(dbUpdates).length > 0) {
       await supabase.from("time_blocks").update(dbUpdates).eq("id", id);
+      
+      // 3. 연결된 원본 할 일(Brain Dump / Top Three)도 함께 업데이트
+      const targetBlock = state.timeBlocks.find(b => b.id === id);
+      if (targetBlock?.taskId) {
+        const taskId = targetBlock.taskId;
+        const bdItem = state.brainDump.find(i => i.id === taskId);
+        const topItem = state.topThree.find(i => i.id === taskId);
+        
+        if (bdItem) {
+          await get().updateBrainDumpItem(taskId, { 
+            content: finalPatch.content ?? targetBlock.content,
+            color: finalPatch.color ?? targetBlock.color
+          });
+        } else if (topItem) {
+          await get().updateTopThreeItem(taskId, {
+            content: finalPatch.content ?? targetBlock.content,
+            color: finalPatch.color ?? targetBlock.color
+          });
+        }
+      }
     }
   },
 

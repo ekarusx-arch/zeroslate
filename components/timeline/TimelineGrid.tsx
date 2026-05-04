@@ -312,6 +312,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
                 addTimeBlock({
                   taskId: assigningTask.id,
                   content: assigningTask.content,
+                  color: assigningTask.color,
                   startTime,
                   endTime,
                   date: selectedDate,

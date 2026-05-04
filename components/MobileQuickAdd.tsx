@@ -31,6 +31,7 @@ export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: Mob
     addTimeBlock({
       taskId: item.id,
       content: item.content,
+      color: item.color,
       startTime,
       endTime,
       date: useTimeboxerStore.getState().selectedDate,
