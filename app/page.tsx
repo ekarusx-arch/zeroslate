@@ -25,6 +25,7 @@ import ArchiveModal from "@/components/ArchiveModal";
 import GoalBanner from "@/components/GoalBanner";
 import GoalModal from "@/components/GoalModal";
 import SettingsModal from "@/components/SettingsModal";
+import MobileNav from "@/components/MobileNav";
 import ArchivePanel from "@/components/right-panel/ArchivePanel";
 import FocusModal from "@/components/FocusModal";
 import ZeroPilot from "@/components/zeropilot/ZeroPilot";
@@ -119,6 +120,7 @@ export default function Home() {
   const openUpgradeModal = useTimeboxerStore((s) => s.openUpgradeModal);
   const closeUpgradeModal = useTimeboxerStore((s) => s.closeUpgradeModal);
   const [landingGuideOpen, setLandingGuideOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"dump" | "timeline" | "stats">("timeline");
 
   const isTodaySelected = selectedDate === getTodayDateKey();
   const { user, signOut } = useAuth();
@@ -492,10 +494,10 @@ export default function Home() {
         </header>
 
         {/* ── 메인 콘텐츠 (3단) ── */}
-        <main className="flex-1 max-w-[1500px] mx-auto w-full px-3 sm:px-4 py-4 flex flex-col lg:flex-row gap-4 min-h-0">
+        <main className="flex-1 max-w-[1500px] mx-auto w-full px-3 sm:px-4 py-4 flex flex-col lg:flex-row gap-4 min-h-0 pb-20 lg:pb-4">
 
-          {/* 좌측 패널 */}
-          <aside className="w-full lg:w-[30%] xl:w-[420px] shrink-0 flex flex-col gap-3">
+          {/* 좌측 패널 (모바일에서는 dump 탭일 때만 표시) */}
+          <aside className={`w-full lg:w-[30%] xl:w-[420px] shrink-0 flex flex-col gap-3 ${activeTab === 'dump' ? 'flex' : 'hidden lg:flex'}`}>
             {/* Top 3 */}
             <div className="panel-card p-4">
               <TopThreeSection />
@@ -507,8 +509,8 @@ export default function Home() {
             </div>
           </aside>
 
-          {/* 중앙 타임라인 */}
-          <section className="flex-1 panel-card overflow-hidden flex flex-col min-h-[520px] lg:min-h-0 lg:min-w-[400px]">
+          {/* 중앙 타임라인 (모바일에서는 timeline 탭일 때만 표시) */}
+          <section className={`flex-1 panel-card overflow-hidden flex flex-col min-h-[520px] lg:min-h-0 lg:min-w-[400px] ${activeTab === 'timeline' ? 'flex' : 'hidden lg:flex'}`}>
             <GoalBanner />
             {/* 타임라인 헤더 */}
             <div className="px-5 py-3.5 border-b border-zinc-100/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shrink-0 bg-white/50">
@@ -558,8 +560,8 @@ export default function Home() {
             </div>
           </section>
 
-          {/* 우측 달력(아카이브) 패널 */}
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col gap-3 min-h-[400px]">
+          {/* 우측 달력(아카이브) 패널 (모바일에서는 stats 탭일 때만 표시) */}
+          <aside className={`w-full lg:w-72 xl:w-80 shrink-0 flex flex-col gap-3 min-h-[400px] ${activeTab === 'stats' ? 'flex' : 'hidden lg:flex'}`}>
             <ArchivePanel />
           </aside>
 
@@ -575,6 +577,7 @@ export default function Home() {
       <ZeroPilot />
       <GoalModal />
       <CalendarViewModal />
+      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
       <UpgradeModal
         open={isUpgradeModalOpen}
         onClose={closeUpgradeModal}

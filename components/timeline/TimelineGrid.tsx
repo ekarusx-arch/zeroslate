@@ -8,6 +8,8 @@ import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import TimeBlock from "./TimeBlock";
 import { ExternalLink, Lock, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ROW_HEIGHT_30 } from "./constants";
+import MobileQuickAdd from "../MobileQuickAdd";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const ROW_HEIGHT_30 = 48; // 30분당 기준 높이
+// ROW_HEIGHT_30 is now imported from constants
 
 
 function timeToMinutes(time: string) {
@@ -179,19 +181,22 @@ function TimeSlot({
   minute,
   showHourLabel,
   slotHeight,
+  onClick,
 }: {
   slotId: string;
   hour: number;
   minute: number;
   showHourLabel: boolean;
   slotHeight: number;
+  onClick?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
 
   return (
     <div
       ref={setNodeRef}
-      className={`time-slot flex relative ${isOver ? "bg-blue-100/60" : ""}`}
+      onClick={onClick}
+      className={`time-slot flex relative cursor-pointer sm:cursor-default ${isOver ? "bg-blue-100/60" : ""}`}
       style={{ height: `${slotHeight}px` }}
     >
       {/* 시간 레이블 - 정시만 표시 */}
@@ -223,6 +228,8 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
   const googleCalendarEvents = useTimeboxerStore((s) => s.googleCalendarEvents);
   const selectedDate = useTimeboxerStore((s) => s.selectedDate);
   const [editingEvent, setEditingEvent] = useState<GoogleCalendarEvent | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [selectedSlotTime, setSelectedSlotTime] = useState<{ hour: number; minute: number } | null>(null);
   const isTodaySelected = selectedDate === getTodayDateKey();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -289,6 +296,12 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             minute={slot.minute}
             showHourLabel={showHourLabel}
             slotHeight={slotHeight}
+            onClick={() => {
+              if (window.innerWidth < 768) {
+                setSelectedSlotTime({ hour: slot.hour, minute: slot.minute });
+                setQuickAddOpen(true);
+              }
+            }}
           />
         );
       })}
@@ -384,6 +397,11 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
         onOpenChange={(open) => {
           if (!open) setEditingEvent(null);
         }}
+      />
+      <MobileQuickAdd
+        open={quickAddOpen}
+        onOpenChange={setQuickAddOpen}
+        selectedTime={selectedSlotTime}
       />
     </div>
     </>
