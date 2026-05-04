@@ -66,43 +66,62 @@ export default function StatsModal() {
   const score = data?.totalMinutes ? Math.round((data.completedMinutes / data.totalMinutes) * 100) : 0;
   const growthRate = 12;
 
-  // 공유 기능
+  // 공유 기능 개선
   const handleShare = async () => {
+    const shareUrl = window.location.origin;
     const shareData = {
       title: "ZeroSlate 생산성 리포트",
       text: `이번 주 제 생산성 점수는 ${score}점입니다! 함께 몰입해봐요.`,
-      url: window.location.href,
+      url: shareUrl,
     };
 
     if (navigator.share) {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        console.error("Share failed", err);
+        // 취소 등 에러 시 클립보드 폴백
+        copyToClipboard(shareUrl);
       }
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      copyToClipboard(shareUrl);
     }
   };
 
-  // 다운로드 (CSV) 기능
-  const handleDownload = () => {
-    if (!data) return;
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setIsCopied(true);
+      alert("공유 링크가 클립보드에 복사되었습니다! 🚀");
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error("Copy failed", err);
+    });
+  };
 
-    let csvContent = "data:text/csv;charset=utf-8,Category,Minutes\n";
+  // 다운로드 (CSV) 기능 개선 - BOM 추가 및 데이터 확인
+  const handleDownload = () => {
+    if (!data || data.pieData.length === 0) {
+      alert("내보낼 데이터가 없습니다. 타임 블록을 완료해 보세요!");
+      return;
+    }
+
+    // UTF-8 BOM 추가 (엑셀/넘버즈 한글 깨짐 방지)
+    const BOM = "\uFEFF";
+    let csvContent = BOM + "카테고리,집중 시간(분),비중(%)\n";
+    
     data.pieData.forEach(row => {
-      csvContent += `${row.name},${row.value}\n`;
+      const percentage = Math.round((row.value / data.completedMinutes) * 100);
+      csvContent += `${row.name},${row.value},${percentage}%\n`;
     });
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `zeroslate_report_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `zeroslate_productivity_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -157,7 +176,6 @@ export default function StatsModal() {
               </p>
             </div>
             
-            {/* Total Score 위치 하향 조정 (mt-12 추가) */}
             <div className="relative group mt-12">
               <div className="absolute inset-0 bg-blue-600/20 blur-3xl group-hover:bg-blue-600/30 transition-all" />
               <div className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full bg-white border-[12px] border-zinc-50 shadow-inner">
