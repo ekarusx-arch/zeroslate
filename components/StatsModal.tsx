@@ -4,8 +4,15 @@
 import { useState } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PieChart as PieChartIcon, TrendingUp, Calendar, Clock, ArrowUpRight, Sparkles, Share2, Download, Zap, ArrowUp, BrainCircuit, Check, Crown, Lock, ChevronRight } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from "recharts";
+import {
+  TrendingUp, Clock, ArrowUpRight, Sparkles, Share2, Download,
+  Zap, ArrowUp, BrainCircuit, Check, Crown, Lock,
+  PieChart as PieChartIcon, Calendar,
+} from "lucide-react";
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer,
+} from "recharts";
 import UpgradeModal from "./UpgradeModal";
 
 interface StatsData {
@@ -58,10 +65,60 @@ export default function StatsModal() {
 
   const isPro = userPlan === "pro";
 
+  // ── 공통 헤더 컴포넌트 ──
+  const ReportHeader = () => (
+    <div className="px-12 pt-10 pb-8 border-b border-zinc-100 bg-gradient-to-b from-zinc-50/60 to-white shrink-0">
+      <div className="flex items-start justify-between gap-8">
+        <div className="space-y-3 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-600/20 whitespace-nowrap">
+              Weekly Intelligence
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 whitespace-nowrap">
+              <ArrowUp className="w-3 h-3 shrink-0" /> 12% 성장 중
+            </div>
+          </div>
+          <DialogTitle className="text-4xl font-bold text-zinc-900 tracking-tighter leading-tight">
+            Productivity <span className="text-zinc-300">Insights</span>
+          </DialogTitle>
+          <p className="text-sm font-medium text-zinc-400 leading-relaxed">
+            {isPro
+              ? "지난 7일간의 몰입 데이터를 AI가 분석했습니다. 상위 5% 패턴을 유지 중이에요."
+              : "AI가 당신의 몰입 패턴을 분석하고 성장 인사이트를 제공합니다."}
+          </p>
+        </div>
+
+        {/* 스코어 원형 */}
+        <div className="relative shrink-0 mt-2">
+          {isPro ? (
+            <>
+              <div className="absolute inset-0 bg-blue-600/15 blur-2xl" />
+              <div className="relative flex flex-col items-center justify-center w-32 h-32 rounded-full bg-white border-[10px] border-zinc-50 shadow-inner">
+                <svg className="absolute inset-0 w-full h-full -rotate-90 p-1">
+                  <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#F8FAFC" strokeWidth="8" />
+                  <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#2563EB" strokeWidth="8"
+                    strokeDasharray="100" strokeDashoffset={100 - score} strokeLinecap="round"
+                    className="transition-all duration-1000" />
+                </svg>
+                <span className="text-3xl font-black text-zinc-900 tracking-tighter">{score}</span>
+                <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-0.5">Score</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center w-32 h-32 rounded-full bg-zinc-50 border-[10px] border-zinc-100">
+              <Lock className="w-7 h-7 text-zinc-300" />
+              <span className="text-[9px] font-black text-zinc-300 uppercase tracking-widest mt-1">Locked</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Dialog onOpenChange={(open) => { if (open) loadData(); }}>
-        {/* 트리거 버튼 - 프리/PRO 동일 */}
+        {/* 트리거 버튼 - 프리/PRO 동일 크기 */}
         <DialogTrigger render={
           <button className="inline-flex items-center gap-1.5 h-[33px] px-[16px] rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-all shadow-md whitespace-nowrap shrink-0 active:scale-95 group">
             <Sparkles className="w-3.5 h-3.5 text-blue-400 group-hover:animate-pulse shrink-0" />
@@ -71,107 +128,56 @@ export default function StatsModal() {
 
         <DialogContent className="max-w-[1100px] w-[95vw] max-h-[90vh] overflow-hidden bg-white border-none shadow-[0_32px_80px_-12px_rgba(0,0,0,0.2)] p-0 rounded-[28px] flex flex-col">
 
+          {/* ── 공통 헤더 ── */}
+          <ReportHeader />
+
           {!isPro ? (
-            /* ── 프리 모드: 2컬럼 레이아웃으로 모달 꽉 채움 ── */
-            <div className="flex h-full min-h-0" style={{ height: "min(680px, 90vh)" }}>
+            /* ── 프리 모드: 헤더 아래 페이월 ── */
+            <div className="flex-1 overflow-y-auto">
+              <div className="flex flex-col items-center justify-center px-12 py-12 gap-8">
 
-              {/* 좌측: 브랜드 + 기능 소개 */}
-              <div className="flex-1 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-10 flex flex-col justify-between relative overflow-hidden">
-                {/* 배경 장식 */}
-                <div className="absolute top-[-60px] left-[-60px] w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-[-40px] right-[-40px] w-48 h-48 bg-violet-500/10 rounded-full blur-3xl" />
+                {/* 잠금 안내 */}
+                <div className="text-center space-y-2">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-orange-200 mb-2">
+                    <Crown className="w-7 h-7 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-black text-zinc-900 tracking-tight">이 리포트는 PRO 전용입니다</h2>
+                  <p className="text-sm text-zinc-500">PRO로 업그레이드하면 AI 분석 결과를 즉시 확인할 수 있습니다.</p>
+                </div>
 
-                <div className="relative z-10">
-                  {/* 상단 뱃지 */}
-                  <div className="flex items-center gap-2 mb-8">
-                    <div className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-500/30">
-                      Weekly Intelligence
+                {/* 기능 3열 그리드 */}
+                <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">
+                  {[
+                    { icon: BrainCircuit, label: "AI 맞춤형\n생산성 진단", color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-100" },
+                    { icon: Zap, label: "지난주 대비\n성장률 분석", color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-100" },
+                    { icon: Download, label: "통계 데이터\n무제한 내보내기", color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-100" },
+                  ].map((item, idx) => (
+                    <div key={idx} className={`flex flex-col items-center gap-3 p-5 rounded-2xl ${item.bg} border ${item.border} text-center`}>
+                      <item.icon className={`w-6 h-6 ${item.color}`} />
+                      <span className="text-xs font-bold text-zinc-700 whitespace-pre-line leading-relaxed">{item.label}</span>
                     </div>
-                  </div>
-
-                  {/* 타이틀 */}
-                  <DialogTitle className="text-4xl font-black text-white tracking-tighter leading-tight mb-4">
-                    Productivity<br /><span className="text-zinc-500">Insights</span>
-                  </DialogTitle>
-                  <p className="text-sm font-medium text-zinc-400 leading-relaxed mb-10">
-                    AI가 당신의 몰입 패턴을 분석하고<br />성장 인사이트를 제공합니다.
-                  </p>
-
-                  {/* 기능 리스트 */}
-                  <div className="space-y-3">
-                    {[
-                      { icon: BrainCircuit, label: "AI 맞춤형 생산성 진단 & 코멘트", color: "text-blue-400", bg: "bg-blue-500/10" },
-                      { icon: Zap, label: "지난주 대비 성장률 및 트렌드 분석", color: "text-amber-400", bg: "bg-amber-500/10" },
-                      { icon: Download, label: "모든 통계 데이터 무제한 내보내기", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                      { icon: TrendingUp, label: "7일간 집중 시간 히스토리 차트", color: "text-violet-400", bg: "bg-violet-500/10" },
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                        <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center shrink-0`}>
-                          <item.icon className={`w-4 h-4 ${item.color}`} />
-                        </div>
-                        <span className="text-sm font-semibold text-zinc-300">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
 
-                {/* 하단 - 잠금 스코어 */}
-                <div className="relative z-10 flex items-center gap-4 mt-8">
-                  <div className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-white/5 border border-white/10">
-                    <Lock className="w-5 h-5 text-zinc-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black text-zinc-500 uppercase tracking-widest">Total Score</p>
-                    <p className="text-2xl font-black text-zinc-600">??</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 우측: CTA */}
-              <div className="w-[380px] shrink-0 bg-white flex flex-col items-center justify-center p-10 gap-8">
-                {/* 아이콘 */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-amber-400/25 blur-2xl rounded-full" />
-                  <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-[22px] bg-gradient-to-br from-amber-400 to-orange-500 shadow-xl shadow-orange-200">
-                    <Crown className="w-9 h-9 text-white" />
-                  </div>
-                </div>
-
-                <div className="text-center space-y-3">
-                  <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
-                    PRO로 잠금 해제
-                  </h2>
-                  <p className="text-sm text-zinc-500 leading-relaxed">
-                    데이터 기반 인사이트로<br />다음 주의 나를 설계하세요.
-                  </p>
-                </div>
-
-                {/* 소셜 프루프 */}
-                <div className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-100 text-center">
-                  <p className="text-2xl font-black text-zinc-900">2,400+</p>
-                  <p className="text-xs font-semibold text-zinc-400 mt-1">명이 AI 리포트 사용 중</p>
-                </div>
-
-                {/* CTA 버튼 */}
-                <div className="w-full space-y-3">
+                {/* CTA */}
+                <div className="w-full max-w-sm space-y-3 text-center">
                   <button
                     onClick={() => openUpgradeModal("AI 리포트")}
                     className="w-full h-14 bg-zinc-900 text-white rounded-2xl font-black text-base hover:bg-zinc-800 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
                   >
                     <Crown className="w-4 h-4 text-amber-400" />
-                    PRO 플랜 시작하기
+                    PRO 플랜으로 잠금 해제
                   </button>
-                  <div className="flex items-center justify-center gap-2 text-[11px] text-zinc-400">
-                    <ChevronRight className="w-3 h-3" />
-                    <span>7일 무료 체험 · 언제든 해지 가능</span>
-                  </div>
+                  <p className="text-xs font-semibold text-zinc-400">
+                    이미 <span className="text-zinc-600 font-black">2,400+</span>명이 AI 리포트를 사용 중입니다
+                  </p>
                 </div>
               </div>
             </div>
 
           ) : (
             /* ── PRO 모드 ── */
-            <div className="flex flex-col h-full overflow-hidden" style={{ height: "min(680px, 90vh)" }}>
+            <>
               {/* 툴바 */}
               <div className="absolute top-5 right-14 flex items-center gap-1 z-50 bg-white/80 backdrop-blur-md border border-zinc-100 p-1 rounded-xl shadow-sm">
                 <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-all text-[11px] font-bold">
@@ -186,38 +192,6 @@ export default function StatsModal() {
               </div>
 
               <div className="flex-1 overflow-y-auto">
-                {/* PRO 헤더 */}
-                <div className="px-12 pt-10 pb-7 border-b border-zinc-50 bg-gradient-to-b from-zinc-50/60 to-white">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <div className="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-600/20">Weekly Intelligence</div>
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                          <ArrowUp className="w-3 h-3" /> 12% 성장 중
-                        </div>
-                      </div>
-                      <DialogTitle className="text-4xl font-bold text-zinc-900 tracking-tighter leading-tight">
-                        Productivity <span className="text-zinc-300">Insights</span>
-                      </DialogTitle>
-                      <p className="text-sm font-medium text-zinc-400 leading-relaxed">
-                        지난 7일간의 몰입 데이터를 AI가 분석했습니다. 상위 5% 패턴을 유지 중이에요.
-                      </p>
-                    </div>
-                    <div className="relative group mt-4 shrink-0">
-                      <div className="absolute inset-0 bg-blue-600/15 blur-2xl" />
-                      <div className="relative flex flex-col items-center justify-center w-32 h-32 rounded-full bg-white border-[10px] border-zinc-50 shadow-inner">
-                        <svg className="absolute inset-0 w-full h-full -rotate-90 p-1">
-                          <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#F8FAFC" strokeWidth="8" />
-                          <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#2563EB" strokeWidth="8" strokeDasharray="100" strokeDashoffset={100 - score} strokeLinecap="round" className="transition-all duration-1000" />
-                        </svg>
-                        <span className="text-3xl font-black text-zinc-900 tracking-tighter">{score}</span>
-                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-0.5">Score</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* PRO 콘텐츠 */}
                 <div className="px-12 py-8 space-y-12">
                   {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -294,9 +268,9 @@ export default function StatsModal() {
                       {/* Tag Deep-Dive */}
                       <div className="space-y-6">
                         <div className="flex items-center gap-4"><h3 className="text-xl font-black text-zinc-900 tracking-tighter">Tag Deep-Dive</h3><div className="h-px flex-1 bg-zinc-100" /></div>
-                        <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+                        <div className="grid grid-cols-2 gap-x-12 gap-y-5">
                           {data.pieData.map((tag, idx) => (
-                            <div key={tag.name} className="flex items-center justify-between py-2 border-b border-zinc-50 hover:border-zinc-100 transition-all">
+                            <div key={tag.name} className="flex items-center justify-between py-2.5 border-b border-zinc-50">
                               <div className="flex items-center gap-3">
                                 <div className="text-base font-black text-zinc-200 w-5">0{idx + 1}</div>
                                 <div>
@@ -326,7 +300,7 @@ export default function StatsModal() {
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
