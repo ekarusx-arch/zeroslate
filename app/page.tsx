@@ -376,8 +376,8 @@ export default function Home() {
         <FocusTimer />
         
         {/* ── 헤더 ── */}
-        <header className="zs-app-header sticky top-0 z-30 backdrop-blur-md border-b">
-          <div className="max-w-[1500px] mx-auto px-6 sm:px-8 h-[58px] flex items-center justify-between gap-6">
+        <header className="sticky top-0 z-50 zs-app-header border-b backdrop-blur-xl">
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 h-[58px] flex items-center justify-between gap-3 sm:gap-6">
             {/* 로고 */}
             <div className="flex items-center gap-2.5 shrink-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-sm">
@@ -421,7 +421,7 @@ export default function Home() {
             </div>
 
             {/* 액션 버튼들 */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar pr-2 flex-1 justify-end">
               {/* 전체 달력 보기 버튼 (Pro 전용) */}
               <button
                 onClick={() => {
@@ -440,7 +440,7 @@ export default function Home() {
               {/* 구글 캘린더 연동 버튼 */}
               <button
                 onClick={handleCalendarSync}
-                className={`inline-flex items-center gap-1.5 h-[33px] px-[14px] rounded-lg border text-xs font-semibold transition-all shrink-0 whitespace-nowrap active:scale-95 ${
+                className={`inline-flex items-center gap-1.5 h-[33px] px-[10px] sm:px-[14px] rounded-lg border text-xs font-semibold transition-all shrink-0 whitespace-nowrap active:scale-95 ${
                   userPlan === 'pro' && googleTokenConnected
                     ? 'border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-100/70 shadow-sm'
                     : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 shadow-sm'
@@ -470,9 +470,9 @@ export default function Home() {
               
               {/* 유저 프로필 & 로그아웃 */}
               {user && (
-                <div className="flex items-center gap-1.5 pl-3 border-l border-zinc-200 ml-1">
+                <div className="flex items-center gap-1 sm:gap-1.5 pl-2 sm:pl-3 border-l border-zinc-200 ml-0.5 sm:ml-1 shrink-0">
                   <PlanBadge size="sm" plan={userPlan} />
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-100/80 hover:bg-zinc-100 rounded-lg shrink-0 transition-colors">
+                  <div className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 bg-zinc-100/80 hover:bg-zinc-100 rounded-lg shrink-0 transition-colors">
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center shrink-0">
                       <span className="text-[9px] font-black text-white">{user.email?.[0]?.toUpperCase()}</span>
                     </div>
