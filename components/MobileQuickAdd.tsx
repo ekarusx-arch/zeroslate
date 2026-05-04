@@ -17,7 +17,7 @@ export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: Mob
   const activeDumps = brainDump.filter(item => !item.isCompleted);
   const activeTopThree = topThree.filter(item => !item.isCompleted && !item.isAssigned);
 
-  const handleSelectTask = (item: { id: string; content: string }) => {
+  const handleSelectTask = (item: { id: string; content: string; color?: string }) => {
     if (!selectedTime) return;
 
     const startTime = `${String(selectedTime.hour).padStart(2, "0")}:${String(selectedTime.minute).padStart(2, "0")}`;
