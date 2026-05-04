@@ -186,6 +186,12 @@ interface TimeboxerState {
   fetchDateData: (date: string) => Promise<void>;
   getColorForContent: (content: string) => string | undefined;
   cycleTag: (content: string) => string;
+  fetchStatsData: () => Promise<{
+    pieData: { name: string; value: number; color: string }[];
+    barData: { date: string; minutes: number }[];
+    totalMinutes: number;
+    completedMinutes: number;
+  }>;
 }
 
 const defaultSettings: Settings = {
@@ -484,6 +490,68 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       }
     }
     return nextContent.trim();
+  },
+
+  fetchStatsData: async () => {
+    const { userId, settings } = get();
+    if (!userId) return { pieData: [], barData: [], totalMinutes: 0, completedMinutes: 0 };
+
+    const today = new Date();
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(today.getDate() - (6 - i));
+      return d.toISOString().split("T")[0];
+    });
+
+    const { data: blocks, error } = await supabase
+      .from("time_blocks")
+      .select("*")
+      .eq("user_id", userId)
+      .in("date", last7Days);
+
+    if (error || !blocks) return { pieData: [], barData: [], totalMinutes: 0, completedMinutes: 0 };
+
+    const tagStats: Record<string, { minutes: number; color: string }> = {};
+    const dailyStats: Record<string, number> = {};
+    last7Days.forEach(d => dailyStats[d] = 0);
+
+    let totalMinutes = 0;
+    let completedMinutes = 0;
+
+    blocks.forEach(b => {
+      const [sh, sm] = b.start_time.split(":").map(Number);
+      const [eh, em] = b.end_time.split(":").map(Number);
+      const diff = (eh * 60 + em) - (sh * 60 + sm);
+      
+      if (diff <= 0) return;
+
+      totalMinutes += diff;
+      if (b.is_completed) {
+        completedMinutes += diff;
+        dailyStats[b.date] += diff;
+
+        const color = getColorForContent(b.content, settings.customTags);
+        const tag = (settings.customTags || []).find(t => t.color === color)?.tag || "기타";
+        
+        if (!tagStats[tag]) {
+          tagStats[tag] = { minutes: 0, color: color || "#CBD5E1" };
+        }
+        tagStats[tag].minutes += diff;
+      }
+    });
+
+    const pieData = Object.entries(tagStats).map(([name, data]) => ({
+      name,
+      value: data.minutes,
+      color: data.color
+    })).sort((a, b) => b.value - a.value);
+
+    const barData = last7Days.map(date => ({
+      date: date.split("-").slice(1).join("/"), // MM/DD 형식
+      minutes: dailyStats[date]
+    }));
+
+    return { pieData, barData, totalMinutes, completedMinutes };
   },
 
   updateSettings: async (s) => {

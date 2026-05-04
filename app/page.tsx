@@ -31,6 +31,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import CalendarViewModal from "@/components/CalendarViewModal";
 import GooglePushFeedback from "@/components/GooglePushFeedback";
 import FocusTimer from "@/components/FocusTimer";
+import StatsModal from "@/components/StatsModal";
 
 import {
   AlertDialog,
@@ -459,6 +460,7 @@ export default function Home() {
               <SettingsModal />
               <GuideModal />
               <ArchiveModal />
+              <StatsModal />
               <SummaryModal />
               <ResetDialog />
               
