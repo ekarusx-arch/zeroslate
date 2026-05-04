@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
-import { Goal, GoalType } from "@/types";
+import { GoalType } from "@/types";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Target, Plus, Trash2, CheckCircle2, Circle, Trophy } from "lucide-react";
 
 export default function GoalModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const { goals, addGoal, deleteGoal, toggleGoal, updateGoal } = useTimeboxerStore();
+  const { goals, addGoal, deleteGoal, toggleGoal } = useTimeboxerStore();
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalType, setNewGoalType] = useState<GoalType>("monthly");
   const [selectedColor, setSelectedColor] = useState("#3B82F6");

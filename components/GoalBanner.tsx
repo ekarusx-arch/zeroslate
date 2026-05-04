@@ -5,7 +5,7 @@ import { Target, ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 
 export default function GoalBanner() {
-  const { goals, openUpgradeModal, userPlan } = useTimeboxerStore();
+  const { goals } = useTimeboxerStore();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // 완료되지 않은 목표들만 필터링
