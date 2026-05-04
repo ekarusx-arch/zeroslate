@@ -11,6 +11,12 @@ import {
 } from "lucide-react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export default function CalendarViewModal() {
@@ -24,6 +30,7 @@ export default function CalendarViewModal() {
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isSyncing, setIsSyncing] = useState(false);
+  const [viewingDate, setViewingDate] = useState<string | null>(null);
 
   // ── 플로팅 윈도우 상태 관리 ──
   const [pos, setPos] = useState({ x: 50, y: 50 });
@@ -186,22 +193,22 @@ export default function CalendarViewModal() {
     >
       {/* ── 헤더 (드래그 핸들) ── */}
       <div 
-        className="zs-calendar-header flex items-center justify-between px-5 py-3.5 border-b z-10 shrink-0 cursor-grab active:cursor-grabbing"
+        className="zs-calendar-header flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3.5 border-b z-10 shrink-0 cursor-grab active:cursor-grabbing gap-2"
         onMouseDown={handleMouseDown}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center gap-3">
-            <div className="zs-calendar-icon w-8 h-8 rounded-xl flex items-center justify-center shadow-sm">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div className="zs-calendar-icon hidden sm:flex w-8 h-8 rounded-xl items-center justify-center shadow-sm">
               <CalendarDays className="w-4 h-4" />
             </div>
-            <h2 className="zs-calendar-title text-lg font-black truncate">
+            <h2 className="zs-calendar-title text-base sm:text-lg font-black truncate">
               {currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월
             </h2>
           </div>
           
-          <div className="zs-calendar-divider h-5 w-px opacity-50" />
+          <div className="zs-calendar-divider h-5 w-px opacity-50 hidden sm:block" />
           
-          <div className="zs-calendar-nav flex items-center gap-0.5 p-1 rounded-xl">
+          <div className="zs-calendar-nav flex items-center gap-0.5 p-0.5 sm:p-1 rounded-xl shrink-0">
             <Button variant="ghost" size="icon" onClick={() => changeMonth(-1)} className="zs-calendar-nav-button w-7 h-7 rounded-lg transition-all">
               <ChevronLeft className="w-3.5 h-3.5" />
             </Button>
@@ -267,7 +274,13 @@ export default function CalendarViewModal() {
           return (
             <div 
               key={idx}
-              onClick={() => setSelectedDate(dateStr)}
+              onClick={() => {
+                setSelectedDate(dateStr);
+                // 모바일 환경이거나 내용물을 명확히 보고 싶을 때 팝업 표시
+                if (window.innerWidth < 768 || daysEvents.length > 0) {
+                  setViewingDate(dateStr);
+                }
+              }}
               className={cn(
                 "zs-calendar-day p-3 border-r border-b transition-colors cursor-pointer group flex flex-col min-h-0",
                 !isCurrentMonth && "zs-calendar-day-muted",
@@ -316,6 +329,39 @@ export default function CalendarViewModal() {
       >
         <Maximize2 className="w-3 h-3 rotate-90" />
       </div>
+
+      {/* ── 모바일/상세 일정 팝업 ── */}
+      <Dialog open={!!viewingDate} onOpenChange={(open) => !open && setViewingDate(null)}>
+        <DialogContent className="sm:max-w-[425px] z-[200]">
+          <DialogHeader>
+            <DialogTitle>
+              {viewingDate && new Date(viewingDate).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-4 max-h-[60vh] overflow-y-auto">
+            {viewingDate && googleCalendarEvents
+              .filter(e => e.date === viewingDate)
+              .sort((a, b) => a.start.localeCompare(b.start))
+              .map(event => (
+                <div 
+                  key={event.id}
+                  className="flex items-center gap-3 p-3 rounded-xl border bg-zinc-50/50 hover:bg-zinc-50 transition-colors"
+                  style={{ borderLeft: `4px solid ${event.color || '#6366f1'}` }}
+                >
+                  {event.isAllDay ? (
+                    <span className="text-xs font-bold text-zinc-500 w-12 text-center bg-zinc-100 rounded py-1">종일</span>
+                  ) : (
+                    <span className="text-[13px] font-bold text-zinc-600 w-12 text-center tracking-tight">{event.start}</span>
+                  )}
+                  <span className="text-sm font-semibold text-zinc-800 flex-1 leading-snug">{event.summary}</span>
+                </div>
+              ))}
+            {viewingDate && googleCalendarEvents.filter(e => e.date === viewingDate).length === 0 && (
+              <p className="text-sm font-medium text-zinc-400 text-center py-8">예정된 일정이 없습니다.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
