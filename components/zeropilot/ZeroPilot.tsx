@@ -517,6 +517,7 @@ export default function ZeroPilot() {
             </button>
           </div>
         </div>
+        </div>
       )}
 
       {/* 플로팅 액션 버튼 (항상 우측 하단 고정) */}
