@@ -6,7 +6,6 @@ import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
