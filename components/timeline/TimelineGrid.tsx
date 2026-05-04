@@ -8,7 +8,6 @@ import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import TimeBlock from "./TimeBlock";
 import { ExternalLink, Lock, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ROW_HEIGHT_30 } from "./constants";
 import MobileQuickAdd from "../MobileQuickAdd";
 import {
   Dialog,
@@ -17,7 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// ROW_HEIGHT_30 is now imported from constants
+const ROW_HEIGHT_30 = 48; // 30분당 기준 높이
+
+// ROW_HEIGHT_30 is defined above
 
 
 function timeToMinutes(time: string) {
