@@ -666,13 +666,24 @@ export default function SettingsModal() {
                     <Tag className="w-3.5 h-3.5 text-zinc-500" />
                     <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">스마트 태그 ({(settings.customTags || []).length})</span>
                   </div>
-                  <button 
-                    onClick={handleResetTags}
-                    className="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
-                  >
-                    <RotateCw className="w-2.5 h-2.5" />
-                    기본 태그 불러오기
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={async () => {
+                        const { initialize } = useTimeboxerStore.getState();
+                        await initialize();
+                      }}
+                      className="text-[10px] font-bold text-zinc-500 hover:text-zinc-700 transition-colors flex items-center gap-1"
+                    >
+                      <RotateCw className="w-2.5 h-2.5" />
+                      서버 동기화
+                    </button>
+                    <button 
+                      onClick={handleResetTags}
+                      className="text-[10px] font-bold text-zinc-400 hover:text-zinc-600 transition-colors flex items-center gap-1"
+                    >
+                      기본값 복원
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">

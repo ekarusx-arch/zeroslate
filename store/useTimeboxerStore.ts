@@ -411,21 +411,24 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       supabase.from("goals").select("*").eq("user_id", userId).order("created_at", { ascending: false })
     ]);
 
-    // DB 설정이 있다면 로컬보다 우선함
+    // DB 설정이 있다면 로컬보다 최우선함
     const finalSettings = {
       ...defaultSettings,
       ...(localSettings ? JSON.parse(localSettings) : {}),
-      ...(st.data ? {
-        startTime: st.data.start_time,
-        endTime: st.data.end_time,
-        step: st.data.step,
-        customTags: st.data.custom_tags || []
-      } : {})
     };
 
-    // 한번 더 강제 확인
-    // 태그 목록이 비어있거나 없는 경우 기본값으로 강제 초기화
-    if (!finalSettings.customTags || finalSettings.customTags.length === 0) {
+    if (st.data) {
+      finalSettings.startTime = st.data.start_time;
+      finalSettings.endTime = st.data.end_time;
+      finalSettings.step = st.data.step;
+      // DB에 태그 데이터가 명시적으로 있다면 (null이 아니라면) 덮어씀
+      if (st.data.custom_tags !== null) {
+        finalSettings.customTags = st.data.custom_tags;
+      }
+    }
+
+    // 완전히 처음 사용하는 사용자(DB도 없고 로컬도 없는 경우)만 기본 태그 적용
+    if (!st.data && !localSettings && (!finalSettings.customTags || finalSettings.customTags.length === 0)) {
       finalSettings.customTags = [
         { tag: "#개발", color: "#93C5FD" },
         { tag: "#운동", color: "#6EE7B7" },
