@@ -70,7 +70,7 @@ export default function StatsModal() {
           </button>
         }
       />
-      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden bg-white border-none shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] p-0 rounded-3xl flex flex-col">
+      <DialogContent className="max-w-[1200px] w-[95vw] sm:max-w-[1200px] max-h-[92vh] overflow-hidden bg-white border-none shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] p-0 rounded-3xl flex flex-col">
         {/* 헤더 섹션 - 수평 밸런스 강조 */}
         <div className="px-12 py-10 border-b border-zinc-50 shrink-0 bg-zinc-50/30">
           <div className="flex items-start justify-between gap-12">
