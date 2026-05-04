@@ -353,6 +353,10 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", date),
     ]);
 
+    if (bd.error) console.error("fetchDateData brain_dumps error:", bd.error);
+    if (tt.error) console.error("fetchDateData top_three error:", tt.error);
+    if (tb.error) console.error("fetchDateData time_blocks error:", tb.error);
+
     set({
       brainDump: (bd.data || []).map(r => ({ id: r.id, content: r.content, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at, date: r.date })),
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color, date: r.date })),
@@ -419,6 +423,10 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       color: r.color, 
       isActive: r.is_active 
     })) : (localRoutines ? JSON.parse(localRoutines) : []);
+
+    if (bd.error) console.error("initialize brain_dumps error:", bd.error);
+    if (tt.error) console.error("initialize top_three error:", tt.error);
+    if (tb.error) console.error("initialize time_blocks error:", tb.error);
 
     set({
       userId,
@@ -607,7 +615,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     
     try {
       const color = getColorForContent(content, settings.customTags);
-      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const id = crypto.randomUUID();
       const newItem: BrainDumpItem = { 
         id, 
         content, 
@@ -618,7 +626,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       };
       
       set((state) => ({ brainDump: [...state.brainDump, newItem] }));
-      await supabase.from("brain_dumps").insert({ 
+      const { error } = await supabase.from("brain_dumps").insert({ 
         id, 
         user_id: userId, 
         content, 
@@ -627,6 +635,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         color, 
         date: selectedDate 
       });
+      if (error) console.error("Supabase BrainDump Insert Error:", error);
     } catch (err) {
       console.error("Failed to add brain dump item:", err);
     }
@@ -707,7 +716,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     try {
       const color = getColorForContent(content, settings.customTags);
-      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const id = crypto.randomUUID();
       const newItem: TopThreeItem = { 
         id, 
         content, 
@@ -718,7 +727,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       };
       
       set((state) => ({ topThree: [...state.topThree, newItem] }));
-      await supabase.from("top_three").insert({ 
+      const { error } = await supabase.from("top_three").insert({ 
         id, 
         user_id: userId, 
         content, 
@@ -727,6 +736,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         color, 
         date: selectedDate 
       });
+      if (error) console.error("Supabase TopThree Insert Error:", error);
     } catch (err) {
       console.error("Failed to add top three item:", err);
     }
