@@ -5,8 +5,8 @@ import { useState } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
-  TrendingUp, Clock, ArrowUpRight, Sparkles, Share2, Download,
-  Zap, ArrowUp, BrainCircuit, Check, Crown, Lock,
+  TrendingUp, Clock, ArrowUpRight, Sparkles,
+  Zap, ArrowUp, BrainCircuit, Crown, Lock,
   PieChart as PieChartIcon, Calendar,
 } from "lucide-react";
 import {
