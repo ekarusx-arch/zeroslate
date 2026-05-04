@@ -288,6 +288,8 @@ export default function TimeBlock({
 
   if (visibleStart >= timelineEndMinutes || visibleEnd <= timelineStartMinutes) return null;
 
+  const blockColor = useTimeboxerStore.getState().getColorForContent(block.content) || block.color || "#e4e4e7";
+
   return (
     <>
     <div
@@ -300,8 +302,8 @@ export default function TimeBlock({
       style={{
         top: `${top}px`,
         height: `${Math.max(height, 20)}px`,
-        backgroundColor: (useTimeboxerStore.getState().getColorForContent(block.content) || block.color) + "CC",
-        borderLeft: `3px solid ${useTimeboxerStore.getState().getColorForContent(block.content) || block.color}`,
+        backgroundColor: blockColor + "CC",
+        borderLeft: `3px solid ${blockColor}`,
         zIndex: isDragging ? 50 : (isHovered ? 10 : 5),
       }}
       onMouseEnter={() => setIsHovered(true)}

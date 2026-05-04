@@ -377,7 +377,7 @@ export default function Home() {
         
         {/* ── 헤더 ── */}
         <header className="sticky top-0 z-50 zs-app-header border-b backdrop-blur-xl">
-          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 h-[58px] flex items-center justify-between gap-3 sm:gap-6">
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 h-[58px] flex items-center justify-between gap-4 sm:gap-6 overflow-x-auto no-scrollbar w-full">
             {/* 로고 */}
             <div className="flex items-center gap-2.5 shrink-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-sm">
@@ -421,7 +421,7 @@ export default function Home() {
             </div>
 
             {/* 액션 버튼들 */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar pr-2 flex-1 justify-end">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto pr-2">
               {/* 전체 달력 보기 버튼 (Pro 전용) */}
               <button
                 onClick={() => {
