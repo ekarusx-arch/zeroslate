@@ -161,87 +161,91 @@ export default function StatsModal() {
           </div>
 
           <div className="flex-1 overflow-y-auto relative">
-            {/* 프리미엄 티저 오버레이 (무료 사용자용) */}
-            {!isPro && (
-              <div className="absolute inset-0 z-[60] bg-white/40 backdrop-blur-xl flex items-center justify-center p-8">
-                <div className="max-w-xl w-full bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-zinc-100 p-12 text-center space-y-10 animate-in fade-in zoom-in duration-500">
-                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-[30px] bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-orange-200 mb-2">
+
+            {/* ── 상단 헤더: 프리/PRO 모두 동일하게 항상 선명하게 표시 ── */}
+            <div className="px-16 py-12 border-b border-zinc-50 shrink-0 bg-gradient-to-b from-zinc-50/50 to-white">
+              <div className="flex items-start justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-600/20">
+                      Weekly Intelligence
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                      <ArrowUp className="w-3 h-3" />
+                      {growthRate}% 성장 중
+                    </div>
+                  </div>
+                  <DialogTitle className="text-5xl font-bold text-zinc-900 tracking-tighter leading-tight">
+                    Productivity <span className="text-zinc-300">Insights</span>
+                  </DialogTitle>
+                  <p className="text-sm font-medium text-zinc-400 max-w-md leading-relaxed">
+                    사용자님의 지난 7일간의 몰입 데이터를 AI가 분석한 결과입니다. <br/>
+                    상위 5%의 몰입 패턴을 유지하고 계시네요.
+                  </p>
+                </div>
+
+                <div className="relative group mt-12">
+                  <div className="absolute inset-0 bg-blue-600/20 blur-3xl group-hover:bg-blue-600/30 transition-all" />
+                  <div className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full bg-white border-[12px] border-zinc-50 shadow-inner">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 p-1">
+                      <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#F8FAFC" strokeWidth="8" />
+                      <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#2563EB" strokeWidth="8" strokeDasharray="100" strokeDashoffset={100 - score} strokeLinecap="round" className="transition-all duration-1000" />
+                    </svg>
+                    <span className="text-5xl font-black text-zinc-900 tracking-tighter">{score}</span>
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Total Score</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 데이터 영역: 프리 사용자는 티저 오버레이로 덮음 ── */}
+            <div className="relative">
+              {/* 프리미엄 티저 오버레이 (무료 사용자용) */}
+              {!isPro && (
+                <div className="absolute inset-0 z-[60] bg-white/50 backdrop-blur-xl flex items-center justify-center p-8">
+                  <div className="max-w-xl w-full bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-zinc-100 p-12 text-center space-y-10 animate-in fade-in zoom-in duration-500">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-[30px] bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-orange-200 mb-2">
                       <Crown className="w-10 h-10 text-white" />
-                   </div>
-                   
-                   <div className="space-y-4">
+                    </div>
+
+                    <div className="space-y-4">
                       <h2 className="text-4xl font-black text-zinc-900 tracking-tight">AI 리포트로 성장을 시작하세요</h2>
                       <p className="text-zinc-500 font-medium leading-relaxed">
                         단순한 기록을 넘어, AI가 당신의 몰입 패턴을 분석합니다. <br/>
                         데이터 기반의 인사이트로 다음 주의 나를 설계하세요.
                       </p>
-                   </div>
+                    </div>
 
-                   <div className="grid grid-cols-1 gap-4 text-left">
+                    <div className="grid grid-cols-1 gap-4 text-left">
                       {[
                         { icon: BrainCircuit, text: "AI 맞춤형 생산성 진단 & 코멘트" },
                         { icon: Zap, text: "지난주 대비 성장률 및 트렌드 분석" },
                         { icon: Download, text: "모든 통계 데이터 무제한 내보내기" }
                       ].map((item, idx) => (
                         <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50/50 border border-zinc-50">
-                           <item.icon className="w-5 h-5 text-orange-500" />
-                           <span className="text-sm font-bold text-zinc-700">{item.text}</span>
+                          <item.icon className="w-5 h-5 text-orange-500" />
+                          <span className="text-sm font-bold text-zinc-700">{item.text}</span>
                         </div>
                       ))}
-                   </div>
+                    </div>
 
-                   <div className="pt-4 space-y-4">
-                      <button 
+                    <div className="pt-4 space-y-4">
+                      <button
                         onClick={() => openUpgradeModal("AI 리포트")}
                         className="w-full h-16 bg-zinc-900 text-white rounded-2xl font-black text-lg hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-200 active:scale-95"
                       >
                         PRO 플랜으로 잠금 해제
                       </button>
                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                         이미 2,400명의 사용자가 AI 리포트를 사용 중입니다
+                        이미 2,400명의 사용자가 AI 리포트를 사용 중입니다
                       </p>
-                   </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* 실제 리포트 내용 (isPro가 false면 블러 처리된 배경으로 작동) */}
-            <div className={!isPro ? "pointer-events-none select-none opacity-50 filter blur-sm" : ""}>
-              {/* 프리미엄 헤더 섹션 */}
-              <div className="px-16 py-12 border-b border-zinc-50 shrink-0 bg-gradient-to-b from-zinc-50/50 to-white">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-600/20">
-                        Weekly Intelligence
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                        <ArrowUp className="w-3 h-3" />
-                        {growthRate}% 성장 중
-                      </div>
-                    </div>
-                    <DialogTitle className="text-5xl font-bold text-zinc-900 tracking-tighter leading-tight">
-                      Productivity <span className="text-zinc-300">Insights</span>
-                    </DialogTitle>
-                    <p className="text-sm font-medium text-zinc-400 max-w-md leading-relaxed">
-                      사용자님의 지난 7일간의 몰입 데이터를 AI가 분석한 결과입니다. <br/>
-                      상위 5%의 몰입 패턴을 유지하고 계시네요.
-                    </p>
-                  </div>
-                  
-                  <div className="relative group mt-12">
-                    <div className="absolute inset-0 bg-blue-600/20 blur-3xl group-hover:bg-blue-600/30 transition-all" />
-                    <div className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full bg-white border-[12px] border-zinc-50 shadow-inner">
-                      <svg className="absolute inset-0 w-full h-full -rotate-90 p-1">
-                        <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#F8FAFC" strokeWidth="8" />
-                        <circle cx="50%" cy="50%" r="46%" fill="transparent" stroke="#2563EB" strokeWidth="8" strokeDasharray="100" strokeDashoffset={100 - score} strokeLinecap="round" className="transition-all duration-1000" />
-                      </svg>
-                      <span className="text-5xl font-black text-zinc-900 tracking-tighter">{score}</span>
-                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Total Score</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* 실제 데이터 (PRO면 정상, 프리면 블러 배경) */}
+              <div className={!isPro ? "pointer-events-none select-none opacity-40 filter blur-sm" : ""}>
 
               {/* 메인 콘텐츠 영역 */}
               <div className="px-16 py-12 space-y-20">
@@ -417,6 +421,7 @@ export default function StatsModal() {
                    </div>
                    <ArrowUpRight className="w-5 h-5 text-zinc-200" />
                 </div>
+              </div>
               </div>
             </div>
           </div>
