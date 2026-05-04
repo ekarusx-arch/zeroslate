@@ -109,8 +109,6 @@ export default function TimeBlock({
   const visibleStart = Math.max(localStart, timelineStartMinutes);
   const visibleEnd = Math.min(localEnd, timelineEndMinutes);
 
-  if (visibleStart >= timelineEndMinutes || visibleEnd <= timelineStartMinutes) return null;
-
   const top = minutesToPx(visibleStart - timelineStartMinutes);
   const height = minutesToPx(visibleEnd - visibleStart);
 
@@ -287,6 +285,8 @@ export default function TimeBlock({
     updateTimeBlock(block.id, { memo: tempMemo });
     setIsMemoOpen(false);
   };
+
+  if (visibleStart >= timelineEndMinutes || visibleEnd <= timelineStartMinutes) return null;
 
   return (
     <>
