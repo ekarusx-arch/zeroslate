@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
-import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette, Lock, Sparkles } from "lucide-react";
+import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette, Lock, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import { PRESET_COLORS, Routine, ThemeId } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -103,7 +103,11 @@ export default function SettingsModal() {
   const [newTagColor, setNewTagColor] = useState(PRESET_COLORS[1].value);
   const [themeNotice, setThemeNotice] = useState<string | null>(null);
 
-  // 루틴 수정 상태
+  // 태그 수정 상태
+  const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [editTagName, setEditTagName] = useState("");
+  const [editTagColor, setEditTagColor] = useState("");
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editStart, setEditStart] = useState("");
@@ -157,6 +161,32 @@ export default function SettingsModal() {
     updateSettings({
       customTags: (settings.customTags || []).filter(t => t.tag !== tag)
     });
+  };
+
+  const handleMoveCustomTag = (tag: string, direction: 'up' | 'down') => {
+    const tags = [...(settings.customTags || [])];
+    const index = tags.findIndex(t => t.tag === tag);
+    if (index === -1) return;
+    
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= tags.length) return;
+    
+    const temp = tags[index];
+    tags[index] = tags[newIndex];
+    tags[newIndex] = temp;
+    
+    updateSettings({ customTags: tags });
+  };
+
+  const handleUpdateCustomTag = () => {
+    if (!editingTag || !editTagName.trim()) return;
+    const tagText = editTagName.startsWith("#") ? editTagName.trim() : `#${editTagName.trim()}`;
+    
+    const tags = (settings.customTags || []).map(t => 
+      t.tag === editingTag ? { tag: tagText, color: editTagColor } : t
+    );
+    updateSettings({ customTags: tags });
+    setEditingTag(null);
   };
 
   const handleSelectTheme = (theme: ThemeId, isPro: boolean) => {
@@ -623,32 +653,96 @@ export default function SettingsModal() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {/* 기본 태그들 안내 (읽기 전용) */}
-                  {PRESET_COLORS.filter(c => c.tag !== "").map((p) => (
-                    <div key={p.tag} className="flex items-center justify-between p-2.5 bg-white border border-zinc-100 rounded-lg opacity-60 grayscale-[0.5]">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.value }} />
-                        <span className="text-xs font-medium text-zinc-600 truncate">{p.tag}</span>
-                      </div>
-                      <span className="text-[9px] font-bold text-zinc-400 uppercase">기본</span>
-                    </div>
-                  ))}
-
-                  {/* 사용자 커스텀 태그들 */}
-                  {(settings.customTags || []).map((t) => (
-                    <div key={t.tag} className="flex items-center justify-between p-2.5 bg-white border border-blue-100 rounded-lg shadow-sm group">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
-                        <span className="text-xs font-bold text-blue-600 truncate">{t.tag}</span>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteCustomTag(t.tag)}
-                        className="p-1 text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                  {(settings.customTags || []).map((t, index) => {
+                    const isEditing = editingTag === t.tag;
+                    
+                    return (
+                      <div 
+                        key={`${t.tag}-${index}`}
+                        className={`flex flex-col justify-center p-2.5 bg-white border rounded-lg transition-all group ${
+                          isEditing 
+                            ? "border-blue-500 ring-1 ring-blue-500 shadow-md min-h-[70px]" 
+                            : "border-zinc-100 hover:border-blue-200 shadow-sm h-[42px]"
+                        }`}
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1.5">
+                              <input 
+                                type="color"
+                                value={editTagColor}
+                                onChange={(e) => setEditTagColor(e.target.value)}
+                                className="w-4 h-4 rounded-full overflow-hidden cursor-pointer shrink-0 border-none p-0"
+                              />
+                              <Input 
+                                value={editTagName}
+                                onChange={(e) => setEditTagName(e.target.value)}
+                                className="h-6 text-[11px] font-bold py-0 px-1.5 border-zinc-200 focus:border-blue-400"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="flex items-center justify-end gap-1">
+                              <button 
+                                onClick={() => setEditingTag(null)}
+                                className="text-[9px] font-bold text-zinc-400 hover:text-zinc-600 px-1.5 py-0.5"
+                              >
+                                취소
+                              </button>
+                              <button 
+                                onClick={handleUpdateCustomTag}
+                                className="text-[9px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-2 py-0.5 rounded shadow-sm transition-colors"
+                              >
+                                저장
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 overflow-hidden pr-1">
+                              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                              <span className="text-[11px] font-bold text-zinc-700 truncate">{t.tag}</span>
+                            </div>
+                            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                              <button 
+                                onClick={() => handleMoveCustomTag(t.tag, 'up')}
+                                disabled={index === 0}
+                                className="p-0.5 text-zinc-300 hover:text-blue-500 disabled:opacity-0"
+                                title="위로 이동"
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </button>
+                              <button 
+                                onClick={() => handleMoveCustomTag(t.tag, 'down')}
+                                disabled={index === (settings.customTags?.length || 0) - 1}
+                                className="p-0.5 text-zinc-300 hover:text-blue-500 disabled:opacity-0"
+                                title="아래로 이동"
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setEditingTag(t.tag);
+                                  setEditTagName(t.tag);
+                                  setEditTagColor(t.color);
+                                }}
+                                className="p-0.5 text-zinc-300 hover:text-blue-500"
+                                title="수정"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteCustomTag(t.tag)}
+                                className="p-0.5 text-zinc-300 hover:text-red-500"
+                                title="삭제"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {(!settings.customTags || settings.customTags.length === 0) && (

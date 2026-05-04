@@ -190,7 +190,15 @@ const defaultSettings: Settings = {
   startTime: 5,
   endTime: 24,
   step: 30,
-  customTags: [],
+  customTags: [
+    { tag: "#개발", color: "#93C5FD" },
+    { tag: "#운동", color: "#6EE7B7" },
+    { tag: "#중요", color: "#FCA5A5" },
+    { tag: "#기획", color: "#FDBA74" },
+    { tag: "#작곡", color: "#C4B5FD" },
+    { tag: "#휴식", color: "#FCD34D" },
+    { tag: "#기타", color: "#F9A8D4" },
+  ],
   theme: "classic",
   customAccent: "#2563EB",
 };
@@ -208,16 +216,10 @@ function getPlanForEmail(email?: string | null): UserPlan {
 
 function getColorForContent(content: string, customTags: any[] = []) {
   if (!Array.isArray(customTags)) return undefined;
-  // 1. 커스텀 태그 먼저 확인 (사용자 우선순위)
+  // 태그 리스트 순서대로 확인 (위쪽에 있을수록 우선순위 높음)
   for (const ct of customTags) {
     if (ct.tag && content.includes(ct.tag)) {
       return ct.color;
-    }
-  }
-  // 2. 프리셋 태그 확인
-  for (const preset of PRESET_COLORS) {
-    if (preset.tag && content.includes(preset.tag)) {
-      return preset.value;
     }
   }
   return undefined;
@@ -387,7 +389,10 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     };
 
     // 한번 더 강제 확인
-    if (!finalSettings.customTags) finalSettings.customTags = [];
+    // 태그 목록이 비어있으면 기본값으로 채워줌
+    if (!finalSettings.customTags || finalSettings.customTags.length === 0) {
+      finalSettings.customTags = [...defaultSettings.customTags];
+    }
     if (!finalSettings.theme) finalSettings.theme = "classic";
 
     const finalRoutines = rt.data && rt.data.length > 0 ? (rt.data || []).map(r => ({ 
