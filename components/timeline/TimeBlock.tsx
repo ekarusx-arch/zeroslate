@@ -81,7 +81,6 @@ export default function TimeBlock({
   const todayDate = getTodayDateKey();
 
   const isToday = selectedDate === todayDate;
-  const isFuture = selectedDate > todayDate;
   const isPastDay = selectedDate < todayDate;
 
   // 오늘일 때만 현재 시간과 비교하여 활성/과거 여부 판단
