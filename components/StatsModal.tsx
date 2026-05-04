@@ -26,8 +26,6 @@ export default function StatsModal() {
   const { fetchStatsData, userPlan, isUpgradeModalOpen, openUpgradeModal, closeUpgradeModal } = useTimeboxerStore();
   const [data, setData] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
-
   const loadData = async () => {
     setIsLoading(true);
     const result = await fetchStatsData();
@@ -41,27 +39,6 @@ export default function StatsModal() {
   };
 
   const score = data?.totalMinutes ? Math.round((data.completedMinutes / data.totalMinutes) * 100) : 0;
-
-  const handleShare = async () => {
-    const url = window.location.origin;
-    if (navigator.share) {
-      try { await navigator.share({ title: "ZeroSlate 리포트", text: `생산성 점수 ${score}점!`, url }); }
-      catch { navigator.clipboard.writeText(url).then(() => { setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }); }
-    } else {
-      navigator.clipboard.writeText(url).then(() => { setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); });
-    }
-  };
-
-  const handleDownload = () => {
-    if (!data?.pieData.length) { alert("내보낼 데이터가 없습니다."); return; }
-    const BOM = "\uFEFF";
-    let csv = BOM + "카테고리,집중 시간(분),비중(%)\n";
-    data.pieData.forEach(r => { csv += `${r.name},${r.value},${Math.round((r.value / data.completedMinutes) * 100)}%\n`; });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-    a.download = `zeroslate_${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
 
   const isPro = userPlan === "pro";
 
@@ -176,18 +153,6 @@ export default function StatsModal() {
           ) : (
             /* ── PRO 모드 ── */
             <>
-              {/* 툴바 */}
-              <div className="absolute top-5 right-14 flex items-center gap-1 z-50 bg-white/80 backdrop-blur-md border border-zinc-100 p-1 rounded-xl shadow-sm">
-                <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-all text-[11px] font-bold">
-                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">{isCopied ? "Copied!" : "Share"}</span>
-                </button>
-                <div className="w-px h-4 bg-zinc-200" />
-                <button onClick={handleDownload} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-all text-[11px] font-bold">
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Export</span>
-                </button>
-              </div>
 
               <div className="flex-1 overflow-y-auto">
                 <div className="px-4 sm:px-10 py-5 sm:py-8 space-y-8 sm:space-y-12">
