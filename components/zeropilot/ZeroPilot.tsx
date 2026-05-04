@@ -241,7 +241,7 @@ export default function ZeroPilot() {
     <div className="fixed bottom-24 lg:bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
       {/* Pilot 대화창 */}
       {isOpen && (
-        <div className="w-80 max-h-[min(760px,calc(100vh-7rem))] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-zinc-100 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4">
+        <div className="w-[calc(100vw-3rem)] sm:w-80 max-h-[min(760px,calc(100vh-7rem))] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-zinc-100 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4">
           {/* 헤더 */}
           <div className="p-4 bg-zinc-900 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">

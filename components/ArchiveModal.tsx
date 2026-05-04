@@ -87,7 +87,7 @@ export default function ArchiveModal() {
         <Archive className="w-3.5 h-3.5" />
         기록
       </DialogTrigger>
-      <DialogContent className="w-[95vw] sm:max-w-[900px]">
+      <DialogContent className="w-[95vw] sm:max-w-[900px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between gap-2 text-base">
             <span className="flex items-center gap-2">
@@ -106,7 +106,7 @@ export default function ArchiveModal() {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-[1.5fr_1fr]">
+        <div className="grid gap-4 md:grid-cols-[1.5fr_1fr] flex-1 min-h-0 overflow-y-auto pr-1">
           <section className="rounded-xl border border-zinc-100 p-3">
             <div className="mb-3 flex items-center justify-between">
               <button
