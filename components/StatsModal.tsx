@@ -20,7 +20,8 @@ import {
   Download,
   Zap,
   ArrowUp,
-  BrainCircuit
+  BrainCircuit,
+  Check
 } from "lucide-react";
 import {
   PieChart,
@@ -46,6 +47,7 @@ export default function StatsModal() {
   const fetchStatsData = useTimeboxerStore((s) => s.fetchStatsData);
   const [data, setData] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -62,7 +64,46 @@ export default function StatsModal() {
   };
 
   const score = data?.totalMinutes ? Math.round((data.completedMinutes / data.totalMinutes) * 100) : 0;
-  const growthRate = 12; // 데모용 성장률
+  const growthRate = 12;
+
+  // 공유 기능
+  const handleShare = async () => {
+    const shareData = {
+      title: "ZeroSlate 생산성 리포트",
+      text: `이번 주 제 생산성 점수는 ${score}점입니다! 함께 몰입해봐요.`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Share failed", err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
+
+  // 다운로드 (CSV) 기능
+  const handleDownload = () => {
+    if (!data) return;
+
+    let csvContent = "data:text/csv;charset=utf-8,Category,Minutes\n";
+    data.pieData.forEach(row => {
+      csvContent += `${row.name},${row.value}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `zeroslate_report_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <Dialog onOpenChange={(open) => { if (open) loadData(); }}>
@@ -75,14 +116,20 @@ export default function StatsModal() {
         }
       />
       <DialogContent className="max-w-[1200px] w-[95vw] sm:max-w-[1200px] max-h-[94vh] overflow-hidden bg-white border-none shadow-[0_48px_96px_-12px_rgba(0,0,0,0.18)] p-0 rounded-[32px] flex flex-col">
-        {/* 상단 툴바 - 세련된 캡슐형 디자인 */}
+        {/* 상단 툴바 */}
         <div className="absolute top-8 right-20 flex items-center gap-1.5 z-50 bg-white/60 backdrop-blur-md border border-zinc-100 p-1.5 rounded-2xl shadow-sm">
-           <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-zinc-400 hover:text-zinc-900 transition-all group/btn">
-              <Share2 className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Share</span>
+           <button 
+             onClick={handleShare}
+             className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-zinc-400 hover:text-zinc-900 transition-all group/btn"
+           >
+              {isCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">{isCopied ? "Copied" : "Share"}</span>
            </button>
            <div className="w-px h-4 bg-zinc-200" />
-           <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-zinc-400 hover:text-zinc-900 transition-all group/btn">
+           <button 
+             onClick={handleDownload}
+             className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-zinc-400 hover:text-zinc-900 transition-all group/btn"
+           >
               <Download className="w-4 h-4" />
               <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Export</span>
            </button>
@@ -90,7 +137,7 @@ export default function StatsModal() {
 
         {/* 프리미엄 헤더 섹션 */}
         <div className="px-16 py-12 border-b border-zinc-50 shrink-0 bg-gradient-to-b from-zinc-50/50 to-white">
-          <div className="flex items-end justify-between">
+          <div className="flex items-start justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <div className="px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] border border-blue-600/20">
@@ -110,7 +157,8 @@ export default function StatsModal() {
               </p>
             </div>
             
-            <div className="relative group">
+            {/* Total Score 위치 하향 조정 (mt-12 추가) */}
+            <div className="relative group mt-12">
               <div className="absolute inset-0 bg-blue-600/20 blur-3xl group-hover:bg-blue-600/30 transition-all" />
               <div className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full bg-white border-[12px] border-zinc-50 shadow-inner">
                 <svg className="absolute inset-0 w-full h-full -rotate-90 p-1">
