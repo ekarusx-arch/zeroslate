@@ -1,6 +1,6 @@
 "use client";
 
-import { ListTodo, Timer, BarChart3, Calendar } from "lucide-react";
+import { ListTodo, Timer, BarChart3 } from "lucide-react";
 
 interface MobileNavProps {
   activeTab: "dump" | "timeline" | "stats";

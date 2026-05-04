@@ -1,7 +1,7 @@
 "use client";
 
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ListTodo, Plus, Check } from "lucide-react";
 import { BrainDumpItem } from "@/types";
 
@@ -12,7 +12,7 @@ interface MobileQuickAddProps {
 }
 
 export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: MobileQuickAddProps) {
-  const { brainDump, addTimeBlock, updateBrainDumpItem, settings } = useTimeboxerStore();
+  const { brainDump, addTimeBlock } = useTimeboxerStore();
   
   // 미완료된 브레인 덤프 항목들
   const activeDumps = brainDump.filter(item => !item.isCompleted);
