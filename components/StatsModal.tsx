@@ -10,12 +10,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
-  BarChart3, 
   PieChart as PieChartIcon, 
   TrendingUp, 
   Calendar, 
   Clock, 
-  Target,
   ArrowUpRight,
   Sparkles,
   Share2,
