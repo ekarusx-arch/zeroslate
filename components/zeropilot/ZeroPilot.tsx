@@ -242,15 +242,15 @@ export default function ZeroPilot() {
       {/* 모바일 뒷배경 딤 */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 z-[90] lg:hidden backdrop-blur-sm transition-opacity" 
+          className="fixed inset-0 bg-black/30 z-[90] sm:hidden backdrop-blur-sm transition-opacity" 
           onClick={() => setIsOpen(false)} 
         />
       )}
 
       {/* Pilot 대화창 (모바일 바텀 시트 / 데스크탑 플로팅) */}
       {isOpen && (
-        <div className="fixed z-[100] bottom-0 left-0 right-0 lg:bottom-[5rem] lg:right-6 lg:left-auto flex flex-col lg:items-end animate-in slide-in-from-bottom-8 duration-300">
-          <div className="w-full lg:w-80 h-[85vh] lg:h-auto lg:max-h-[min(760px,calc(100vh-7rem))] bg-white rounded-t-[2rem] lg:rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-t lg:border border-zinc-100 overflow-hidden flex flex-col">
+        <div className="fixed z-[100] bottom-0 left-0 right-0 sm:bottom-[5.5rem] sm:right-6 sm:left-auto flex flex-col sm:items-end animate-in slide-in-from-bottom-8 duration-300">
+          <div className="w-full sm:w-80 h-[90vh] sm:h-auto sm:max-h-[min(760px,calc(100vh-7rem))] bg-white rounded-t-[2rem] sm:rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.12)] sm:shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-t sm:border border-zinc-100 overflow-hidden flex flex-col">
           {/* 헤더 */}
           <div className="p-4 bg-zinc-900 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -521,7 +521,7 @@ export default function ZeroPilot() {
       )}
 
       {/* 플로팅 액션 버튼 (항상 우측 하단 고정) */}
-      <div className="fixed bottom-24 lg:bottom-6 right-6 z-[100]">
+      <div className="fixed bottom-24 sm:bottom-6 right-6 z-[100]">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="relative zs-pilot-btn flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-[0_8px_30px_rgba(59,130,246,0.3)] bg-gradient-to-br from-blue-500 to-indigo-600 text-white transition-transform hover:scale-105 active:scale-95"
