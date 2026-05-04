@@ -547,11 +547,11 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     // 색상이 변경되었다면 해시태그도 연동
     if (updates.color !== undefined) {
-      const allTags = [...PRESET_COLORS, ...state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }))];
+      const allTags = state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }));
       const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
       
-      // 기존 프레셋/커스텀 태그들 제거
+      // 기존 태그들 제거
       newContent = removeKnownTags(newContent, allTags);
       
       // 새 태그 추가
@@ -647,7 +647,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     // 색상이 변경되었다면 해시태그도 연동
     if (updates.color !== undefined) {
-      const allTags = [...PRESET_COLORS, ...state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }))];
+      const allTags = state.settings.customTags.map(ct => ({ tag: ct.tag, value: ct.color }));
       const newPreset = allTags.find(p => p.value === updates.color);
       let newContent = updates.content ?? item.content;
       
