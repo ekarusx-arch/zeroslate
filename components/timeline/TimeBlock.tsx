@@ -77,8 +77,17 @@ export default function TimeBlock({
   const timelineStartMinutes = startHour * 60;
   const timelineEndMinutes = endHour * 60;
 
-  const isActive = localStart <= currentMinutes && currentMinutes < localEnd;
-  const isPast = currentMinutes >= localEnd;
+  const selectedDate = useTimeboxerStore((s) => s.selectedDate);
+  const todayDate = getTodayDateKey();
+
+  const isToday = selectedDate === todayDate;
+  const isFuture = selectedDate > todayDate;
+  const isPastDay = selectedDate < todayDate;
+
+  // 오늘일 때만 현재 시간과 비교하여 활성/과거 여부 판단
+  const isActive = isToday && (localStart <= currentMinutes && currentMinutes < localEnd);
+  const isPast = isPastDay || (isToday && currentMinutes >= localEnd);
+  
   const progressPercent = isActive ? ((currentMinutes - localStart) / (localEnd - localStart)) * 100 : 0;
   const isEndingSoon = isActive && (localEnd - currentMinutes) <= 5;
 

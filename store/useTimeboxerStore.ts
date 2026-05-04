@@ -369,7 +369,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (!session) return;
     const userId = session.user.id;
     const accountPlan = getPlanForEmail(session.user.email);
-    const today = getTodayKey();
+    const targetDate = get().selectedDate;
     
     // 1. 로컬 스토리지에서 우선 로드 (즉각적인 UI 반영)
     const localSettings = localStorage.getItem(`zeroslate_settings_${userId}`);
@@ -378,11 +378,11 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (localSettings) set({ settings: JSON.parse(localSettings) });
     if (localRoutines) set({ routines: JSON.parse(localRoutines) });
 
-    // 2. Supabase에서 공통 설정 및 오늘 데이터 불러오기
+    // 2. Supabase에서 공통 설정 및 선택된 날짜 데이터 불러오기
     const [bd, tt, tb, dl, rt, st] = await Promise.all([
-      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", today),
-      supabase.from("top_three").select("*").eq("user_id", userId).eq("date", today),
-      supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", today),
+      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", targetDate),
+      supabase.from("top_three").select("*").eq("user_id", userId).eq("date", targetDate),
+      supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", targetDate),
       supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("routines").select("*").eq("user_id", userId),
       supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle()
