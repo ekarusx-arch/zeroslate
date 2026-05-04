@@ -387,7 +387,7 @@ export default function Home() {
 
 
             {/* 날짜 내비게이션 */}
-            <div className="flex items-center gap-1 bg-white/70 px-1.5 py-1 rounded-xl border border-zinc-200/80 shadow-sm hidden md:flex">
+            <div className="flex items-center gap-1 bg-white/70 px-1.5 py-1 rounded-xl border border-zinc-200/80 shadow-sm hidden md:flex shrink-0">
               <button
                 onClick={() => changeDate(-1)}
                 className="p-1.5 hover:bg-zinc-100 rounded-lg transition-all text-zinc-400 hover:text-zinc-700"
@@ -398,7 +398,7 @@ export default function Home() {
               
               <button 
                 onClick={goToToday}
-                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 ${
                   isTodaySelected 
                     ? "text-blue-600 bg-blue-50 shadow-sm" 
                     : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
