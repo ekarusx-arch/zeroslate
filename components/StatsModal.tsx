@@ -157,10 +157,9 @@ export default function StatsModal() {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           <ChartTooltip 
                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', fontSize: '11px', fontWeight: 'bold', color: '#0F172A' }}
-                            formatter={(value: any) => formatMinutes(Number(value || 0))}
+                            formatter={(value: number | string | undefined) => formatMinutes(Number(value || 0))}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -191,11 +190,10 @@ export default function StatsModal() {
                           dy={15}
                         />
                         <YAxis hide />
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         <ChartTooltip 
                           cursor={{ fill: '#F8FAFC', radius: 8 }}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', fontSize: '11px', fontWeight: 'bold' }}
-                          formatter={(value: any) => [`${formatMinutes(Number(value || 0))}`, 'Focus']}
+                          formatter={(value: number | string | undefined) => [`${formatMinutes(Number(value || 0))}`, 'Focus']}
                         />
                         <Bar 
                           dataKey="minutes" 
