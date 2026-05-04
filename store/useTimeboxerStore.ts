@@ -10,6 +10,8 @@ import {
   PRESET_COLORS,
   Routine,
   UserPlan,
+  Goal,
+  GoalType,
 } from "@/types";
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────
@@ -169,6 +171,14 @@ interface TimeboxerState {
   activeFocusId: string | null;
   setFocusId: (id: string | null) => void;
 
+  // ── 장기 목표 (Goals) ──────────────────────────────────────────────
+  goals: Goal[];
+  fetchGoals: () => Promise<void>;
+  addGoal: (title: string, type: GoalType, color?: string) => Promise<void>;
+  updateGoal: (id: string, updates: Partial<Goal>) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+  toggleGoal: (id: string) => Promise<void>;
+
   isPilotLoading: boolean;
   pilotMessage: string | null;
   setPilotLoading: (loading: boolean) => void;
@@ -260,6 +270,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   colorIndex: 0,
   userId: null,
   selectedDate: getTodayKey(),
+  goals: [],
 
   // 유료화 초기 상태
   userPlan: 'free' as UserPlan,
@@ -379,13 +390,14 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (localRoutines) set({ routines: JSON.parse(localRoutines) });
 
     // 2. Supabase에서 공통 설정 및 선택된 날짜 데이터 불러오기
-    const [bd, tt, tb, dl, rt, st] = await Promise.all([
+    const [bd, tt, tb, dl, rt, st, gs] = await Promise.all([
       supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", targetDate),
       supabase.from("top_three").select("*").eq("user_id", userId).eq("date", targetDate),
       supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", targetDate),
       supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("routines").select("*").eq("user_id", userId),
-      supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle()
+      supabase.from("user_settings").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("goals").select("*").eq("user_id", userId).order("created_at", { ascending: false })
     ]);
 
     // DB 설정이 있다면 로컬보다 우선함
@@ -427,6 +439,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     if (bd.error) console.error("initialize brain_dumps error:", bd.error);
     if (tt.error) console.error("initialize top_three error:", tt.error);
     if (tb.error) console.error("initialize time_blocks error:", tb.error);
+    if (gs.error) console.error("initialize goals error:", gs.error);
 
     set({
       userId,
@@ -437,6 +450,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       topThree: (tt.data || []).map(r => ({ id: r.id, content: r.content, isAssigned: r.is_assigned, isCompleted: r.is_completed, color: r.color, date: r.date })),
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo, date: r.date })),
       dailyLogs: (dl.data || []).map(r => r.raw_data as DailyLog).filter(Boolean),
+      goals: (gs.data || []).map(r => ({ id: r.id, title: r.title, type: r.type, isCompleted: r.is_completed, color: r.color, createdAt: r.created_at })),
     });
 
     // 구글 캘린더 연동 상태 체크
@@ -1218,7 +1232,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   resetAll: async () => {
     const state = get();
-    set({ brainDump: [], topThree: [], timeBlocks: [], colorIndex: 0 });
+    set({ brainDump: [], topThree: [], timeBlocks: [] });
     if (state.userId) {
       await Promise.all([
         supabase.from("time_blocks").delete().eq("user_id", state.userId),
@@ -1226,5 +1240,91 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         supabase.from("brain_dumps").delete().eq("user_id", state.userId)
       ]);
     }
+  },
+
+  // ── 장기 목표 (Goals) ──────────────────────────────────────────────
+  fetchGoals: async () => {
+    const { userId } = get();
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("goals")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("fetchGoals error:", error);
+      return;
+    }
+
+    set({
+      goals: (data || []).map(r => ({
+        id: r.id,
+        title: r.title,
+        type: r.type,
+        isCompleted: r.is_completed,
+        color: r.color,
+        createdAt: r.created_at
+      }))
+    });
+  },
+
+  addGoal: async (title, type, color) => {
+    const { userId } = get();
+    if (!userId) return;
+
+    const id = crypto.randomUUID();
+    const newGoal: Goal = {
+      id,
+      title,
+      type,
+      isCompleted: false,
+      color: color || "#93C5FD",
+      createdAt: new Date().toISOString()
+    };
+
+    set(state => ({ goals: [newGoal, ...state.goals] }));
+
+    const { error } = await supabase.from("goals").insert({
+      id,
+      user_id: userId,
+      title,
+      type,
+      is_completed: false,
+      color: newGoal.color,
+      created_at: newGoal.createdAt
+    });
+
+    if (error) console.error("addGoal error:", error);
+  },
+
+  updateGoal: async (id, updates) => {
+    set(state => ({
+      goals: state.goals.map(g => g.id === id ? { ...g, ...updates } : g)
+    }));
+
+    const dbUpdates: any = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.type !== undefined) dbUpdates.type = updates.type;
+    if (updates.isCompleted !== undefined) dbUpdates.is_completed = updates.isCompleted;
+    if (updates.color !== undefined) dbUpdates.color = updates.color;
+
+    const { error } = await supabase.from("goals").update(dbUpdates).eq("id", id);
+    if (error) console.error("updateGoal error:", error);
+  },
+
+  deleteGoal: async (id) => {
+    set(state => ({ goals: state.goals.filter(g => g.id !== id) }));
+    const { error } = await supabase.from("goals").delete().eq("id", id);
+    if (error) console.error("deleteGoal error:", error);
+  },
+
+  toggleGoal: async (id) => {
+    const { goals } = get();
+    const goal = goals.find(g => g.id === id);
+    if (!goal) return;
+    const newStatus = !goal.isCompleted;
+    await get().updateGoal(id, { isCompleted: newStatus });
   },
 }));

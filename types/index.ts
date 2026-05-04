@@ -43,6 +43,7 @@ export interface BrainDumpItem {
   createdAt: string;
   color?: string;
   date?: string; // "YYYY-MM-DD"
+  goalId?: string; // ← 신규: 연결된 장기 목표 ID
 }
 
 export interface TopThreeItem {
@@ -52,6 +53,7 @@ export interface TopThreeItem {
   isCompleted: boolean;
   color?: string;
   date?: string; // "YYYY-MM-DD"
+  goalId?: string; // ← 신규: 연결된 장기 목표 ID
 }
 
 export interface TimeBlock {
@@ -125,4 +127,16 @@ export interface SummaryStats {
   totalPlannedMinutes: number;
   completedMinutes: number;
   completedBlockList: TimeBlock[];
+}
+
+// ── 장기 목표 (Goals) ──────────────────────────────────────────────
+export type GoalType = 'monthly' | 'quarterly';
+
+export interface Goal {
+  id: string;
+  title: string;
+  type: GoalType;
+  isCompleted: boolean;
+  color?: string;
+  createdAt: string;
 }

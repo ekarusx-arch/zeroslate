@@ -22,6 +22,8 @@ import TimelineGrid from "@/components/timeline/TimelineGrid";
 import SummaryModal from "@/components/SummaryModal";
 import GuideModal from "@/components/GuideModal";
 import ArchiveModal from "@/components/ArchiveModal";
+import GoalBanner from "@/components/GoalBanner";
+import GoalModal from "@/components/GoalModal";
 import SettingsModal from "@/components/SettingsModal";
 import ArchivePanel from "@/components/right-panel/ArchivePanel";
 import FocusModal from "@/components/FocusModal";
@@ -507,6 +509,7 @@ export default function Home() {
 
           {/* 중앙 타임라인 */}
           <section className="flex-1 panel-card overflow-hidden flex flex-col min-h-[520px] lg:min-h-0 lg:min-w-[400px]">
+            <GoalBanner />
             {/* 타임라인 헤더 */}
             <div className="px-5 py-3.5 border-b border-zinc-100/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shrink-0 bg-white/50">
               <div className="flex items-center gap-2.5">
@@ -570,6 +573,7 @@ export default function Home() {
 
       <FocusModal />
       <ZeroPilot />
+      <GoalModal />
       <CalendarViewModal />
       <UpgradeModal
         open={isUpgradeModalOpen}
