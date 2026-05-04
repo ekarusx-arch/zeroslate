@@ -231,7 +231,8 @@ const PRO_ACCESS_EMAILS = new Set([
   "ekarusx@gmail.com",
   "ekarusx@naver.com",
   "zeroslate.official@gmail.com",
-  "nahyeon.kim@mahanaim.com"
+  "nahyeon.kim@mahanaim.com",
+  "graciasbass@goodnews.or.kr"
 ]);
 
 function getPlanForEmail(email?: string | null): UserPlan {
