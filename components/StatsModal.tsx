@@ -75,13 +75,16 @@ export default function StatsModal() {
         }
       />
       <DialogContent className="max-w-[1200px] w-[95vw] sm:max-w-[1200px] max-h-[94vh] overflow-hidden bg-white border-none shadow-[0_48px_96px_-12px_rgba(0,0,0,0.18)] p-0 rounded-[32px] flex flex-col">
-        {/* 상단 툴바 */}
-        <div className="absolute top-6 right-16 flex items-center gap-2 z-50">
-           <button className="p-2.5 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-all">
+        {/* 상단 툴바 - 세련된 캡슐형 디자인 */}
+        <div className="absolute top-8 right-20 flex items-center gap-1.5 z-50 bg-white/60 backdrop-blur-md border border-zinc-100 p-1.5 rounded-2xl shadow-sm">
+           <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-zinc-400 hover:text-zinc-900 transition-all group/btn">
               <Share2 className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Share</span>
            </button>
-           <button className="p-2.5 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-all">
+           <div className="w-px h-4 bg-zinc-200" />
+           <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white text-zinc-400 hover:text-zinc-900 transition-all group/btn">
               <Download className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Export</span>
            </button>
         </div>
 
