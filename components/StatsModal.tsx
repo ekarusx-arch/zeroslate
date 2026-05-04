@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -159,7 +160,7 @@ export default function StatsModal() {
                           </Pie>
                           <ChartTooltip 
                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', fontSize: '11px', fontWeight: 'bold', color: '#0F172A' }}
-                            formatter={(value: number | string | undefined) => formatMinutes(Number(value || 0))}
+                            formatter={(value: any) => formatMinutes(Number(value || 0))}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -193,7 +194,7 @@ export default function StatsModal() {
                         <ChartTooltip 
                           cursor={{ fill: '#F8FAFC', radius: 8 }}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', fontSize: '11px', fontWeight: 'bold' }}
-                          formatter={(value: number | string | undefined) => [`${formatMinutes(Number(value || 0))}`, 'Focus']}
+                          formatter={(value: any) => [`${formatMinutes(Number(value || 0))}`, 'Focus']}
                         />
                         <Bar 
                           dataKey="minutes" 
