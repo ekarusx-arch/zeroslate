@@ -214,13 +214,16 @@ export default function SummaryModal() {
             <div className="space-y-2">
               <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">완료된 블록</p>
               <div className="space-y-1">
-                {currentStats.completedBlockList.map((b) => (
-                  <div key={b.id} className="flex items-center gap-2 text-xs text-zinc-600">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <span>{b.content}</span>
-                    <span className="text-zinc-400 ml-auto">{b.startTime}–{b.endTime}</span>
-                  </div>
-                ))}
+                {currentStats.completedBlockList.map((b) => {
+                  const tagColor = useTimeboxerStore.getState().getColorForContent(b.content) || b.color || "#F4F4F5";
+                  return (
+                    <div key={b.id} className="flex items-center gap-2 text-xs text-zinc-600 py-0.5">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tagColor }} />
+                      <span className="truncate">{b.content}</span>
+                      <span className="text-[10px] text-zinc-400 ml-auto tabular-nums">{b.startTime}–{b.endTime}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

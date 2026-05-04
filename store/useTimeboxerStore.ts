@@ -184,6 +184,8 @@ interface TimeboxerState {
   carryOverToTomorrow: () => Promise<void>;
   resetAll: () => void;
   fetchDateData: (date: string) => Promise<void>;
+  getColorForContent: (content: string) => string | undefined;
+  cycleTag: (content: string) => string;
 }
 
 const defaultSettings: Settings = {
@@ -448,6 +450,40 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     } else {
       set({ userPlan: 'free' });
     }
+  },
+
+  getColorForContent: (content) => {
+    const { settings } = get();
+    return getColorForContent(content, settings.customTags);
+  },
+
+  cycleTag: (content) => {
+    const { settings } = get();
+    const tags = settings.customTags || [];
+    if (tags.length === 0) return content;
+
+    // 1. 현재 어떤 태그가 있는지 확인
+    const currentTagIndex = tags.findIndex(t => content.includes(t.tag));
+    
+    let nextContent = content;
+    if (currentTagIndex === -1) {
+      // 태그가 없으면 첫 번째 태그 추가
+      nextContent = `${content} ${tags[0].tag}`.trim();
+    } else {
+      // 태그가 있으면 다음 태그로 교체
+      const nextIndex = (currentTagIndex + 1) % (tags.length + 1);
+      
+      // 마지막 인덱스(tags.length)인 경우 태그 제거 (순환의 끝)
+      if (nextIndex === tags.length) {
+        nextContent = removeKnownTags(content, tags);
+      } else {
+        const currentTag = tags[currentTagIndex].tag;
+        const nextTag = tags[nextIndex].tag;
+        // 기존 태그를 새 태그로 교체
+        nextContent = content.replace(currentTag, nextTag);
+      }
+    }
+    return nextContent.trim();
   },
 
   updateSettings: async (s) => {

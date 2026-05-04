@@ -74,14 +74,9 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 
   const handleColorCycle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const settings = useTimeboxerStore.getState().settings;
-    const allTags = [...PRESET_COLORS, ...(settings.customTags || []).map(ct => ({ label: ct.tag, value: ct.color, tag: ct.tag }))];
-    
-    const currentTagIndex = allTags.findIndex(p => p.tag && item.content.includes(p.tag));
-    const currentColorIndex = allTags.findIndex(p => p.value.toLowerCase() === (item.color || "#F4F4F5").toLowerCase());
-    const currentIndex = currentTagIndex >= 0 ? currentTagIndex : currentColorIndex;
-    const nextIndex = (currentIndex + 1) % allTags.length;
-    updateBrainDumpItem(item.id, { color: allTags[nextIndex].value });
+    const cycleTag = useTimeboxerStore.getState().cycleTag;
+    const newContent = cycleTag(item.content);
+    updateBrainDumpItem(item.id, { content: newContent });
   };
 
   return (
@@ -109,11 +104,11 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         onClick={handleColorCycle}
         className="shrink-0 w-3 h-3 rounded-full border shadow-sm transition-all cursor-pointer hover:ring-2 hover:ring-blue-200 active:scale-90"
         style={{
-          backgroundColor: item.color || "#f4f4f5",
-          borderColor: item.color ? "transparent" : "#e4e4e7",
+          backgroundColor: useTimeboxerStore.getState().getColorForContent(item.content) || item.color || "#f4f4f5",
+          borderColor: (useTimeboxerStore.getState().getColorForContent(item.content) || item.color) ? "transparent" : "#e4e4e7",
         }}
         aria-label="컨텍스트 색상 변경"
-        title={`클릭하여 카테고리 변경: ${[...PRESET_COLORS, ...(useTimeboxerStore.getState().settings.customTags || []).map(ct => ({ label: ct.tag, value: ct.color }))].find(p => p.value === (item.color || "#F4F4F5"))?.label || "기본"}`}
+        title={`클릭하여 카테고리 변경: ${(useTimeboxerStore.getState().settings.customTags || []).find(p => p.color === (useTimeboxerStore.getState().getColorForContent(item.content) || item.color || "#F4F4F5"))?.tag || "기본"}`}
       />
 
       {/* 체크박스 */}

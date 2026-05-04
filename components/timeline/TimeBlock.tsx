@@ -287,8 +287,8 @@ export default function TimeBlock({
       style={{
         top: `${top}px`,
         height: `${Math.max(height, 20)}px`,
-        backgroundColor: block.color + "CC",
-        borderLeft: `3px solid ${block.color}`,
+        backgroundColor: (useTimeboxerStore.getState().getColorForContent(block.content) || block.color) + "CC",
+        borderLeft: `3px solid ${useTimeboxerStore.getState().getColorForContent(block.content) || block.color}`,
         zIndex: isDragging ? 50 : (isHovered ? 10 : 5),
       }}
       onMouseEnter={() => setIsHovered(true)}
