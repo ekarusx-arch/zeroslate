@@ -75,7 +75,7 @@ export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: Mob
                     {activeTopThree.map((item) => (
                       <button
                         key={item.id}
-                        onClick={() => handleSelectTask(item, 'focus')}
+                        onClick={() => handleSelectTask(item)}
                         className="w-full flex items-center justify-between p-4 bg-white border border-zinc-100 rounded-2xl hover:border-violet-300 hover:shadow-md transition-all text-left active:scale-[0.98]"
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -98,7 +98,7 @@ export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: Mob
                     {activeDumps.map((item) => (
                       <button
                         key={item.id}
-                        onClick={() => handleSelectTask(item, 'braindump')}
+                        onClick={() => handleSelectTask(item)}
                         className="w-full flex items-center justify-between p-4 bg-white border border-zinc-100 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all text-left active:scale-[0.98]"
                       >
                         <div className="flex items-center gap-3 min-w-0">
