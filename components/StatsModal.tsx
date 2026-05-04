@@ -132,10 +132,10 @@ export default function StatsModal() {
       <Dialog onOpenChange={(open) => { if (open) loadData(); }}>
         <DialogTrigger
           render={
-            <button className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-zinc-900 text-white text-[11px] font-bold transition-all hover:bg-zinc-800 hover:scale-[1.02] active:scale-95 shadow-xl shadow-zinc-200 group whitespace-nowrap shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-blue-500 group-hover:animate-pulse shrink-0" />
+            <button className="inline-flex items-center gap-1.5 h-[33px] px-[16px] rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-all shadow-md whitespace-nowrap shrink-0 active:scale-95 group">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400 group-hover:animate-pulse shrink-0" />
               <span>AI 리포트</span>
-              {!isPro && <Lock className="w-2.5 h-2.5 text-zinc-500 ml-0.5 shrink-0 opacity-60" />}
+              {!isPro && <Lock className="w-3 h-3 text-zinc-500 ml-1 shrink-0 opacity-60" />}
             </button>
           }
         />
