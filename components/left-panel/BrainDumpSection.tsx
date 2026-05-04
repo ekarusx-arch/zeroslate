@@ -12,6 +12,7 @@ import {
   Zap,
   CheckCircle2,
   RotateCw,
+  Timer,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,9 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
   const toggleBrainDumpItem = useTimeboxerStore((s) => s.toggleBrainDumpItem);
   const deleteBrainDumpItem = useTimeboxerStore((s) => s.deleteBrainDumpItem);
   const updateBrainDumpItem = useTimeboxerStore((s) => s.updateBrainDumpItem);
+  const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
+  const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
+  const settings = useTimeboxerStore((s) => s.settings);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
@@ -76,6 +80,52 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
     const cycleTag = useTimeboxerStore.getState().cycleTag;
     const newContent = cycleTag(item.content);
     updateBrainDumpItem(item.id, { content: newContent });
+  };
+
+  const handleQuickAssign = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const timeToMin = (t: string) => { const [h,m] = t.split(":").map(Number); return h*60+m; };
+    const selectedDate = useTimeboxerStore.getState().selectedDate;
+    
+    let currentMinutes = settings.startTime * 60;
+    // 오늘 날짜인 경우, 현재 시간 이후의 가장 빠른 시간부터 찾기
+    if (selectedDate === new Date().toISOString().split('T')[0]) {
+      const now = new Date();
+      currentMinutes = Math.max(currentMinutes, now.getHours() * 60 + now.getMinutes());
+    }
+
+    const remainder = currentMinutes % 30;
+    let startMin = currentMinutes + (remainder === 0 ? 0 : 30 - remainder);
+    const blocksOnDate = timeBlocks.filter(b => b.date === selectedDate);
+    
+    while (startMin < settings.endTime * 60) {
+      const endMin = startMin + 30;
+      const isOverlapping = blocksOnDate.some(b => {
+        const bStart = timeToMin(b.startTime);
+        const bEnd = timeToMin(b.endTime);
+        return (startMin < bEnd && endMin > bStart);
+      });
+      
+      if (!isOverlapping) {
+        const startH = Math.floor(startMin / 60);
+        const startM = startMin % 60;
+        const endH = Math.floor(endMin / 60);
+        const endM = endMin % 60;
+        
+        addTimeBlock({
+          taskId: item.id,
+          content: item.content,
+          startTime: `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`,
+          endTime: `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`,
+          date: selectedDate,
+        });
+        
+        alert(`${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")} 슬롯에 배치되었습니다!`);
+        return;
+      }
+      startMin += 30;
+    }
+    alert("남은 시간에 빈 30분 슬롯이 없습니다.");
   };
 
   return (
@@ -144,6 +194,16 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
           {item.content}
         </span>
       )}
+
+      {/* 모바일 타임라인 빠른 배치 버튼 */}
+      <button
+        onClick={handleQuickAssign}
+        className="lg:hidden text-zinc-400 hover:text-blue-500 transition-all duration-150 shrink-0 bg-zinc-50 p-1.5 rounded-lg border border-zinc-100 shadow-sm active:scale-95"
+        aria-label="타임라인에 30분 배치"
+        title="타임라인 빈 시간에 자동 배치"
+      >
+        <Timer className="w-3.5 h-3.5" />
+      </button>
 
       {/* 삭제 버튼 */}
       <button

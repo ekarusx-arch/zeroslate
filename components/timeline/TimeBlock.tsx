@@ -106,8 +106,13 @@ export default function TimeBlock({
     if (currentMinutes < localEnd) alarmsRef.current.end = false;
   }, [currentMinutes, localStart, localEnd]);
 
-  const top = minutesToPx(localStart - timelineStartMinutes);
-  const height = minutesToPx(localEnd - localStart);
+  const visibleStart = Math.max(localStart, timelineStartMinutes);
+  const visibleEnd = Math.min(localEnd, timelineEndMinutes);
+
+  if (visibleStart >= timelineEndMinutes || visibleEnd <= timelineStartMinutes) return null;
+
+  const top = minutesToPx(visibleStart - timelineStartMinutes);
+  const height = minutesToPx(visibleEnd - visibleStart);
 
   const duration = localEnd - localStart;
   const durationText =

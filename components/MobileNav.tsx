@@ -26,10 +26,8 @@ export default function MobileNav({ activeTab, setActiveTab }: MobileNavProps) {
           activeTab === "timeline" ? "text-blue-600 scale-110" : "text-zinc-400"
         }`}
       >
-        <div className={`p-2 rounded-2xl ${activeTab === "timeline" ? "bg-blue-600 text-white shadow-lg -mt-8 border-4 border-white" : ""}`}>
-          <Timer className="w-6 h-6" />
-        </div>
-        {activeTab !== "timeline" && <span className="text-[10px] font-bold">타임라인</span>}
+        <Timer className="w-5 h-5" />
+        <span className="text-[10px] font-bold">타임라인</span>
       </button>
 
       <button
