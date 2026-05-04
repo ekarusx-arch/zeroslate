@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 
-import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette, Lock, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Repeat, Clock, Edit2, Check, X, Tag, Palette, Lock, Sparkles, ChevronUp, ChevronDown, RotateCw } from "lucide-react";
 import { PRESET_COLORS, Routine, ThemeId } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -187,6 +187,20 @@ export default function SettingsModal() {
     );
     updateSettings({ customTags: tags });
     setEditingTag(null);
+  };
+
+  const handleResetTags = () => {
+    const defaultTags = [
+      { tag: "#개발", color: "#93C5FD" },
+      { tag: "#운동", color: "#6EE7B7" },
+      { tag: "#중요", color: "#FCA5A5" },
+      { tag: "#기획", color: "#FDBA74" },
+      { tag: "#작곡", color: "#C4B5FD" },
+      { tag: "#휴식", color: "#FCD34D" },
+      { tag: "#기타", color: "#F9A8D4" },
+    ];
+    updateSettings({ customTags: defaultTags });
+    setThemeNotice("기본 스마트 태그가 복구되었습니다.");
   };
 
   const handleSelectTheme = (theme: ThemeId, isPro: boolean) => {
@@ -647,9 +661,18 @@ export default function SettingsModal() {
 
               {/* 커스텀 태그 목록 */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Tag className="w-3.5 h-3.5 text-zinc-500" />
-                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">나의 스마트 태그 ({(settings.customTags || []).length})</span>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-3.5 h-3.5 text-zinc-500" />
+                    <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">스마트 태그 ({(settings.customTags || []).length})</span>
+                  </div>
+                  <button 
+                    onClick={handleResetTags}
+                    className="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
+                  >
+                    <RotateCw className="w-2.5 h-2.5" />
+                    기본 태그 불러오기
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -746,11 +769,23 @@ export default function SettingsModal() {
                 </div>
 
                 {(!settings.customTags || settings.customTags.length === 0) && (
-                  <p className="text-[11px] text-zinc-400 text-center py-4 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
-                    {userPlan === "pro"
-                      ? "직접 태그를 추가해 보세요! 해당 단어가 포함되면 자동 색상이 적용됩니다."
-                      : "Pro에서 직접 태그와 색상을 추가하면 단어에 맞춰 자동 색상이 적용됩니다."}
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-8 px-4 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <Tag className="w-5 h-5 text-zinc-300" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-zinc-500">등록된 스마트 태그가 없습니다</p>
+                      <p className="text-[10px] text-zinc-400 mt-1">기본 태그를 불러오거나 직접 추가해보세요</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleResetTags}
+                      className="h-8 text-[11px] font-bold border-zinc-200 hover:bg-white"
+                    >
+                      기본 태그 불러오기
+                    </Button>
+                  </div>
                 )}
               </div>
 
