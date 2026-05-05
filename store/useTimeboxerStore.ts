@@ -154,7 +154,7 @@ interface TimeboxerState {
   addBrainDumpItem: (content: string) => void;
   updateBrainDumpItem: (id: string, updates: Partial<BrainDumpItem>) => void;
   toggleBrainDumpItem: (id: string) => void;
-  sortBrainDumpByTag: () => void;
+  sortBrainDumpByTag: () => Promise<void>;
   deleteBrainDumpItem: (id: string) => void;
 
   addTopThreeItem: (content: string) => void;
@@ -372,7 +372,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     set({ brainDump: [], topThree: [], timeBlocks: [] });
 
     const [bd, tt, tb] = await Promise.all([
-      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", date),
+      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", date).order("created_at", { ascending: true }),
       supabase.from("top_three").select("*").eq("user_id", userId).eq("date", date),
       supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", date),
     ]);
@@ -404,7 +404,7 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
     // 2. Supabase에서 공통 설정 및 선택된 날짜 데이터 불러오기
     const [bd, tt, tb, dl, rt, st, gs] = await Promise.all([
-      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", targetDate),
+      supabase.from("brain_dumps").select("*").eq("user_id", userId).eq("date", targetDate).order("created_at", { ascending: true }),
       supabase.from("top_three").select("*").eq("user_id", userId).eq("date", targetDate),
       supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date", targetDate),
       supabase.from("daily_logs").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -742,33 +742,47 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     ]);
   },
 
-  sortBrainDumpByTag: () => {
-    const { brainDump, settings } = get();
+  sortBrainDumpByTag: async () => {
+    const { brainDump, settings, userId } = get();
     const tags = settings.customTags || [];
 
     const sorted = [...brainDump].sort((a, b) => {
-      // 1. 태그 추출 (가장 먼저 매칭되는 태그 기준)
       const tagA = tags.find((t) => a.content.includes(t.tag))?.tag;
       const tagB = tags.find((t) => b.content.includes(t.tag))?.tag;
 
-      // 2. 둘 다 태그가 없으면 원래 생성 순서 유지
       if (!tagA && !tagB) return a.createdAt.localeCompare(b.createdAt);
-      
-      // 3. 한쪽만 태그가 없으면 태그 있는 쪽을 위로
       if (!tagA) return 1;
       if (!tagB) return -1;
 
-      // 4. 둘 다 태그가 있으면 설정된 태그 순서에 따름 (위쪽에 정의된 태그 우선)
       const indexA = tags.findIndex((t) => t.tag === tagA);
       const indexB = tags.findIndex((t) => t.tag === tagB);
 
       if (indexA !== indexB) return indexA - indexB;
-
-      // 5. 같은 태그 내에서는 생성 순서로 정렬
       return a.createdAt.localeCompare(b.createdAt);
     });
 
+    // 1. 상태 업데이트 (즉각적인 UI 반영)
     set({ brainDump: sorted });
+
+    // 2. 서버에 순서 고정 (created_at 업데이트)
+    if (userId && sorted.length > 0) {
+      // 기본 시작 시간을 정렬된 첫 번째 아이템의 시간 혹은 현재 시간으로 설정
+      const baseTime = new Date(sorted[0].createdAt).getTime();
+      
+      const updates = sorted.map((item, index) => ({
+        id: item.id,
+        user_id: userId,
+        content: item.content,
+        is_completed: item.isCompleted,
+        color: item.color,
+        date: item.date,
+        // 10ms씩 차이를 두어 순서 고정
+        created_at: new Date(baseTime + index * 10).toISOString() 
+      }));
+
+      const { error } = await supabase.from("brain_dumps").upsert(updates);
+      if (error) console.error("정렬 순서 저장 실패:", error);
+    }
   },
 
   // ── Top Three ──
