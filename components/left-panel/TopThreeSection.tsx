@@ -291,7 +291,7 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
 // ─────────────────────────────────────────────────────────────────────
 // Top Three 섹션 전체
 // ─────────────────────────────────────────────────────────────────────
-export default function TopThreeSection() {
+export default function TopThreeSection({ dragHandle }: { dragHandle?: React.ReactNode }) {
   const [inputValue, setInputValue] = useState("");
   const topThree = useTimeboxerStore((s) => s.topThree);
   const addTopThreeItem = useTimeboxerStore((s) => s.addTopThreeItem);
@@ -324,12 +324,15 @@ export default function TopThreeSection() {
     >
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-            <Target className="w-4 h-4 text-violet-600" />
+        <div className="flex items-center gap-1">
+          {dragHandle}
+          <div className="flex items-center gap-2 ml-1">
+            <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+              <Target className="w-4 h-4 text-violet-600" />
+            </div>
+            <h2 className="font-semibold text-sm text-zinc-800">Top 3 Focus</h2>
+            <span className="text-xs text-zinc-500">{topThree.length}/3</span>
           </div>
-          <h2 className="font-semibold text-sm text-zinc-800">Top 3 Focus</h2>
-          <span className="text-xs text-zinc-500">{topThree.length}/3</span>
         </div>
       </div>
 

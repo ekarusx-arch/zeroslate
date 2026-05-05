@@ -227,6 +227,7 @@ const defaultSettings: Settings = {
   ],
   theme: "classic",
   customAccent: "#2563EB",
+  leftPanelOrder: ["top-three", "brain-dump"],
 };
 
 const PRO_ACCESS_EMAILS = new Set([
@@ -444,6 +445,14 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         if (st.data.bg_mood) finalSettings.bgMood = st.data.bg_mood;
         
         finalSettings.updatedAt = dbUpdatedAt;
+      }
+    }
+
+    // leftPanelOrder는 로컬 설정을 최우선으로 함 (DB 스키마에 없을 수 있음)
+    if (localSettings) {
+      const parsed = JSON.parse(localSettings);
+      if (parsed.leftPanelOrder) {
+        finalSettings.leftPanelOrder = parsed.leftPanelOrder;
       }
     }
 

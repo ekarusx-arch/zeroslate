@@ -312,7 +312,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 // ─────────────────────────────────────────────────────────────────────
 // Brain Dump 섹션 전체
 // ─────────────────────────────────────────────────────────────────────
-export default function BrainDumpSection() {
+export default function BrainDumpSection({ dragHandle }: { dragHandle?: React.ReactNode }) {
   const [inputValue, setInputValue] = useState("");
   const brainDump = useTimeboxerStore((s) => s.brainDump);
   const addBrainDumpItem = useTimeboxerStore((s) => s.addBrainDumpItem);
@@ -351,19 +351,22 @@ export default function BrainDumpSection() {
     >
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-blue-600" />
+        <div className="flex items-center gap-1">
+          {dragHandle}
+          <div className="flex items-center gap-2 ml-1">
+            <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-blue-600" />
+            </div>
+            <h2 className="font-semibold text-sm text-zinc-800">Brain Dump</h2>
+            <span className="text-xs text-zinc-500">{brainDump.length}개</span>
+            <button
+              onClick={sortBrainDumpByTag}
+              className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors -ml-1"
+              title="태그별 정렬"
+            >
+              <ListFilter className="w-4 h-4" />
+            </button>
           </div>
-          <h2 className="font-semibold text-sm text-zinc-800">Brain Dump</h2>
-          <span className="text-xs text-zinc-500">{brainDump.length}개</span>
-          <button
-            onClick={sortBrainDumpByTag}
-            className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors -ml-1"
-            title="태그별 정렬"
-          >
-            <ListFilter className="w-4 h-4" />
-          </button>
         </div>
         {completedCount > 0 && (
           <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">

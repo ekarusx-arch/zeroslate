@@ -13,6 +13,13 @@ import {
   TouchSensor,
   KeyboardSensor,
 } from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { PlanBadge } from "@/components/ui/ProBadge";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { LogOut, CalendarDays, Calendar as CalendarIcon, Check, RotateCw, GripVertical, RefreshCw, Timer, UploadCloud, ChevronLeft, ChevronRight } from "lucide-react";
@@ -49,12 +56,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// 드래그 오버레이용 미니 카드
 function DragPreview({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-blue-300 bg-white shadow-xl drag-overlay text-sm text-zinc-700 max-w-[200px]">
       <GripVertical className="w-4 h-4 text-zinc-400 shrink-0" />
       <span className="truncate">{label}</span>
+    </div>
+  );
+}
+
+// ── 섹션 리오더링용 래퍼 ──────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function SortableSection({ id, children }: { id: string; children: (handleProps: any) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 100 : undefined,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleProps = { ...attributes, ...listeners };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      {children(handleProps)}
     </div>
   );
 }
@@ -325,7 +351,20 @@ export default function Home() {
     const { active, over } = event;
     if (!over) return;
 
+    const activeId = String(active.id);
     const overId = String(over.id);
+
+    // 섹션 리오더링 처리
+    if (["top-three", "brain-dump"].includes(activeId) && ["top-three", "brain-dump"].includes(overId)) {
+      if (activeId !== overId) {
+        const oldOrder = settings.leftPanelOrder || ["top-three", "brain-dump"];
+        const oldIndex = oldOrder.indexOf(activeId);
+        const newIndex = oldOrder.indexOf(overId);
+        const newOrder = arrayMove(oldOrder, oldIndex, newIndex);
+        useTimeboxerStore.getState().updateSettings({ leftPanelOrder: newOrder });
+      }
+      return;
+    }
 
     // Top Three 섹션으로 드롭한 경우
     if (overId === "top-three-zone") {
@@ -540,15 +579,31 @@ export default function Home() {
 
           {/* 좌측 패널 (모바일에서는 dump 탭일 때만 표시) */}
           <aside className={`w-full lg:w-[30%] xl:w-[420px] shrink-0 flex flex-col gap-3 ${activeTab === 'dump' ? 'flex' : 'hidden lg:flex'}`}>
-            {/* Top 3 */}
-            <div className="panel-card p-3 sm:p-4">
-              <TopThreeSection />
-            </div>
-
-            {/* Brain Dump */}
-            <div className="panel-card p-3 sm:p-4 flex-1 flex flex-col min-h-0 lg:max-h-[calc(100vh-200px)]">
-              <BrainDumpSection />
-            </div>
+            <SortableContext items={settings.leftPanelOrder || ['top-three', 'brain-dump']} strategy={verticalListSortingStrategy}>
+              {(settings.leftPanelOrder || ['top-three', 'brain-dump']).map((sectionId) => (
+                <SortableSection key={sectionId} id={sectionId}>
+                  {(handleProps) => (
+                    sectionId === 'top-three' ? (
+                      <div className="panel-card p-3 sm:p-4">
+                        <TopThreeSection dragHandle={
+                          <div {...handleProps} className="p-1 text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+                        } />
+                      </div>
+                    ) : (
+                      <div className="panel-card p-3 sm:p-4 flex-1 flex flex-col min-h-0 lg:max-h-[calc(100vh-200px)]">
+                        <BrainDumpSection dragHandle={
+                          <div {...handleProps} className="p-1 text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+                        } />
+                      </div>
+                    )
+                  )}
+                </SortableSection>
+              ))}
+            </SortableContext>
           </aside>
 
           {/* 중앙 타임라인 (모바일에서는 timeline 탭일 때만 표시) */}
