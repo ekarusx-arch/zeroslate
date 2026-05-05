@@ -601,16 +601,16 @@ export default function TimeBlock({
         </div>
       )}
 
-      {/* 하단 리사이즈 핸들 */}
+      {/* 하단 리사이즈 핸들 (모바일 가시성 확보) */}
       <div
         data-handle="bottom"
-        className={`absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center transition-opacity z-30 ${
-          isResizing || isHovered ? "opacity-100" : "opacity-0"
+        className={`absolute bottom-0 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center transition-all z-30 ${
+          isResizing ? "opacity-100 scale-y-110" : "opacity-40"
         }`}
         onMouseDown={handleBottomResize}
         onTouchStart={handleBottomTouchResize}
       >
-        <div className={`w-8 h-1 rounded-full shadow-sm transition-all ${isResizing ? "bg-white scale-x-125" : "bg-white/60"}`} />
+        <div className={`w-8 h-1 rounded-full shadow-sm transition-all ${isResizing ? "bg-white scale-x-150" : "bg-white/40"}`} />
       </div>
     </div>
 
