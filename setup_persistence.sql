@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
   start_time INTEGER DEFAULT 5,
   end_time INTEGER DEFAULT 24,
   step INTEGER DEFAULT 30,
+  custom_tags JSONB DEFAULT '[]'::jsonb,
+  theme TEXT DEFAULT 'classic',
+  bg_mood TEXT DEFAULT 'none',
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 

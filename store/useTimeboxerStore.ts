@@ -432,6 +432,9 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         if (st.data.custom_tags !== null) {
           finalSettings.customTags = st.data.custom_tags;
         }
+        if (st.data.theme) finalSettings.theme = st.data.theme;
+        if (st.data.bg_mood) finalSettings.bgMood = st.data.bg_mood;
+        
         finalSettings.updatedAt = dbUpdatedAt;
       }
     }
@@ -639,6 +642,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         end_time: newSettings.endTime,
         step: newSettings.step,
         custom_tags: newSettings.customTags,
+        theme: newSettings.theme,
+        bg_mood: newSettings.bgMood,
         updated_at: now
       });
     }
@@ -665,6 +670,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
         end_time: updatedSettings.endTime,
         step: updatedSettings.step,
         custom_tags: updatedSettings.customTags,
+        theme: updatedSettings.theme,
+        bg_mood: updatedSettings.bgMood,
         updated_at: now
       });
 
