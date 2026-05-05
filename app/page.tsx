@@ -303,14 +303,17 @@ export default function Home() {
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 2000,
-        tolerance: 5,
+        tolerance: 15,
       },
     }),
     useSensor(KeyboardSensor)
   );
 
+  const setIsDragging = useTimeboxerStore((s) => s.setIsDragging);
+
   // 드래그 시작
   const handleDragStart = (event: DragStartEvent) => {
+    setIsDragging(true);
     const data = event.active.data.current;
     if (data?.type === "brain-dump") {
       setActiveItem({ type: "brain-dump", label: (data.item as BrainDumpItem).content });
@@ -321,6 +324,7 @@ export default function Home() {
 
   // 드래그 종료 (드롭)
   const handleDragEnd = (event: DragEndEvent) => {
+    setIsDragging(false);
     setActiveItem(null);
     const { active, over } = event;
     if (!over) return;

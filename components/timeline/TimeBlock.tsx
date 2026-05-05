@@ -58,6 +58,7 @@ export default function TimeBlock({
   const blockRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isMemoOpen, setIsMemoOpen] = useState(false);
+  const [isLongPressing, setIsLongPressing] = useState(false);
   const [tempMemo, setTempMemo] = useState(block.memo || "");
   const currentMinutes = useCurrentMinutes();
 
@@ -289,22 +290,26 @@ export default function TimeBlock({
     if ((e.target as HTMLElement).closest("button, input, [data-handle]")) return;
     
     touchStartY.current = e.touches[0].clientY;
+    setIsLongPressing(true);
     
-    // 롱프레스 타이머 시작 (500ms)
+    // 롱프레스 타이머 시작 (2초)
     longPressTimer.current = setTimeout(() => {
       setIsMobileEditing(true);
+      setIsLongPressing(false);
+      useTimeboxerStore.getState().setIsDragging(true);
       if (window.navigator.vibrate) window.navigator.vibrate(50);
-    }, 500);
+    }, 2000);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const currentY = e.touches[0].clientY;
     
     // 움직임이 크면 롱프레스 취소 (스크롤 의도)
-    if (!isMobileEditing && Math.abs(currentY - touchStartY.current) > 10) {
+    if (!isMobileEditing && Math.abs(currentY - touchStartY.current) > 20) {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current);
         longPressTimer.current = null;
+        setIsLongPressing(false);
       }
     }
 
@@ -325,6 +330,7 @@ export default function TimeBlock({
   };
 
   const handleTouchEnd = () => {
+    setIsLongPressing(false);
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -333,6 +339,7 @@ export default function TimeBlock({
     if (isMobileEditing) {
       setIsMobileEditing(false);
       setIsDragging(false);
+      useTimeboxerStore.getState().setIsDragging(false);
       
       // 스토어 업데이트
       if (localStart !== timeStringToMinutes(block.startTime)) {
@@ -397,7 +404,9 @@ export default function TimeBlock({
         isActive ? "active-block-glow" : ""
       } ${!isActive && isPast && !block.isCompleted ? "opacity-60 grayscale-[0.2]" : ""} ${
         isEndingSoon ? "animate-pulse ring-2 ring-red-400" : ""
-      } ${isDragging ? "z-50 shadow-2xl scale-[1.02]" : "transition-all duration-300 z-5"}`}
+      } ${isDragging ? "z-50 shadow-2xl scale-[1.02]" : "transition-all duration-300 z-5"} ${
+        isLongPressing ? "brightness-110 scale-[0.98]" : ""
+      }`}
       style={{
         top: `${top}px`,
         height: `${Math.max(height, 20)}px`,

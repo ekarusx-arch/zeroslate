@@ -255,8 +255,9 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
   const isTodaySelected = selectedDate === getTodayDateKey();
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useTimeboxerStore((s) => s.isDragging);
 
-  // 직접 그리기 상태
+  // ── 직접 그리기 상태 ──
 
   // 슬롯 높이 계산 (30분당 ROW_HEIGHT_30 기준)
   const slotHeight = (settings.step / 30) * ROW_HEIGHT_30;
@@ -320,6 +321,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
             slotHeight={slotHeight}
             isAssigningMode={!!assigningTask}
             onClick={() => {
+              if (isDragging) return;
               if (assigningTask) {
                 const startTime = `${String(slot.hour).padStart(2, "0")}:${String(slot.minute).padStart(2, "0")}`;
                 const endTotalMin = slot.hour * 60 + slot.minute + 30;

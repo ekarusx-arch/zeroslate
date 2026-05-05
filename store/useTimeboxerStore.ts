@@ -212,6 +212,8 @@ interface TimeboxerState {
   }>;
   reorderTopThree: (oldIndex: number, newIndex: number) => void;
   reorderBrainDump: (oldIndex: number, newIndex: number) => void;
+  isDragging: boolean;
+  setIsDragging: (val: boolean) => void;
 }
 
 const defaultSettings: Settings = {
@@ -281,6 +283,8 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
   colorIndex: 0,
   userId: null,
   selectedDate: getTodayKey(),
+  isDragging: false,
+  setIsDragging: (val) => set({ isDragging: val }),
   goals: [],
 
   assigningTask: null,
