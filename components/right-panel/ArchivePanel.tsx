@@ -16,7 +16,7 @@ import {
   Lock,
 } from "lucide-react";
 import AnalyticsView from "./AnalyticsView";
-import UpgradeModal from "@/components/UpgradeModal";
+import UpgradeModal from "@/components/modals/UpgradeModal";
 import { formatMinutes, isArchiveLocked, toDateKey } from "@/utils/archive";
 
 function formatMonthLabel(date: Date) {

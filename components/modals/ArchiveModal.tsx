@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Archive, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Crown, Lock, RotateCcw } from "lucide-react";
-import { Button } from "./ui/button";
-import UpgradeModal from "@/components/UpgradeModal";
+import { Button } from "../ui/button";
+import UpgradeModal from "@/components/modals/UpgradeModal";
 import { formatMinutes, isArchiveLocked, toDateKey } from "@/utils/archive";
 
 function formatMonthLabel(date: Date) {

@@ -8,7 +8,7 @@ import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import TimeBlock from "./TimeBlock";
 import { ExternalLink, Lock, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import MobileQuickAdd from "../MobileQuickAdd";
+import MobileQuickAdd from "../navigation/MobileQuickAdd";
 import {
   Dialog,
   DialogContent,

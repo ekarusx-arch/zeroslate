@@ -12,7 +12,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock3, Save, Target, Zap, Share2 } from "lucide-react";
-import ShareCard from "./ShareCard";
+import ShareCard from "../ShareCard";
 import { SummaryStats } from "@/types";
 
 export default function SummaryModal() {

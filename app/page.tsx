@@ -11,30 +11,30 @@ import {
   useSensors,
   closestCenter,
 } from "@dnd-kit/core";
-import { PlanBadge } from "@/components/ProBadge";
-import { useAuth } from "@/components/AuthProvider";
+import { PlanBadge } from "@/components/ui/ProBadge";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { LogOut, CalendarDays, Calendar as CalendarIcon, Check, RotateCw, GripVertical, RefreshCw, Timer, UploadCloud, ChevronLeft, ChevronRight } from "lucide-react";
 import { getTodayDateKey, useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { BrainDumpItem, TopThreeItem } from "@/types";
 import TopThreeSection from "@/components/left-panel/TopThreeSection";
 import BrainDumpSection from "@/components/left-panel/BrainDumpSection";
 import TimelineGrid from "@/components/timeline/TimelineGrid";
-import SummaryModal from "@/components/SummaryModal";
-import GuideModal from "@/components/GuideModal";
-import ArchiveModal from "@/components/ArchiveModal";
-import GoalBanner from "@/components/GoalBanner";
-import GoalModal from "@/components/GoalModal";
-import SettingsModal from "@/components/SettingsModal";
-import MobileNav from "@/components/MobileNav";
+import SummaryModal from "@/components/modals/SummaryModal";
+import GuideModal from "@/components/modals/GuideModal";
+import ArchiveModal from "@/components/modals/ArchiveModal";
+import GoalBanner from "@/components/feedback/GoalBanner";
+import GoalModal from "@/components/modals/GoalModal";
+import SettingsModal from "@/components/modals/SettingsModal";
+import MobileNav from "@/components/navigation/MobileNav";
 import ArchivePanel from "@/components/right-panel/ArchivePanel";
-import FocusModal from "@/components/FocusModal";
+import FocusModal from "@/components/modals/FocusModal";
 import ZeroPilot from "@/components/zeropilot/ZeroPilot";
 import LandingPage from "@/components/LandingPage";
-import UpgradeModal from "@/components/UpgradeModal";
-import CalendarViewModal from "@/components/CalendarViewModal";
-import GooglePushFeedback from "@/components/GooglePushFeedback";
+import UpgradeModal from "@/components/modals/UpgradeModal";
+import CalendarViewModal from "@/components/modals/CalendarViewModal";
+import GooglePushFeedback from "@/components/feedback/GooglePushFeedback";
 import FocusTimer from "@/components/FocusTimer";
-import StatsModal from "@/components/StatsModal";
+import StatsModal from "@/components/modals/StatsModal";
 
 import {
   AlertDialog,
