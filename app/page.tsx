@@ -119,6 +119,10 @@ export default function Home() {
   const upgradeFeature = useTimeboxerStore((s) => s.upgradeFeature);
   const openUpgradeModal = useTimeboxerStore((s) => s.openUpgradeModal);
   const closeUpgradeModal = useTimeboxerStore((s) => s.closeUpgradeModal);
+  
+  const addTopThreeItem = useTimeboxerStore((s) => s.addTopThreeItem);
+  const deleteBrainDumpItem = useTimeboxerStore((s) => s.deleteBrainDumpItem);
+  const topThree = useTimeboxerStore((s) => s.topThree);
   const [landingGuideOpen, setLandingGuideOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"dump" | "timeline" | "stats">("timeline");
 
@@ -311,6 +315,22 @@ export default function Home() {
     if (!over) return;
 
     const overId = String(over.id);
+
+    // Top Three 섹션으로 드롭한 경우
+    if (overId === "top-three-zone") {
+      const data = active.data.current;
+      if (data?.type === "brain-dump") {
+        const item = data.item as BrainDumpItem;
+        if (topThree.length >= 3) {
+          alert("Top 3 항목이 이미 가득 찼습니다. 기존 항목을 완료하거나 삭제 후 옮겨주세요.");
+          return;
+        }
+        addTopThreeItem(item.content);
+        deleteBrainDumpItem(item.id);
+      }
+      return;
+    }
+
     if (!overId.startsWith("slot-")) return;
 
     // slot-${hour}-${minute}

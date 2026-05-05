@@ -3,7 +3,7 @@
 import { useState, KeyboardEvent, useRef } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { TopThreeItem as TopThreeItemType } from "@/types";
-import { useDraggable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, AlertTriangle, Plus, Target, Check, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -219,8 +219,17 @@ export default function TopThreeSection() {
     }
   };
 
+  const { setNodeRef, isOver } = useDroppable({
+    id: "top-three-zone",
+  });
+
   return (
-    <div className="space-y-3">
+    <div 
+      ref={setNodeRef}
+      className={`space-y-3 p-1 rounded-2xl transition-colors ${
+        isOver ? "bg-violet-50/50 ring-2 ring-violet-200 ring-dashed" : ""
+      }`}
+    >
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
