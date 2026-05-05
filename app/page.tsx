@@ -388,7 +388,7 @@ export default function Home() {
     const hour = parseInt(parts[1]);
     const minute = parseInt(parts[2]);
     const startMin = hour * 60 + minute;
-    const endMin = Math.min(startMin + 60, settings.endTime * 60); // 기본 1시간
+    const endMin = Math.min(startMin + 30, settings.endTime * 60); // 기본 30분
 
     const data = active.data.current;
     if (!data) return;
