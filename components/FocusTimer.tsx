@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTimeboxerStore, getTodayDateKey } from "@/store/useTimeboxerStore";
-import { Timer } from "lucide-react";
+import { Timer, Check } from "lucide-react";
 
 function timeStringToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -16,6 +16,9 @@ export default function FocusTimer() {
 
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<string | null>(null);
+  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+
+  const toggleTimeBlock = useTimeboxerStore((s) => s.toggleTimeBlock);
 
   useEffect(() => {
     if (!isTodaySelected) {
@@ -32,7 +35,7 @@ export default function FocusTimer() {
       const activeBlock = timeBlocks.find((block) => {
         const start = timeStringToMinutes(block.startTime);
         const end = timeStringToMinutes(block.endTime);
-        return start <= currentMinutes && currentMinutes < end;
+        return !block.isCompleted && start <= currentMinutes && currentMinutes < end;
       });
 
       if (activeBlock) {
@@ -45,15 +48,18 @@ export default function FocusTimer() {
           const timeStr = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
           setTimeLeft(timeStr);
           setActiveTask(activeBlock.content);
+          setActiveBlockId(activeBlock.id);
           document.title = `(${timeStr}) ${activeBlock.content} - ZeroSlate`;
         } else {
           setTimeLeft(null);
           setActiveTask(null);
+          setActiveBlockId(null);
           document.title = "ZeroSlate";
         }
       } else {
         setTimeLeft(null);
         setActiveTask(null);
+        setActiveBlockId(null);
         document.title = "ZeroSlate";
       }
     }, 1000);
@@ -86,6 +92,18 @@ export default function FocusTimer() {
             {timeLeft}
           </span>
         </div>
+
+        {/* 완료 버튼 */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (activeBlockId) toggleTimeBlock(activeBlockId);
+          }}
+          className="ml-2 p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-90 group/btn"
+          title="작업 완료 및 종료"
+        >
+          <Check className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+        </button>
       </div>
     </div>
   );
