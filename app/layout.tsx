@@ -19,8 +19,15 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "ZeroSlate",
+    startupImage: [
+      "/icon-512.png",
+    ],
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
   },
   formatDetection: {
     telephone: false,
@@ -62,6 +69,24 @@ export default function RootLayout({
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

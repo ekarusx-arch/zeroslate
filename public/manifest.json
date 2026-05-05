@@ -3,8 +3,11 @@
   "short_name": "ZeroSlate",
   "description": "Premium AI Timeboxing Platform",
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F0F2F7",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
   "theme_color": "#2563EB",
   "icons": [
     {
