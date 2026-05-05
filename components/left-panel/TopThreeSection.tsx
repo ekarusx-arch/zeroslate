@@ -215,10 +215,10 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
       )}
 
       {/* 액션 버튼 그룹 */}
-      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleManualAssign}
-          className={`p-2 rounded-lg transition-all ${
+          className={`p-1 rounded-lg transition-all ${
             assigningTask?.id === item.id
               ? "bg-violet-500 text-white shadow-sm scale-110"
               : "text-zinc-400 hover:text-violet-500 hover:bg-violet-50"
@@ -229,14 +229,14 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
         </button>
         <button
           onClick={handleTimeModalOpen}
-          className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+          className="p-1 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
           title="직접 시간 입력하여 배치"
         >
           <Timer className="w-4 h-4" />
         </button>
         <button
           onClick={() => useTimeboxerStore.getState().deleteTopThreeItem(item.id)}
-          className="p-2 text-zinc-400 hover:text-red-400 transition-all duration-150"
+          className="p-1 text-zinc-400 hover:text-red-400 transition-all duration-150"
           aria-label="Top 3 항목 삭제"
         >
           <Trash2 className="w-4 h-4" />

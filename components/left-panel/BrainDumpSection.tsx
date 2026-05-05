@@ -235,10 +235,10 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       )}
 
       {/* 시간 배치 버튼 */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleManualAssign}
-          className={`p-2 rounded-lg transition-all ${
+          className={`p-1 rounded-lg transition-all ${
             assigningTask?.id === item.id
               ? "bg-blue-500 text-white shadow-sm scale-110"
               : "text-zinc-400 hover:text-blue-500 hover:bg-blue-50"
@@ -249,7 +249,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         </button>
         <button
           onClick={handleTimeModalOpen}
-          className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+          className="p-1 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
           title="직접 시간 입력하여 배치"
         >
           <Timer className="w-4 h-4" />
@@ -301,7 +301,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       {/* 삭제 버튼 */}
       <button
         onClick={() => deleteBrainDumpItem(item.id)}
-        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-zinc-400 hover:text-red-400 transition-all duration-150 shrink-0"
+        className="p-1 text-zinc-400 hover:text-red-400 transition-all duration-150 shrink-0"
         aria-label="브레인 덤프 항목 삭제"
       >
         <Trash2 className="w-3.5 h-3.5" />
