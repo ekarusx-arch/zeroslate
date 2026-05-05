@@ -30,6 +30,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 
 // ── 개별 Brain Dump 드래그 아이템 ───────────────────────────
@@ -46,6 +53,11 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 시간 입력 모달 상태
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -86,22 +98,24 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
     updateBrainDumpItem(item.id, { content: newContent });
   };
 
-  const handleQuickAssign = (e: React.MouseEvent) => {
+  const handleTimeModalOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // 다음 빈 슬롯 계산
     const timeToMin = (t: string) => { const [h,m] = t.split(":").map(Number); return h*60+m; };
     const selectedDate = useTimeboxerStore.getState().selectedDate;
-    
     let currentMinutes = settings.startTime * 60;
-    // 오늘 날짜인 경우, 현재 시간 이후의 가장 빠른 시간부터 찾기
     if (selectedDate === new Date().toISOString().split('T')[0]) {
       const now = new Date();
       currentMinutes = Math.max(currentMinutes, now.getHours() * 60 + now.getMinutes());
     }
-
     const remainder = currentMinutes % 30;
     let startMin = currentMinutes + (remainder === 0 ? 0 : 30 - remainder);
     const blocksOnDate = timeBlocks.filter(b => b.date === selectedDate);
     
+    let foundStart = "";
+    let foundEnd = "";
+
     while (startMin < settings.endTime * 60) {
       const endMin = startMin + 30;
       const isOverlapping = blocksOnDate.some(b => {
@@ -111,25 +125,31 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       });
       
       if (!isOverlapping) {
-        const startH = Math.floor(startMin / 60);
-        const startM = startMin % 60;
-        const endH = Math.floor(endMin / 60);
-        const endM = endMin % 60;
-        
-        addTimeBlock({
-          taskId: item.id,
-          content: item.content,
-          startTime: `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`,
-          endTime: `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`,
-          date: selectedDate,
-        });
-        
-        alert(`${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")} 슬롯에 배치되었습니다!`);
-        return;
+        foundStart = `${String(Math.floor(startMin/60)).padStart(2, "0")}:${String(startMin%60).padStart(2, "0")}`;
+        foundEnd = `${String(Math.floor(endMin/60)).padStart(2, "0")}:${String(endMin%60).padStart(2, "0")}`;
+        break;
       }
       startMin += 30;
     }
-    alert("남은 시간에 빈 30분 슬롯이 없습니다.");
+
+    setStartTime(foundStart || "09:00");
+    setEndTime(foundEnd || "09:30");
+    setIsTimeModalOpen(true);
+  };
+
+  const handleConfirmTime = () => {
+    // 간단한 검증
+    if (!startTime || !endTime) return;
+    
+    addTimeBlock({
+      taskId: item.id,
+      content: item.content,
+      startTime: startTime,
+      endTime: endTime,
+      date: useTimeboxerStore.getState().selectedDate,
+    });
+    
+    setIsTimeModalOpen(false);
   };
 
   const handleManualAssign = (e: React.MouseEvent) => {
@@ -227,13 +247,55 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
           <Calendar className="w-4 h-4" />
         </button>
         <button
-          onClick={handleQuickAssign}
+          onClick={handleTimeModalOpen}
           className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
-          title="다음 빈 시간에 빠른 배치"
+          title="직접 시간 입력하여 배치"
         >
           <Timer className="w-4 h-4" />
         </button>
       </div>
+
+      {/* 시간 입력 모달 */}
+      <Dialog open={isTimeModalOpen} onOpenChange={setIsTimeModalOpen}>
+        <DialogContent className="sm:max-w-[320px] p-6 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Timer className="w-4 h-4 text-amber-500" />
+              시간 설정
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">시작 시간</label>
+              <Input 
+                type="time" 
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="h-10 text-sm font-bold"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">종일 시간</label>
+              <Input 
+                type="time" 
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="h-10 text-sm font-bold"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-2">
+            <Button 
+              onClick={handleConfirmTime}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold h-10 rounded-xl"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 삭제 버튼 */}
       <button
