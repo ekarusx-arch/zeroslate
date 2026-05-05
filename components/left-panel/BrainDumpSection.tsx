@@ -14,6 +14,7 @@ import {
   RotateCw,
   Timer,
   Calendar,
+  ListFilter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -256,6 +257,7 @@ export default function BrainDumpSection() {
   const userPlan = useTimeboxerStore((s) => s.userPlan);
   const openUpgradeModal = useTimeboxerStore((s) => s.openUpgradeModal);
   const carryOverToTomorrow = useTimeboxerStore((s) => s.carryOverToTomorrow);
+  const sortBrainDumpByTag = useTimeboxerStore((s) => s.sortBrainDumpByTag);
 
   const completedCount = brainDump.filter((i) => i.isCompleted).length;
   const pendingItems = brainDump.filter((i) => !i.isCompleted);
@@ -284,6 +286,13 @@ export default function BrainDumpSection() {
           </div>
           <h2 className="font-semibold text-sm text-zinc-800">Brain Dump</h2>
           <span className="text-xs text-zinc-500">{brainDump.length}개</span>
+          <button
+            onClick={sortBrainDumpByTag}
+            className="p-1 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors ml-0.5"
+            title="태그별 정렬"
+          >
+            <ListFilter className="w-3.5 h-3.5" />
+          </button>
         </div>
         {completedCount > 0 && (
           <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
