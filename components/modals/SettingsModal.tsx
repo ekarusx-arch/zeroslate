@@ -71,7 +71,7 @@ export default function SettingsModal() {
         설정
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg h-[680px] flex flex-col p-0 overflow-hidden bg-white border-none shadow-2xl">
+      <DialogContent className="w-[95vw] sm:max-w-lg h-[90vh] sm:h-[680px] flex flex-col p-0 overflow-hidden bg-white border-none shadow-2xl rounded-t-[28px] sm:rounded-3xl">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Settings2 className="w-4 h-4 text-zinc-500" />

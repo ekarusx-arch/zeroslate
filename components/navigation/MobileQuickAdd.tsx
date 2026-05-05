@@ -2,7 +2,7 @@
 
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ListTodo, Plus, Check, Target, Zap } from "lucide-react";
+import { ListTodo, Plus, Check, Target, Zap, ListFilter } from "lucide-react";
 
 interface MobileQuickAddProps {
   open: boolean;
@@ -11,7 +11,7 @@ interface MobileQuickAddProps {
 }
 
 export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: MobileQuickAddProps) {
-  const { brainDump, topThree, addTimeBlock } = useTimeboxerStore();
+  const { brainDump, topThree, addTimeBlock, sortBrainDumpByTag } = useTimeboxerStore();
   
   // 미완료/미배정 항목들
   const activeDumps = brainDump.filter(item => !item.isCompleted);
@@ -92,9 +92,21 @@ export default function MobileQuickAdd({ open, onOpenChange, selectedTime }: Mob
                 {/* Brain Dump Section */}
                 {activeDumps.length > 0 && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-1">
-                      <Zap className="w-3.5 h-3.5 text-blue-500" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Brain Dump</span>
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Brain Dump</span>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sortBrainDumpByTag();
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 bg-zinc-200/50 rounded-lg text-[10px] font-bold text-zinc-500 active:bg-zinc-200"
+                      >
+                        <ListFilter className="w-3 h-3" />
+                        태그별 정렬
+                      </button>
                     </div>
                     {activeDumps.map((item) => (
                       <button

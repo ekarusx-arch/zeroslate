@@ -217,21 +217,21 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleManualAssign}
-          className={`p-1.5 rounded-lg transition-all ${
+          className={`p-2 rounded-lg transition-all ${
             assigningTask?.id === item.id
               ? "bg-blue-500 text-white shadow-sm scale-110"
               : "text-zinc-400 hover:text-blue-500 hover:bg-blue-50"
           }`}
           title="타임라인에 직접 배치하기"
         >
-          <Calendar className="w-3.5 h-3.5" />
+          <Calendar className="w-4 h-4" />
         </button>
         <button
           onClick={handleQuickAssign}
-          className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+          className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
           title="다음 빈 시간에 빠른 배치"
         >
-          <Timer className="w-3.5 h-3.5" />
+          <Timer className="w-4 h-4" />
         </button>
       </div>
 
@@ -288,10 +288,10 @@ export default function BrainDumpSection() {
           <span className="text-xs text-zinc-500">{brainDump.length}개</span>
           <button
             onClick={sortBrainDumpByTag}
-            className="p-1 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors ml-0.5"
+            className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors -ml-1"
             title="태그별 정렬"
           >
-            <ListFilter className="w-3.5 h-3.5" />
+            <ListFilter className="w-4 h-4" />
           </button>
         </div>
         {completedCount > 0 && (
