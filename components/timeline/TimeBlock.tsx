@@ -314,7 +314,7 @@ export default function TimeBlock({
     }
 
     if (isMobileEditing) {
-      e.preventDefault(); // 스크롤 방지
+      // 비수동 리스너를 통해 브라우저 기본 스크롤을 확실히 차단
       const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
       const relY = currentY - containerTop;
       const blockDuration = localEnd - localStart;
@@ -328,6 +328,21 @@ export default function TimeBlock({
       setIsDragging(true);
     }
   };
+
+  // 비수동(non-passive) 리스너 연결로 모바일 스크롤 완벽 차단
+  useEffect(() => {
+    const el = blockRef.current;
+    if (!el) return;
+
+    const handleTouchMoveNonPassive = (e: TouchEvent) => {
+      if (isMobileEditing) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener("touchmove", handleTouchMoveNonPassive, { passive: false });
+    return () => el.removeEventListener("touchmove", handleTouchMoveNonPassive);
+  }, [isMobileEditing]);
 
   const handleTouchEnd = () => {
     setIsLongPressing(false);
@@ -384,7 +399,7 @@ export default function TimeBlock({
     };
 
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchend", onTouchEnd, { passive: false });
   };
 
   const handleSaveMemo = () => {

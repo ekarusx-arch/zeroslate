@@ -304,7 +304,7 @@ export default function TimelineGrid({ settings }: { settings: Settings }) {
 
       <div
         ref={containerRef}
-        className="relative select-none pb-8"
+        className={`relative select-none pb-8 ${isDragging ? "touch-none overflow-hidden" : ""}`}
         style={{ cursor: "default" }}
       >
       {/* 슬롯 행 */}

@@ -108,6 +108,7 @@ type PushFeedback =
 // ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const settings = useTimeboxerStore((s) => s.settings);
+  const isDragging = useTimeboxerStore((s) => s.isDragging);
   const addTimeBlock = useTimeboxerStore((s) => s.addTimeBlock);
   const userPlan = useTimeboxerStore((s) => s.userPlan);
   const googleTokenConnected = useTimeboxerStore((s) => s.googleTokenConnected);
@@ -625,7 +626,7 @@ export default function Home() {
             </div>
 
             {/* 스크롤 영역 */}
-            <div className="overflow-y-auto flex-1">
+            <div className={`overflow-y-auto flex-1 ${isDragging ? "overflow-hidden touch-none" : ""}`}>
               <TimelineGrid settings={settings} />
             </div>
           </section>
