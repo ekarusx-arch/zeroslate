@@ -124,17 +124,20 @@ export default function TimeBlock({
 
   // ── 상단 핸들 리사이즈 ──────────────────────────────
   const handleTopResize = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
-      e.preventDefault();
       if (!containerRef.current) return;
 
       setIsDragging(true);
       const containerTop = containerRef.current.getBoundingClientRect().top;
       const originalEnd = localEnd;
 
-      const onMouseMove = (me: MouseEvent) => {
-        const relY = me.clientY - containerTop;
+      const getClientY = (event: MouseEvent | TouchEvent) => {
+        return 'touches' in event ? (event as TouchEvent).touches[0].clientY : (event as MouseEvent).clientY;
+      };
+
+      const onMove = (me: MouseEvent | TouchEvent) => {
+        const relY = getClientY(me) - containerTop;
         const newStartRaw = timelineStartMinutes + pxToMinutes(relY);
         const newStart = Math.max(
           timelineStartMinutes,
@@ -143,12 +146,14 @@ export default function TimeBlock({
         setLocalStart(newStart);
       };
 
-      const onMouseUp = (me: MouseEvent) => {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
+      const onEnd = (me: MouseEvent | TouchEvent) => {
+        window.removeEventListener("mousemove", onMove as EventListener);
+        window.removeEventListener("mouseup", onEnd as EventListener);
+        window.removeEventListener("touchmove", onMove as EventListener);
+        window.removeEventListener("touchend", onEnd as EventListener);
         
         setIsDragging(false);
-        const relY = me.clientY - containerTop;
+        const relY = getClientY(me) - containerTop;
         const finalStartRaw = timelineStartMinutes + pxToMinutes(relY);
         const finalStart = Math.max(
           timelineStartMinutes,
@@ -162,92 +167,30 @@ export default function TimeBlock({
         }
       };
 
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("mousemove", onMove as EventListener);
+      window.addEventListener("mouseup", onEnd as EventListener);
+      window.addEventListener("touchmove", onMove as EventListener, { passive: false });
+      window.addEventListener("touchend", onEnd as EventListener, { passive: false });
     },
     [block.id, block.startTime, localEnd, timelineStartMinutes, containerRef, updateTimeBlock]
   );
 
-  // ── 모바일 상단 핸들 터치 리사이즈 (0.5초 지연) ──
-  const [isTopResizing, setIsTopResizing] = useState(false);
-  const topResizeTimer = useRef<NodeJS.Timeout | null>(null);
-
-  const handleTopTouchResize = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    const startY = e.touches[0].clientY;
-    
-    topResizeTimer.current = setTimeout(() => {
-      setIsTopResizing(true);
-      setIsDragging(true);
-      if (window.navigator.vibrate) window.navigator.vibrate(20);
-      
-      const onTouchMove = (te: TouchEvent) => {
-        te.preventDefault();
-        const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
-        const relY = te.touches[0].clientY - containerTop;
-        const newStartRaw = timelineStartMinutes + pxToMinutes(relY);
-        const newStart = Math.max(
-          timelineStartMinutes,
-          Math.min(newStartRaw, localEnd - MIN_BLOCK_MINUTES)
-        );
-        setLocalStart(newStart);
-      };
-
-      const onTouchEnd = () => {
-        window.removeEventListener("touchmove", onTouchMove);
-        window.removeEventListener("touchend", onTouchEnd);
-        setIsTopResizing(false);
-        setIsDragging(false);
-        
-        if (localStart !== timeStringToMinutes(block.startTime)) {
-          updateTimeBlock(block.id, {
-            startTime: minutesToTimeString(localStart),
-          });
-        }
-      };
-
-      window.addEventListener("touchmove", onTouchMove, { passive: false });
-      window.addEventListener("touchend", onTouchEnd, { passive: false });
-    }, 500);
-
-    const cancelTopResize = (te: TouchEvent) => {
-      if (!isTopResizing) {
-        const dy = Math.abs(te.touches[0].clientY - startY);
-        if (dy > 10) {
-          if (topResizeTimer.current) {
-            clearTimeout(topResizeTimer.current);
-            topResizeTimer.current = null;
-          }
-        }
-      }
-    };
-
-    const cleanup = () => {
-      if (topResizeTimer.current) {
-        clearTimeout(topResizeTimer.current);
-        topResizeTimer.current = null;
-      }
-      window.removeEventListener("touchmove", cancelTopResize);
-      window.removeEventListener("touchend", cleanup);
-    };
-
-    window.addEventListener("touchmove", cancelTopResize);
-    window.addEventListener("touchend", cleanup);
-  };
-
   // ── 하단 핸들 리사이즈 ──────────────────────────────
   const handleBottomResize = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | React.TouchEvent) => {
       e.stopPropagation();
-      e.preventDefault();
       if (!containerRef.current) return;
 
       setIsDragging(true);
       const containerTop = containerRef.current.getBoundingClientRect().top;
       const originalStart = localStart;
 
-      const onMouseMove = (me: MouseEvent) => {
-        const relY = me.clientY - containerTop;
+      const getClientY = (event: MouseEvent | TouchEvent) => {
+        return 'touches' in event ? (event as TouchEvent).touches[0].clientY : (event as MouseEvent).clientY;
+      };
+
+      const onMove = (me: MouseEvent | TouchEvent) => {
+        const relY = getClientY(me) - containerTop;
         const newEndRaw = timelineStartMinutes + pxToMinutes(relY);
         const newEnd = Math.min(
           timelineEndMinutes,
@@ -256,12 +199,14 @@ export default function TimeBlock({
         setLocalEnd(newEnd);
       };
 
-      const onMouseUp = (me: MouseEvent) => {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
+      const onEnd = (me: MouseEvent | TouchEvent) => {
+        window.removeEventListener("mousemove", onMove as EventListener);
+        window.removeEventListener("mouseup", onEnd as EventListener);
+        window.removeEventListener("touchmove", onMove as EventListener);
+        window.removeEventListener("touchend", onEnd as EventListener);
         
         setIsDragging(false);
-        const relY = me.clientY - containerTop;
+        const relY = getClientY(me) - containerTop;
         const finalEndRaw = timelineStartMinutes + pxToMinutes(relY);
         const finalEnd = Math.min(
           timelineEndMinutes,
@@ -275,8 +220,10 @@ export default function TimeBlock({
         }
       };
 
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("mousemove", onMove as EventListener);
+      window.addEventListener("mouseup", onEnd as EventListener);
+      window.addEventListener("touchmove", onMove as EventListener, { passive: false });
+      window.addEventListener("touchend", onEnd as EventListener, { passive: false });
     },
     [
       block.id,
@@ -288,73 +235,6 @@ export default function TimeBlock({
       updateTimeBlock,
     ]
   );
-
-  // ── 모바일 하단 핸들 터치 리사이즈 (0.5초 지연) ──
-  const [isResizing, setIsResizing] = useState(false);
-  const resizeTimer = useRef<NodeJS.Timeout | null>(null);
-
-  const handleBottomTouchResize = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    const startY = e.touches[0].clientY;
-    
-    resizeTimer.current = setTimeout(() => {
-      setIsResizing(true);
-      setIsDragging(true);
-      if (window.navigator.vibrate) window.navigator.vibrate(20);
-      
-      const onTouchMove = (te: TouchEvent) => {
-        te.preventDefault();
-        const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
-        const relY = te.touches[0].clientY - containerTop;
-        const newEndRaw = timelineStartMinutes + pxToMinutes(relY);
-        const newEnd = Math.min(
-          timelineEndMinutes,
-          Math.max(localStart + MIN_BLOCK_MINUTES, newEndRaw)
-        );
-        setLocalEnd(newEnd);
-      };
-
-      const onTouchEnd = () => {
-        window.removeEventListener("touchmove", onTouchMove);
-        window.removeEventListener("touchend", onTouchEnd);
-        setIsResizing(false);
-        setIsDragging(false);
-        
-        if (localEnd !== timeStringToMinutes(block.endTime)) {
-          updateTimeBlock(block.id, {
-            endTime: minutesToTimeString(localEnd),
-          });
-        }
-      };
-
-      window.addEventListener("touchmove", onTouchMove, { passive: false });
-      window.addEventListener("touchend", onTouchEnd, { passive: false });
-    }, 500);
-
-    const cancelResize = (te: TouchEvent) => {
-      if (!isResizing) {
-        const dy = Math.abs(te.touches[0].clientY - startY);
-        if (dy > 10) { // 움직임이 크면 취소
-          if (resizeTimer.current) {
-            clearTimeout(resizeTimer.current);
-            resizeTimer.current = null;
-          }
-        }
-      }
-    };
-
-    const cleanup = () => {
-      if (resizeTimer.current) {
-        clearTimeout(resizeTimer.current);
-        resizeTimer.current = null;
-      }
-      window.removeEventListener("touchmove", cancelResize);
-      window.removeEventListener("touchend", cleanup);
-    };
-
-    window.addEventListener("touchmove", cancelResize);
-    window.addEventListener("touchend", cleanup);
-  };
 
   // ── 블록 드래그 이동 ──────────────────────────────
   const handleBlockDrag = useCallback(
@@ -581,16 +461,16 @@ export default function TimeBlock({
       {isMobileEditing && (
         <div className="absolute inset-0 z-20 border-2 border-white/50 rounded-xl pointer-events-none bg-white/10" />
       )}
-      {/* 상단 리사이즈 핸들 (데스크탑/모바일 최적화) */}
+      {/* 상단 리사이즈 핸들 (노트북/데스크탑 최적화) */}
       <div
         data-handle="top"
         className={`absolute top-0 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center transition-all z-40 ${
-          isTopResizing || isHovered ? "opacity-100" : "opacity-30 sm:opacity-0 sm:group-hover:opacity-80"
+          isHovered ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100"
         }`}
         onMouseDown={handleTopResize}
-        onTouchStart={handleTopTouchResize}
+        onTouchStart={handleTopResize}
       >
-        <div className={`w-10 h-1.5 rounded-full shadow-md transition-all ${isTopResizing ? "bg-white scale-x-125" : "bg-white/90 shadow-black/20"}`} />
+        <div className="w-10 h-1.5 rounded-full shadow-md bg-white/90 shadow-black/20 transition-all" />
       </div>
 
       {/* 내부 프로그레스 바 */}
@@ -671,16 +551,16 @@ export default function TimeBlock({
         </div>
       )}
 
-      {/* 하단 리사이즈 핸들 (데스크탑/모바일 최적화) */}
+      {/* 하단 리사이즈 핸들 (노트북/데스크탑 최적화) */}
       <div
         data-handle="bottom"
         className={`absolute bottom-0 left-0 right-0 h-7 cursor-ns-resize flex items-center justify-center transition-all z-40 ${
-          isResizing || isHovered ? "opacity-100" : "opacity-30 sm:opacity-0 sm:group-hover:opacity-80"
+          isHovered ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100"
         }`}
         onMouseDown={handleBottomResize}
-        onTouchStart={handleBottomTouchResize}
+        onTouchStart={handleBottomResize}
       >
-        <div className={`w-10 h-1.5 rounded-full shadow-md transition-all ${isResizing ? "bg-white scale-x-125" : "bg-white/90 shadow-black/20"}`} />
+        <div className="w-10 h-1.5 rounded-full shadow-md bg-white/90 shadow-black/20 transition-all" />
       </div>
     </div>
 
