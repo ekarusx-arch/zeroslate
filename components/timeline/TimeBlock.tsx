@@ -122,52 +122,6 @@ export default function TimeBlock({
       ? `${Math.floor(duration / 60)}h${duration % 60 > 0 ? ` ${duration % 60}m` : ""}`
       : `${duration}m`;
 
-  // ── 상단 핸들 리사이즈 ──────────────────────────────
-  const handleTopResize = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (!containerRef.current) return;
-
-      setIsDragging(true);
-      const containerTop = containerRef.current.getBoundingClientRect().top;
-      const originalEnd = localEnd;
-
-      const onMouseMove = (me: MouseEvent) => {
-        const relY = me.clientY - containerTop;
-        const newStartRaw = timelineStartMinutes + pxToMinutes(relY);
-        const newStart = Math.max(
-          timelineStartMinutes,
-          Math.min(newStartRaw, originalEnd - MIN_BLOCK_MINUTES)
-        );
-        setLocalStart(newStart);
-      };
-
-      const onMouseUp = (me: MouseEvent) => {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-        
-        setIsDragging(false);
-        const relY = me.clientY - containerTop;
-        const finalStartRaw = timelineStartMinutes + pxToMinutes(relY);
-        const finalStart = Math.max(
-          timelineStartMinutes,
-          Math.min(finalStartRaw, originalEnd - MIN_BLOCK_MINUTES)
-        );
-
-        if (finalStart !== timeStringToMinutes(block.startTime)) {
-          updateTimeBlock(block.id, {
-            startTime: minutesToTimeString(finalStart),
-          });
-        }
-      };
-
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    },
-    [block.id, block.startTime, localEnd, timelineStartMinutes, containerRef, updateTimeBlock]
-  );
-
   // ── 하단 핸들 리사이즈 ──────────────────────────────
   const handleBottomResize = useCallback(
     (e: React.MouseEvent) => {
@@ -514,14 +468,7 @@ export default function TimeBlock({
       {isMobileEditing && (
         <div className="absolute inset-0 z-20 border-2 border-white/50 rounded-xl pointer-events-none bg-white/10" />
       )}
-      {/* 상단 리사이즈 핸들 */}
-      <div
-        data-handle="top"
-        className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
-        onMouseDown={handleTopResize}
-      >
-        <div className="w-8 h-0.5 bg-white/60 rounded-full" />
-      </div>
+      {/* 상단 리사이즈 핸들 제거됨 */}
 
       {/* 내부 프로그레스 바 */}
       {isActive && (
@@ -604,13 +551,13 @@ export default function TimeBlock({
       {/* 하단 리사이즈 핸들 (데스크탑/모바일 최적화) */}
       <div
         data-handle="bottom"
-        className={`absolute bottom-0 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center transition-all z-30 ${
-          isResizing || isHovered ? "opacity-100 scale-y-110" : "opacity-20 sm:opacity-0 sm:group-hover:opacity-100"
+        className={`absolute bottom-0 left-0 right-0 h-7 cursor-ns-resize flex items-center justify-center transition-all z-40 ${
+          isResizing || isHovered ? "opacity-100" : "opacity-30 sm:opacity-0 sm:group-hover:opacity-80"
         }`}
         onMouseDown={handleBottomResize}
         onTouchStart={handleBottomTouchResize}
       >
-        <div className={`w-8 h-1 rounded-full shadow-sm transition-all ${isResizing ? "bg-white scale-x-150" : "bg-zinc-400/60 sm:bg-white/60"}`} />
+        <div className={`w-10 h-1.5 rounded-full shadow-md transition-all ${isResizing ? "bg-white scale-x-125" : "bg-white/90 shadow-black/20"}`} />
       </div>
     </div>
 
