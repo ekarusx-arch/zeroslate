@@ -18,7 +18,50 @@ export default function FocusTimer() {
   const [activeTask, setActiveTask] = useState<string | null>(null);
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
 
+  // 드래그 관련 상태
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   const toggleTimeBlock = useTimeboxerStore((s) => s.toggleTimeBlock);
+
+  // 위치 정보 로드
+  useEffect(() => {
+    const savedPos = localStorage.getItem("focus-timer-pos");
+    if (savedPos) {
+      try {
+        setPosition(JSON.parse(savedPos));
+      } catch (e) {
+        console.error("Failed to load position", e);
+      }
+    }
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    // 버튼 클릭 시에는 드래그 방지
+    if ((e.target as HTMLElement).closest("button")) return;
+    
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    localStorage.setItem("focus-timer-pos", JSON.stringify(position));
+  };
 
   useEffect(() => {
     if (!isTodaySelected) {
@@ -73,8 +116,20 @@ export default function FocusTimer() {
   if (!timeLeft) return null;
 
   return (
-    <div className="fixed bottom-24 left-8 z-50 animate-in fade-in slide-in-from-left-4 duration-300">
-      <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-md text-zinc-900 rounded-2xl border border-zinc-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] group hover:scale-105 transition-all duration-300">
+    <div
+      className={`fixed bottom-24 left-8 z-50 ${
+        isDragging ? "" : "animate-in fade-in slide-in-from-left-4 duration-300"
+      }`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      style={{
+        transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+        touchAction: "none",
+        cursor: isDragging ? "grabbing" : "grab",
+      }}
+    >
+      <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-md text-zinc-900 rounded-2xl border border-zinc-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] group hover:scale-105 transition-all duration-300 scale-90 sm:scale-100 origin-bottom-left">
         <div className="relative">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-200 animate-pulse-subtle">
             <Timer className="w-6 h-6 text-white" />
