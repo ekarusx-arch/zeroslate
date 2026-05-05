@@ -66,7 +66,7 @@ export default function TimeBlock({
   const [isMobileEditing, setIsMobileEditing] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartY = useRef<number>(0);
-  const scrollInterval = useRef<NodeJS.Timeout | null>(null);
+  const scrollInterval = useRef<number | null>(null);
   const [localStart, setLocalStart] = useState(timeStringToMinutes(block.startTime));
   const [localEnd, setLocalEnd] = useState(timeStringToMinutes(block.endTime));
 
@@ -290,15 +290,20 @@ export default function TimeBlock({
     if ((e.target as HTMLElement).closest("button, input, [data-handle]")) return;
     
     touchStartY.current = e.touches[0].clientY;
-    setIsLongPressing(true);
     
-    // 롱프레스 타이머 시작 (2초)
+    // 즉시 모양을 바꾸지 않고, 0.5초 후에 "롱프레스 중" 피드백 제공
     longPressTimer.current = setTimeout(() => {
-      setIsMobileEditing(true);
-      setIsLongPressing(false);
-      useTimeboxerStore.getState().setIsDragging(true);
-      if (window.navigator.vibrate) window.navigator.vibrate(50);
-    }, 2000);
+      setIsLongPressing(true);
+      if (window.navigator.vibrate) window.navigator.vibrate(20);
+      
+      // 2초가 되면 편집 모드 활성화
+      longPressTimer.current = setTimeout(() => {
+        setIsMobileEditing(true);
+        setIsLongPressing(false);
+        useTimeboxerStore.getState().setIsDragging(true);
+        if (window.navigator.vibrate) window.navigator.vibrate(50);
+      }, 1500); // 이미 0.5초 지났으므로 1.5초 더 대기
+    }, 500);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -321,25 +326,28 @@ export default function TimeBlock({
       const relativeY = currentY - containerRect.top;
       const viewportHeight = containerRect.height;
 
-      // 자동 스크롤 감지 및 실행 (감지 영역 100px로 확대)
+      // 자동 스크롤 중지
       if (scrollInterval.current) {
-        clearInterval(scrollInterval.current);
+        cancelAnimationFrame(scrollInterval.current);
         scrollInterval.current = null;
       }
 
       const threshold = 100;
-      if (relativeY < threshold) {
-        // 상단 스크롤 (경계에 가까울수록 가속)
-        const speed = Math.max(3, (threshold - relativeY) / 3);
-        scrollInterval.current = setInterval(() => {
-          scrollContainer.scrollTop -= speed;
-        }, 16);
-      } else if (relativeY > viewportHeight - threshold) {
-        // 하단 스크롤
-        const speed = Math.max(3, (relativeY - (viewportHeight - threshold)) / 3);
-        scrollInterval.current = setInterval(() => {
+      if (relativeY < threshold || relativeY > viewportHeight - threshold) {
+        const startAutoScroll = () => {
+          if (!isMobileEditing) return;
+          
+          let speed = 0;
+          if (relativeY < threshold) {
+            speed = -Math.max(3, (threshold - relativeY) / 3);
+          } else {
+            speed = Math.max(3, (relativeY - (viewportHeight - threshold)) / 3);
+          }
+          
           scrollContainer.scrollTop += speed;
-        }, 16);
+          scrollInterval.current = requestAnimationFrame(startAutoScroll);
+        };
+        scrollInterval.current = requestAnimationFrame(startAutoScroll);
       }
 
       // 비수동 리스너를 통해 브라우저 기본 스크롤을 확실히 차단
@@ -374,7 +382,7 @@ export default function TimeBlock({
 
   const handleTouchEnd = () => {
     if (scrollInterval.current) {
-      clearInterval(scrollInterval.current);
+      cancelAnimationFrame(scrollInterval.current);
       scrollInterval.current = null;
     }
     setIsLongPressing(false);
