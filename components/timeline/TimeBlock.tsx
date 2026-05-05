@@ -67,6 +67,7 @@ export default function TimeBlock({
   const [isMobileEditing, setIsMobileEditing] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartY = useRef<number>(0);
+  const scrollInterval = useRef<NodeJS.Timeout | null>(null);
   const [localStart, setLocalStart] = useState(timeStringToMinutes(block.startTime));
   const [localEnd, setLocalEnd] = useState(timeStringToMinutes(block.endTime));
 
@@ -314,6 +315,34 @@ export default function TimeBlock({
     }
 
     if (isMobileEditing) {
+      const scrollContainer = containerRef.current?.parentElement as HTMLDivElement;
+      if (!scrollContainer) return;
+
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const relativeY = currentY - containerRect.top;
+      const viewportHeight = containerRect.height;
+
+      // 자동 스크롤 감지 및 실행
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+        scrollInterval.current = null;
+      }
+
+      const threshold = 80; // 80px 내에 들어오면 스크롤 시작
+      if (relativeY < threshold) {
+        // 상단 스크롤
+        const speed = Math.max(2, (threshold - relativeY) / 5);
+        scrollInterval.current = setInterval(() => {
+          scrollContainer.scrollTop -= speed;
+        }, 16);
+      } else if (relativeY > viewportHeight - threshold) {
+        // 하단 스크롤
+        const speed = Math.max(2, (relativeY - (viewportHeight - threshold)) / 5);
+        scrollInterval.current = setInterval(() => {
+          scrollContainer.scrollTop += speed;
+        }, 16);
+      }
+
       // 비수동 리스너를 통해 브라우저 기본 스크롤을 확실히 차단
       const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
       const relY = currentY - containerTop;
@@ -345,6 +374,10 @@ export default function TimeBlock({
   }, [isMobileEditing]);
 
   const handleTouchEnd = () => {
+    if (scrollInterval.current) {
+      clearInterval(scrollInterval.current);
+      scrollInterval.current = null;
+    }
     setIsLongPressing(false);
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);

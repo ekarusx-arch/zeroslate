@@ -626,7 +626,7 @@ export default function Home() {
             </div>
 
             {/* 스크롤 영역 */}
-            <div className={`overflow-y-auto flex-1 ${isDragging ? "overflow-hidden touch-none" : ""}`}>
+            <div className={`overflow-y-auto flex-1 ${isDragging ? "touch-none" : ""}`}>
               <TimelineGrid settings={settings} />
             </div>
           </section>
