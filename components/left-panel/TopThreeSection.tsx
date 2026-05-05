@@ -5,11 +5,18 @@ import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { TopThreeItem as TopThreeItemType } from "@/types";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, AlertTriangle, Plus, Target, Check, Calendar } from "lucide-react";
+import { GripVertical, Trash2, Plus, Target, Check, Calendar, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +35,11 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.content);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 시간 입력 모달 상태
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -80,6 +92,59 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
         type: 'focus'
       });
     }
+  };
+
+  const handleTimeModalOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const settings = useTimeboxerStore.getState().settings;
+    const timeBlocks = useTimeboxerStore.getState().timeBlocks;
+    const selectedDate = useTimeboxerStore.getState().selectedDate;
+
+    // 다음 빈 슬롯 계산 로직 (브레인 덤프와 동일)
+    const timeToMin = (t: string) => { const [h,m] = t.split(":").map(Number); return h*60+m; };
+    let currentMinutes = settings.startTime * 60;
+    if (selectedDate === new Date().toISOString().split('T')[0]) {
+      const now = new Date();
+      currentMinutes = Math.max(currentMinutes, now.getHours() * 60 + now.getMinutes());
+    }
+    const remainder = currentMinutes % 30;
+    let startMin = currentMinutes + (remainder === 0 ? 0 : 30 - remainder);
+    const blocksOnDate = timeBlocks.filter(b => b.date === selectedDate);
+    
+    let foundStart = "";
+    let foundEnd = "";
+
+    while (startMin < settings.endTime * 60) {
+      const endMin = startMin + 30;
+      const isOverlapping = blocksOnDate.some(b => {
+        const bStart = timeToMin(b.startTime);
+        const bEnd = timeToMin(b.endTime);
+        return (startMin < bEnd && endMin > bStart);
+      });
+      
+      if (!isOverlapping) {
+        foundStart = `${String(Math.floor(startMin/60)).padStart(2, "0")}:${String(startMin%60).padStart(2, "0")}`;
+        foundEnd = `${String(Math.floor(endMin/60)).padStart(2, "0")}:${String(endMin%60).padStart(2, "0")}`;
+        break;
+      }
+      startMin += 30;
+    }
+
+    setStartTime(foundStart || "09:00");
+    setEndTime(foundEnd || "09:30");
+    setIsTimeModalOpen(true);
+  };
+
+  const handleConfirmTime = () => {
+    if (!startTime || !endTime) return;
+    useTimeboxerStore.getState().addTimeBlock({
+      taskId: item.id,
+      content: item.content,
+      startTime: startTime,
+      endTime: endTime,
+      date: useTimeboxerStore.getState().selectedDate,
+    });
+    setIsTimeModalOpen(false);
   };
 
   return (
@@ -151,47 +216,81 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
         </span>
       )}
 
-      {/* 미배정 경고 */}
-      {!item.isAssigned && !item.isCompleted && (
-        <Tooltip>
-          <TooltipTrigger className="badge-warn" aria-label="타임라인 미배정">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          </TooltipTrigger>
-          <TooltipContent>타임라인에 아직 배치되지 않았어요!</TooltipContent>
-        </Tooltip>
-      )}
-
-      {/* 배정 완료 표시 */}
-      {item.isAssigned && !item.isCompleted && (
-        <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-      )}
-
       {/* 완료 뱃지 */}
       {item.isCompleted && (
         <Check className="w-3.5 h-3.5 text-violet-400 shrink-0" />
       )}
 
-      {/* 시간 배치 버튼 */}
-      <button
-        onClick={handleManualAssign}
-        className={`opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg transition-all ${
-          assigningTask?.id === item.id
-            ? "bg-violet-500 text-white shadow-sm scale-110"
-            : "text-zinc-400 hover:text-violet-500 hover:bg-violet-50"
-        }`}
-        title="타임라인에 직접 배치하기"
-      >
-        <Calendar className="w-3.5 h-3.5" />
-      </button>
+      {/* 액션 버튼 그룹 */}
+      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={handleManualAssign}
+          className={`p-2 rounded-lg transition-all ${
+            assigningTask?.id === item.id
+              ? "bg-violet-500 text-white shadow-sm scale-110"
+              : "text-zinc-400 hover:text-violet-500 hover:bg-violet-50"
+          }`}
+          title="타임라인에 직접 배치하기"
+        >
+          <Calendar className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleTimeModalOpen}
+          className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+          title="직접 시간 입력하여 배치"
+        >
+          <Timer className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => useTimeboxerStore.getState().deleteTopThreeItem(item.id)}
+          className="p-2 text-zinc-400 hover:text-red-400 transition-all duration-150"
+          aria-label="Top 3 항목 삭제"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
 
-      {/* 삭제 버튼 */}
-      <button
-        onClick={() => deleteTopThreeItem(item.id)}
-        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-zinc-400 hover:text-red-400 transition-all duration-150"
-        aria-label="Top 3 항목 삭제"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      {/* 시간 입력 모달 */}
+      <Dialog open={isTimeModalOpen} onOpenChange={setIsTimeModalOpen}>
+        <DialogContent className="sm:max-w-[320px] p-6 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Timer className="w-4 h-4 text-amber-500" />
+              시간 설정
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">시작 시간</label>
+              <Input 
+                type="time" 
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="h-10 text-sm font-bold"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-400 uppercase ml-1">종료 시간</label>
+              <Input 
+                type="time" 
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="h-10 text-sm font-bold"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-2">
+            <Button 
+              onClick={handleConfirmTime}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold h-10 rounded-xl"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -204,7 +303,6 @@ export default function TopThreeSection() {
   const topThree = useTimeboxerStore((s) => s.topThree);
   const addTopThreeItem = useTimeboxerStore((s) => s.addTopThreeItem);
 
-  const unassigned = topThree.filter((t) => !t.isAssigned && !t.isCompleted).length;
   const canAdd = topThree.length < 3;
 
   const handleAdd = () => {
@@ -240,12 +338,6 @@ export default function TopThreeSection() {
           <h2 className="font-semibold text-sm text-zinc-800">Top 3 Focus</h2>
           <span className="text-xs text-zinc-500">{topThree.length}/3</span>
         </div>
-        {unassigned > 0 && (
-          <Badge variant="outline" className="border-amber-300 text-amber-600 bg-amber-50 text-xs gap-1">
-            <AlertTriangle className="w-3 h-3" />
-            {unassigned}개 미배정
-          </Badge>
-        )}
       </div>
 
       {/* 아이템 리스트 */}
