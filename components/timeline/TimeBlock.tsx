@@ -315,29 +315,29 @@ export default function TimeBlock({
     }
 
     if (isMobileEditing) {
-      const scrollContainer = containerRef.current?.parentElement as HTMLDivElement;
+      const scrollContainer = document.getElementById("timeline-scroll-container") as HTMLDivElement;
       if (!scrollContainer) return;
 
       const containerRect = scrollContainer.getBoundingClientRect();
       const relativeY = currentY - containerRect.top;
       const viewportHeight = containerRect.height;
 
-      // 자동 스크롤 감지 및 실행
+      // 자동 스크롤 감지 및 실행 (감지 영역 100px로 확대)
       if (scrollInterval.current) {
         clearInterval(scrollInterval.current);
         scrollInterval.current = null;
       }
 
-      const threshold = 80; // 80px 내에 들어오면 스크롤 시작
+      const threshold = 100;
       if (relativeY < threshold) {
-        // 상단 스크롤
-        const speed = Math.max(2, (threshold - relativeY) / 5);
+        // 상단 스크롤 (경계에 가까울수록 가속)
+        const speed = Math.max(3, (threshold - relativeY) / 3);
         scrollInterval.current = setInterval(() => {
           scrollContainer.scrollTop -= speed;
         }, 16);
       } else if (relativeY > viewportHeight - threshold) {
         // 하단 스크롤
-        const speed = Math.max(2, (relativeY - (viewportHeight - threshold)) / 5);
+        const speed = Math.max(3, (relativeY - (viewportHeight - threshold)) / 3);
         scrollInterval.current = setInterval(() => {
           scrollContainer.scrollTop += speed;
         }, 16);
@@ -457,7 +457,7 @@ export default function TimeBlock({
       }`}
       style={{
         top: `${top}px`,
-        height: `${Math.max(height, 20)}px`,
+        height: `${Math.max(height, 34)}px`, // 최소 높이 34px 확보
         backgroundColor: blockColor + "CC",
         borderLeft: `3px solid ${blockColor}`,
         zIndex: isDragging ? 50 : (isHovered ? 10 : 5),
@@ -470,13 +470,7 @@ export default function TimeBlock({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onClick={(e) => {
-        if (isMobileEditing) return;
-        if (!(e.target as HTMLElement).closest("button, input, [data-handle]")) {
-          setTempMemo(block.memo || "");
-          setIsMemoOpen(true);
-        }
-      }}
+      // onClick 제거 (메모 버튼으로 대체)
     >
       {/* 모바일 편집 모드 시각적 효과 */}
       {isMobileEditing && (
@@ -500,25 +494,42 @@ export default function TimeBlock({
       )}
 
       {/* 블록 내용 */}
-      <div className="px-2 pt-1 pb-4 h-full flex flex-col gap-0.5 overflow-hidden relative z-10">
-        <div className="flex items-start gap-1.5">
+      <div className={`px-2 h-full flex flex-col gap-0.5 overflow-hidden relative z-10 ${height < 34 ? "pt-0.5 pb-1" : "pt-1 pb-4"}`}>
+        <div className={`flex items-start gap-1 ${height < 34 ? "pt-0" : ""}`}>
           <Checkbox
             checked={block.isCompleted}
             onCheckedChange={() => toggleTimeBlock(block.id)}
-            className="w-3.5 h-3.5 mt-0.5 shrink-0 border-white/60 data-[state=checked]:bg-white/80 data-[state=checked]:border-white/80"
+            className={`${height < 30 ? "w-3 h-3" : "w-3.5 h-3.5"} mt-0.5 shrink-0 border-white/60 data-[state=checked]:bg-white/80 data-[state=checked]:border-white/80`}
             onClick={(e) => e.stopPropagation()}
             aria-label={`${block.content} 완료 토글`}
           />
           <span
-            className={`text-xs font-medium leading-tight flex-1 text-zinc-800 ${
+            className={`text-xs font-medium leading-tight flex-1 text-zinc-800 truncate ${
               block.isCompleted ? "line-through opacity-60" : ""
             } ${isActive ? "font-bold" : ""}`}
           >
             {block.content}
           </span>
 
+          {/* 메모 버튼 추가 (onClick 대신 사용) */}
+          {!isDragging && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setTempMemo(block.memo || "");
+                setIsMemoOpen(true);
+              }}
+              className={`shrink-0 p-1 rounded-md transition-colors ${
+                block.memo ? "text-white bg-black/10" : "text-zinc-500 hover:bg-black/5"
+              }`}
+              title="메모 작성"
+            >
+              <StickyNote className={height < 30 ? "w-2.5 h-2.5" : "w-3.5 h-3.5"} />
+            </button>
+          )}
+
           {isActive && (
-            <span className="flex h-2 w-2 relative shrink-0 mt-1 mr-1">
+            <span className="flex h-2 w-2 relative shrink-0 mt-1 mr-0.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
@@ -530,7 +541,7 @@ export default function TimeBlock({
                 e.stopPropagation();
                 setFocusId(block.id);
               }}
-              className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 bg-zinc-900 text-white rounded text-[10px] font-bold hover:bg-black transition-colors"
+              className="shrink-0 flex items-center gap-1 px-1 py-0.5 bg-zinc-900 text-white rounded text-[9px] font-bold hover:bg-black transition-colors"
               title="몰입 모드 시작"
             >
               <Play className="w-2.5 h-2.5 fill-current" />
@@ -552,7 +563,7 @@ export default function TimeBlock({
           )}
         </div>
 
-        {height >= 40 && (
+        {height >= 34 && (
           <span className="text-[10px] text-zinc-600/70 leading-none pl-5">
             {minutesToTimeString(localStart)} – {minutesToTimeString(localEnd)} · {durationText}
           </span>
@@ -569,13 +580,13 @@ export default function TimeBlock({
       {/* 하단 리사이즈 핸들 */}
       <div
         data-handle="bottom"
-        className={`absolute bottom-0 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center transition-opacity z-30 ${
+        className={`absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center transition-opacity z-30 ${
           isMobileEditing || isHovered ? "opacity-100" : "opacity-0"
         }`}
         onMouseDown={handleBottomResize}
         onTouchStart={handleBottomTouchResize}
       >
-        <div className={`w-12 h-1 rounded-full shadow-sm transition-all ${isMobileEditing ? "bg-white scale-x-125" : "bg-white/60"}`} />
+        <div className={`w-8 h-1 rounded-full shadow-sm transition-all ${isMobileEditing ? "bg-white scale-x-125" : "bg-white/60"}`} />
       </div>
     </div>
 
