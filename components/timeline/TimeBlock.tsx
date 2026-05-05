@@ -5,7 +5,7 @@ import { getTodayDateKey, useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { useCurrentMinutes } from "@/hooks/useCurrentMinutes";
 import { playAlarm } from "@/utils/audio";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, StickyNote, AlignLeft, Play } from "lucide-react";
+import { Trash2, StickyNote, AlignLeft } from "lucide-react";
 import { TimeBlock as TimeBlockType } from "@/types";
 import {
   Dialog,
@@ -53,7 +53,6 @@ export default function TimeBlock({
   const updateTimeBlock = useTimeboxerStore((s) => s.updateTimeBlock);
   const deleteTimeBlock = useTimeboxerStore((s) => s.deleteTimeBlock);
   const toggleTimeBlock = useTimeboxerStore((s) => s.toggleTimeBlock);
-  const setFocusId = useTimeboxerStore((s) => s.setFocusId);
 
   const blockRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -533,20 +532,6 @@ export default function TimeBlock({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
-          )}
-
-          {isActive && isHovered && !isDragging && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setFocusId(block.id);
-              }}
-              className="shrink-0 flex items-center gap-1 px-1 py-0.5 bg-zinc-900 text-white rounded text-[9px] font-bold hover:bg-black transition-colors"
-              title="몰입 모드 시작"
-            >
-              <Play className="w-2.5 h-2.5 fill-current" />
-              몰입
-            </button>
           )}
 
           {isHovered && !isDragging && (

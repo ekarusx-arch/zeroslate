@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTimeboxerStore, getTodayDateKey } from "@/store/useTimeboxerStore";
-import { Timer, Check } from "lucide-react";
+import { Timer, Check, Play } from "lucide-react";
 
 function timeStringToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -12,13 +12,15 @@ function timeStringToMinutes(t: string) {
 export default function FocusTimer() {
   const timeBlocks = useTimeboxerStore((s) => s.timeBlocks);
   const selectedDate = useTimeboxerStore((s) => s.selectedDate);
+  const activeFocusId = useTimeboxerStore((s) => s.activeFocusId);
+  const setFocusId = useTimeboxerStore((s) => s.setFocusId);
   const isTodaySelected = selectedDate === getTodayDateKey();
 
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<string | null>(null);
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
 
-  // 드래그 관련 상태
+  // ... (드래그 관련 상태 생략 - 원본 보존)
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -38,9 +40,7 @@ export default function FocusTimer() {
   }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    // 버튼 클릭 시에는 드래그 방지
     if ((e.target as HTMLElement).closest("button")) return;
-    
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -51,7 +51,6 @@ export default function FocusTimer() {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
     setPosition({ x: newX, y: newY });
@@ -113,7 +112,8 @@ export default function FocusTimer() {
     };
   }, [timeBlocks, isTodaySelected]);
 
-  if (!timeLeft) return null;
+  // 몰입 모드 실행 중이거나 진행 중인 작업이 없으면 숨김
+  if (activeFocusId || !timeLeft) return null;
 
   return (
     <div
@@ -148,17 +148,31 @@ export default function FocusTimer() {
           </span>
         </div>
 
-        {/* 완료 버튼 */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (activeBlockId) toggleTimeBlock(activeBlockId);
-          }}
-          className="ml-2 p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-90 group/btn"
-          title="작업 완료 및 종료"
-        >
-          <Check className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
-        </button>
+        <div className="flex items-center gap-2 ml-2">
+          {/* 몰입 시작 버튼 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (activeBlockId) setFocusId(activeBlockId);
+            }}
+            className="flex items-center gap-1.5 px-4 h-11 bg-zinc-900 hover:bg-black text-white rounded-xl shadow-lg transition-all active:scale-95 group/focus"
+          >
+            <Play className="w-3.5 h-3.5 fill-current group-hover/focus:scale-110 transition-transform" />
+            <span className="text-xs font-bold whitespace-nowrap">몰입 시작</span>
+          </button>
+
+          {/* 완료 버튼 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (activeBlockId) toggleTimeBlock(activeBlockId);
+            }}
+            className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-90 group/btn"
+            title="작업 완료 및 종료"
+          >
+            <Check className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+          </button>
+        </div>
       </div>
     </div>
   );
