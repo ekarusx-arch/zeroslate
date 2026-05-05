@@ -124,6 +124,8 @@ export default function Home() {
   
   const addTopThreeItem = useTimeboxerStore((s) => s.addTopThreeItem);
   const deleteBrainDumpItem = useTimeboxerStore((s) => s.deleteBrainDumpItem);
+  const addBrainDumpItem = useTimeboxerStore((s) => s.addBrainDumpItem);
+  const deleteTopThreeItem = useTimeboxerStore((s) => s.deleteTopThreeItem);
   const topThree = useTimeboxerStore((s) => s.topThree);
   const [landingGuideOpen, setLandingGuideOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"dump" | "timeline" | "stats">("timeline");
@@ -336,6 +338,17 @@ export default function Home() {
         }
         addTopThreeItem(item.content);
         deleteBrainDumpItem(item.id);
+      }
+      return;
+    }
+
+    // Brain Dump 섹션으로 드롭한 경우 (Top Three에서 내려오는 경우)
+    if (overId === "brain-dump-zone") {
+      const data = active.data.current;
+      if (data?.type === "top-three") {
+        const item = data.item as TopThreeItem;
+        addBrainDumpItem(item.content);
+        deleteTopThreeItem(item.id);
       }
       return;
     }

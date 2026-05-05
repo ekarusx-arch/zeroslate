@@ -3,7 +3,7 @@
 import { useState, KeyboardEvent, useRef } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { BrainDumpItem as BrainDumpItemType } from "@/types";
-import { useDraggable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
   GripVertical,
@@ -322,6 +322,10 @@ export default function BrainDumpSection() {
   const carryOverToTomorrow = useTimeboxerStore((s) => s.carryOverToTomorrow);
   const sortBrainDumpByTag = useTimeboxerStore((s) => s.sortBrainDumpByTag);
 
+  const { setNodeRef, isOver } = useDroppable({
+    id: "brain-dump-zone",
+  });
+
   const completedCount = brainDump.filter((i) => i.isCompleted).length;
   const pendingItems = brainDump.filter((i) => !i.isCompleted);
   const completedItems = brainDump.filter((i) => i.isCompleted);
@@ -340,7 +344,12 @@ export default function BrainDumpSection() {
   };
 
   return (
-    <div className="space-y-3 flex flex-col flex-1 min-h-0">
+    <div 
+      ref={setNodeRef}
+      className={`space-y-3 flex flex-col flex-1 min-h-0 p-1 rounded-2xl transition-colors ${
+        isOver ? "bg-blue-50/50 ring-2 ring-blue-200 ring-dashed" : ""
+      }`}
+    >
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
