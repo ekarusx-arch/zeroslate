@@ -149,7 +149,8 @@ interface TimeboxerState {
   syncGoogleCalendar: (range?: { date?: string; timeMin?: string; timeMax?: string }) => Promise<void>;
 
   initialize: () => Promise<void>;
-  updateSettings: (s: Partial<Settings>) => void;
+  updateSettings: (s: Partial<Settings>) => Promise<void>;
+  pushSettingsToCloud: () => Promise<void>;
 
   addBrainDumpItem: (content: string) => void;
   updateBrainDumpItem: (id: string, updates: Partial<BrainDumpItem>) => void;
@@ -420,12 +421,18 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     };
 
     if (st.data) {
-      finalSettings.startTime = st.data.start_time;
-      finalSettings.endTime = st.data.end_time;
-      finalSettings.step = st.data.step;
-      // DB에 태그 데이터가 명시적으로 있다면 (null이 아니라면) 덮어씀
-      if (st.data.custom_tags !== null) {
-        finalSettings.customTags = st.data.custom_tags;
+      const dbUpdatedAt = st.data.updated_at;
+      const localUpdatedAt = finalSettings.updatedAt;
+      
+      // DB 데이터가 더 최신이거나 로컬 타임스탬프가 아예 없는 경우에만 DB 데이터로 덮어씀
+      if (!localUpdatedAt || (dbUpdatedAt && new Date(dbUpdatedAt) > new Date(localUpdatedAt))) {
+        finalSettings.startTime = st.data.start_time;
+        finalSettings.endTime = st.data.end_time;
+        finalSettings.step = st.data.step;
+        if (st.data.custom_tags !== null) {
+          finalSettings.customTags = st.data.custom_tags;
+        }
+        finalSettings.updatedAt = dbUpdatedAt;
       }
     }
 
@@ -620,23 +627,42 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   updateSettings: async (s) => {
     const { userId, settings } = get();
-    const newSettings = { ...settings, ...s };
+    const now = new Date().toISOString();
+    const newSettings = { ...settings, ...s, updatedAt: now };
     set({ settings: newSettings });
 
     if (userId) {
-      // 로컬 스토리지 저장 (백업)
       localStorage.setItem(`zeroslate_settings_${userId}`, JSON.stringify(newSettings));
-      
-      // DB 저장
       await supabase.from("user_settings").upsert({
         user_id: userId,
         start_time: newSettings.startTime,
         end_time: newSettings.endTime,
         step: newSettings.step,
         custom_tags: newSettings.customTags,
-        updated_at: new Date().toISOString()
+        updated_at: now
       });
     }
+  },
+
+  pushSettingsToCloud: async () => {
+    const { userId, settings } = get();
+    if (!userId) return;
+    
+    const now = new Date().toISOString();
+    const updatedSettings = { ...settings, updatedAt: now };
+    set({ settings: updatedSettings });
+    localStorage.setItem(`zeroslate_settings_${userId}`, JSON.stringify(updatedSettings));
+
+    await supabase.from("user_settings").upsert({
+      user_id: userId,
+      start_time: updatedSettings.startTime,
+      end_time: updatedSettings.endTime,
+      step: updatedSettings.step,
+      custom_tags: updatedSettings.customTags,
+      updated_at: now
+    });
+    
+    alert("현재 기기의 설정이 클라우드에 성공적으로 백업되었습니다! ☁️✨");
   },
 
   addBrainDumpItem: async (content) => {

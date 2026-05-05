@@ -22,6 +22,7 @@ import ThemeTab from "../settings/ThemeTab";
 export default function SettingsModal() {
   const settings = useTimeboxerStore((s) => s.settings);
   const updateSettings = useTimeboxerStore((s) => s.updateSettings);
+  const pushSettingsToCloud = useTimeboxerStore((s) => s.pushSettingsToCloud);
   const userPlan = useTimeboxerStore((s) => s.userPlan);
   const routines = useTimeboxerStore((s) => s.routines);
   const addRoutine = useTimeboxerStore((s) => s.addRoutine);
@@ -124,6 +125,7 @@ export default function SettingsModal() {
                 customTags={settings.customTags || []}
                 userPlan={userPlan}
                 updateSettings={updateSettings}
+                pushSettingsToCloud={pushSettingsToCloud}
                 initialize={initialize}
               />
             </TabsContent>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Tag, Edit2, X, Lock, RotateCw, ChevronUp, ChevronDown, Palette } from "lucide-react";
+import { Plus, Tag, Edit2, X, Lock, RotateCw, ChevronUp, ChevronDown, Palette, CloudUpload } from "lucide-react";
 import { PRESET_COLORS, Settings } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 interface TagsTabProps {
   customTags: { tag: string; color: string }[];
   userPlan: string;
-  updateSettings: (s: Partial<Settings>) => void;
+  updateSettings: (s: Partial<Settings>) => Promise<void>;
+  pushSettingsToCloud: () => Promise<void>;
   initialize: () => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ export default function TagsTab({
   customTags,
   userPlan,
   updateSettings,
+  pushSettingsToCloud,
   initialize,
 }: TagsTabProps) {
   const [newTagName, setNewTagName] = useState("");
@@ -207,6 +209,14 @@ export default function TagsTab({
             <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">스마트 태그 ({customTags.length})</span>
           </div>
           <div className="flex items-center gap-3">
+            <button 
+              onClick={pushSettingsToCloud}
+              className="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
+              title="현재 기기의 설정을 서버에 덮어씌웁니다."
+            >
+              <CloudUpload className="w-2.5 h-2.5" />
+              서버로 전송
+            </button>
             <button 
               onClick={initialize}
               className="text-[10px] font-bold text-zinc-500 hover:text-zinc-700 transition-colors flex items-center gap-1"
