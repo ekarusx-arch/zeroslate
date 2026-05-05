@@ -254,6 +254,13 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         >
           <Timer className="w-4 h-4" />
         </button>
+        <button
+          onClick={() => deleteBrainDumpItem(item.id)}
+          className="p-1 text-zinc-400 hover:text-red-400 transition-all duration-150 shrink-0"
+          aria-label="브레인 덤프 항목 삭제"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 시간 입력 모달 */}
@@ -298,14 +305,6 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
         </DialogContent>
       </Dialog>
 
-      {/* 삭제 버튼 */}
-      <button
-        onClick={() => deleteBrainDumpItem(item.id)}
-        className="p-1 text-zinc-400 hover:text-red-400 transition-all duration-150 shrink-0"
-        aria-label="브레인 덤프 항목 삭제"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
     </div>
   );
 }
