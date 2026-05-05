@@ -536,17 +536,17 @@ export default function Home() {
         </header>
 
         {/* ── 메인 콘텐츠 (3단) ── */}
-        <main className="flex-1 max-w-[1500px] mx-auto w-full px-3 sm:px-4 py-4 flex flex-col lg:flex-row gap-4 min-h-0 pb-20 lg:pb-4">
+        <main className="flex-1 max-w-[1500px] mx-auto w-full px-2 sm:px-4 py-4 flex flex-col lg:flex-row gap-4 min-h-0 pb-20 lg:pb-4">
 
           {/* 좌측 패널 (모바일에서는 dump 탭일 때만 표시) */}
           <aside className={`w-full lg:w-[30%] xl:w-[420px] shrink-0 flex flex-col gap-3 ${activeTab === 'dump' ? 'flex' : 'hidden lg:flex'}`}>
             {/* Top 3 */}
-            <div className="panel-card p-4">
+            <div className="panel-card p-3 sm:p-4">
               <TopThreeSection />
             </div>
 
             {/* Brain Dump */}
-            <div className="panel-card p-4 flex-1 flex flex-col min-h-0 lg:max-h-[calc(100vh-200px)]">
+            <div className="panel-card p-3 sm:p-4 flex-1 flex flex-col min-h-0 lg:max-h-[calc(100vh-200px)]">
               <BrainDumpSection />
             </div>
           </aside>

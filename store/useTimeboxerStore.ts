@@ -646,23 +646,35 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
 
   pushSettingsToCloud: async () => {
     const { userId, settings } = get();
-    if (!userId) return;
+    if (!userId) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
     
-    const now = new Date().toISOString();
-    const updatedSettings = { ...settings, updatedAt: now };
-    set({ settings: updatedSettings });
-    localStorage.setItem(`zeroslate_settings_${userId}`, JSON.stringify(updatedSettings));
+    try {
+      const now = new Date().toISOString();
+      const updatedSettings = { ...settings, updatedAt: now };
+      set({ settings: updatedSettings });
+      localStorage.setItem(`zeroslate_settings_${userId}`, JSON.stringify(updatedSettings));
 
-    await supabase.from("user_settings").upsert({
-      user_id: userId,
-      start_time: updatedSettings.startTime,
-      end_time: updatedSettings.endTime,
-      step: updatedSettings.step,
-      custom_tags: updatedSettings.customTags,
-      updated_at: now
-    });
-    
-    alert("현재 기기의 설정이 클라우드에 성공적으로 백업되었습니다! ☁️✨");
+      console.log("Pushing settings to cloud:", updatedSettings);
+
+      const { error } = await supabase.from("user_settings").upsert({
+        user_id: userId,
+        start_time: updatedSettings.startTime,
+        end_time: updatedSettings.endTime,
+        step: updatedSettings.step,
+        custom_tags: updatedSettings.customTags,
+        updated_at: now
+      });
+
+      if (error) throw error;
+      
+      alert("현재 기기의 설정이 클라우드에 성공적으로 백업되었습니다! ☁️✨");
+    } catch (error) {
+      console.error("Error pushing settings:", error);
+      alert("서버 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
   },
 
   addBrainDumpItem: async (content) => {

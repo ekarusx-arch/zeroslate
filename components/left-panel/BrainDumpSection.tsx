@@ -170,7 +170,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl border bg-white transition-all duration-150 ${
+      className={`group flex items-center gap-2 px-2 py-2.5 rounded-xl border bg-white transition-all duration-150 ${
         item.isCompleted
           ? "border-zinc-100 opacity-60"
           : "border-zinc-200 hover:border-blue-300 hover:shadow-sm"
