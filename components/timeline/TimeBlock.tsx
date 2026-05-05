@@ -168,60 +168,6 @@ export default function TimeBlock({
     [block.id, block.startTime, localEnd, timelineStartMinutes, containerRef, updateTimeBlock]
   );
 
-  // ── 하단 핸들 리사이즈 ──────────────────────────────
-  const handleBottomResize = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (!containerRef.current) return;
-
-      setIsDragging(true);
-      const containerTop = containerRef.current.getBoundingClientRect().top;
-      const originalStart = localStart;
-
-      const onMouseMove = (me: MouseEvent) => {
-        const relY = me.clientY - containerTop;
-        const newEndRaw = timelineStartMinutes + pxToMinutes(relY);
-        const newEnd = Math.min(
-          timelineEndMinutes,
-          Math.max(originalStart + MIN_BLOCK_MINUTES, newEndRaw)
-        );
-        setLocalEnd(newEnd);
-      };
-
-      const onMouseUp = (me: MouseEvent) => {
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-        
-        setIsDragging(false);
-        const relY = me.clientY - containerTop;
-        const finalEndRaw = timelineStartMinutes + pxToMinutes(relY);
-        const finalEnd = Math.min(
-          timelineEndMinutes,
-          Math.max(originalStart + MIN_BLOCK_MINUTES, finalEndRaw)
-        );
-
-        if (finalEnd !== timeStringToMinutes(block.endTime)) {
-          updateTimeBlock(block.id, {
-            endTime: minutesToTimeString(finalEnd),
-          });
-        }
-      };
-
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    },
-    [
-      block.id,
-      block.endTime,
-      localStart,
-      timelineStartMinutes,
-      timelineEndMinutes,
-      containerRef,
-      updateTimeBlock,
-    ]
-  );
-
   // ── 블록 드래그 이동 ──────────────────────────────
   const handleBlockDrag = useCallback(
     (e: React.MouseEvent) => {
@@ -406,42 +352,6 @@ export default function TimeBlock({
     }
   };
 
-  // ── 모바일 하단 핸들 터치 리사이즈 ──
-  const handleBottomTouchResize = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    setIsMobileEditing(true);
-    setIsDragging(true);
-
-    const onTouchMove = (te: TouchEvent) => {
-      te.preventDefault();
-      const containerTop = containerRef.current?.getBoundingClientRect().top || 0;
-      const relY = te.touches[0].clientY - containerTop;
-      const newEndRaw = timelineStartMinutes + pxToMinutes(relY);
-      const newEnd = Math.min(
-        timelineEndMinutes,
-        Math.max(localStart + MIN_BLOCK_MINUTES, newEndRaw)
-      );
-      setLocalEnd(newEnd);
-    };
-
-    const onTouchEnd = () => {
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
-      
-      setIsMobileEditing(false);
-      setIsDragging(false);
-      
-      if (localEnd !== timeStringToMinutes(block.endTime)) {
-        updateTimeBlock(block.id, {
-          endTime: minutesToTimeString(localEnd),
-        });
-      }
-    };
-
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: false });
-  };
-
   const handleSaveMemo = () => {
     updateTimeBlock(block.id, { memo: tempMemo });
     setIsMemoOpen(false);
@@ -570,17 +480,7 @@ export default function TimeBlock({
         </div>
       )}
 
-      {/* 하단 리사이즈 핸들 */}
-      <div
-        data-handle="bottom"
-        className={`absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center transition-opacity z-30 ${
-          isMobileEditing || isHovered ? "opacity-100" : "opacity-0"
-        }`}
-        onMouseDown={handleBottomResize}
-        onTouchStart={handleBottomTouchResize}
-      >
-        <div className={`w-8 h-1 rounded-full shadow-sm transition-all ${isMobileEditing ? "bg-white scale-x-125" : "bg-white/60"}`} />
-      </div>
+      {/* 하단 리사이즈 핸들 제거됨 */}
     </div>
 
     {/* 메모 편집 모달 */}
