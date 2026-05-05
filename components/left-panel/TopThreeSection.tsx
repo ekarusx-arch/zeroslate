@@ -8,7 +8,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Plus, Target, Check, Calendar, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -17,16 +16,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 
 // ── 개별 Top Three 드래그 아이템 ───────────────────────────
 function DraggableTopItem({ item }: { item: TopThreeItemType }) {
-  const deleteTopThreeItem = useTimeboxerStore((s) => s.deleteTopThreeItem);
   const toggleTopThreeItem = useTimeboxerStore((s) => s.toggleTopThreeItem);
   const updateTopThreeItem = useTimeboxerStore((s) => s.updateTopThreeItem);
   const setAssigningTask = useTimeboxerStore((s) => s.setAssigningTask);
