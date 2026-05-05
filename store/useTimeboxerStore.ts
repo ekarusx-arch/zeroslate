@@ -210,6 +210,8 @@ interface TimeboxerState {
     totalMinutes: number;
     completedMinutes: number;
   }>;
+  reorderTopThree: (oldIndex: number, newIndex: number) => void;
+  reorderBrainDump: (oldIndex: number, newIndex: number) => void;
 }
 
 const defaultSettings: Settings = {
@@ -227,7 +229,6 @@ const defaultSettings: Settings = {
   ],
   theme: "classic",
   customAccent: "#2563EB",
-  leftPanelOrder: ["top-three", "brain-dump"],
 };
 
 const PRO_ACCESS_EMAILS = new Set([
@@ -448,14 +449,6 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       }
     }
 
-    // leftPanelOrder는 로컬 설정을 최우선으로 함 (DB 스키마에 없을 수 있음)
-    if (localSettings) {
-      const parsed = JSON.parse(localSettings);
-      if (parsed.leftPanelOrder) {
-        finalSettings.leftPanelOrder = parsed.leftPanelOrder;
-      }
-    }
-
     // 완전히 처음 사용하는 사용자(DB도 없고 로컬도 없는 경우)만 기본 태그 적용
     if (!st.data && !localSettings && (!finalSettings.customTags || finalSettings.customTags.length === 0)) {
       finalSettings.customTags = [
@@ -643,6 +636,24 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
     }));
 
     return { pieData, barData, totalMinutes, completedMinutes };
+  },
+
+  reorderTopThree: (oldIndex, newIndex) => {
+    set((state) => {
+      const newList = [...state.topThree];
+      const [removed] = newList.splice(oldIndex, 1);
+      newList.splice(newIndex, 0, removed);
+      return { topThree: newList };
+    });
+  },
+
+  reorderBrainDump: (oldIndex, newIndex) => {
+    set((state) => {
+      const newList = [...state.brainDump];
+      const [removed] = newList.splice(oldIndex, 1);
+      newList.splice(newIndex, 0, removed);
+      return { brainDump: newList };
+    });
   },
 
   updateSettings: async (s) => {

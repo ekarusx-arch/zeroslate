@@ -13,13 +13,6 @@ import {
   TouchSensor,
   KeyboardSensor,
 } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { PlanBadge } from "@/components/ui/ProBadge";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { LogOut, CalendarDays, Calendar as CalendarIcon, Check, RotateCw, GripVertical, RefreshCw, Timer, UploadCloud, ChevronLeft, ChevronRight } from "lucide-react";
@@ -61,26 +54,6 @@ function DragPreview({ label }: { label: string }) {
     <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-blue-300 bg-white shadow-xl drag-overlay text-sm text-zinc-700 max-w-[200px]">
       <GripVertical className="w-4 h-4 text-zinc-400 shrink-0" />
       <span className="truncate">{label}</span>
-    </div>
-  );
-}
-
-// ── 섹션 리오더링용 래퍼 ──────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function SortableSection({ id, children }: { id: string; children: (handleProps: any) => React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-    zIndex: isDragging ? 100 : undefined,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const handleProps = { ...attributes, ...listeners };
-
-  return (
-    <div ref={setNodeRef} style={style} className="relative group">
-      {children(handleProps)}
     </div>
   );
 }
@@ -153,6 +126,7 @@ export default function Home() {
   const addBrainDumpItem = useTimeboxerStore((s) => s.addBrainDumpItem);
   const deleteTopThreeItem = useTimeboxerStore((s) => s.deleteTopThreeItem);
   const topThree = useTimeboxerStore((s) => s.topThree);
+  const brainDump = useTimeboxerStore((s) => s.brainDump);
   const [landingGuideOpen, setLandingGuideOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"dump" | "timeline" | "stats">("timeline");
 
@@ -353,17 +327,27 @@ export default function Home() {
 
     const activeId = String(active.id);
     const overId = String(over.id);
+    const activeData = active.data.current;
+    const overData = over.data.current;
 
-    // 섹션 리오더링 처리
-    if (["top-three", "brain-dump"].includes(activeId) && ["top-three", "brain-dump"].includes(overId)) {
-      if (activeId !== overId) {
-        const oldOrder = settings.leftPanelOrder || ["top-three", "brain-dump"];
-        const oldIndex = oldOrder.indexOf(activeId);
-        const newIndex = oldOrder.indexOf(overId);
-        const newOrder = arrayMove(oldOrder, oldIndex, newIndex);
-        useTimeboxerStore.getState().updateSettings({ leftPanelOrder: newOrder });
+    // 아이템 리오더링 처리 (같은 섹션 내에서 아이템 간 이동하는 경우)
+    if (activeId !== overId && activeData?.type === overData?.type) {
+      if (activeData?.type === "top-three") {
+        const oldIndex = topThree.findIndex((i) => i.id === activeId);
+        const newIndex = topThree.findIndex((i) => i.id === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          useTimeboxerStore.getState().reorderTopThree(oldIndex, newIndex);
+        }
+        return;
       }
-      return;
+      if (activeData?.type === "brain-dump") {
+        const oldIndex = brainDump.findIndex((i) => i.id === activeId);
+        const newIndex = brainDump.findIndex((i) => i.id === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          useTimeboxerStore.getState().reorderBrainDump(oldIndex, newIndex);
+        }
+        return;
+      }
     }
 
     // Top Three 섹션으로 드롭한 경우
@@ -578,32 +562,17 @@ export default function Home() {
         <main className="flex-1 max-w-[1500px] mx-auto w-full px-2 sm:px-4 py-4 flex flex-col lg:flex-row gap-4 min-h-0 pb-20 lg:pb-4">
 
           {/* 좌측 패널 (모바일에서는 dump 탭일 때만 표시) */}
+          {/* 좌측 패널 (모바일에서는 dump 탭일 때만 표시) */}
           <aside className={`w-full lg:w-[30%] xl:w-[420px] shrink-0 flex flex-col gap-3 ${activeTab === 'dump' ? 'flex' : 'hidden lg:flex'}`}>
-            <SortableContext items={settings.leftPanelOrder || ['top-three', 'brain-dump']} strategy={verticalListSortingStrategy}>
-              {(settings.leftPanelOrder || ['top-three', 'brain-dump']).map((sectionId) => (
-                <SortableSection key={sectionId} id={sectionId}>
-                  {(handleProps) => (
-                    sectionId === 'top-three' ? (
-                      <div className="panel-card p-3 sm:p-4">
-                        <TopThreeSection dragHandle={
-                          <div {...handleProps} className="p-1 text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing">
-                            <GripVertical className="w-4 h-4" />
-                          </div>
-                        } />
-                      </div>
-                    ) : (
-                      <div className="panel-card p-3 sm:p-4 flex-1 flex flex-col min-h-0 lg:max-h-[calc(100vh-200px)]">
-                        <BrainDumpSection dragHandle={
-                          <div {...handleProps} className="p-1 text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing">
-                            <GripVertical className="w-4 h-4" />
-                          </div>
-                        } />
-                      </div>
-                    )
-                  )}
-                </SortableSection>
-              ))}
-            </SortableContext>
+            {/* Top 3 */}
+            <div className="panel-card p-3 sm:p-4">
+              <TopThreeSection />
+            </div>
+
+            {/* Brain Dump */}
+            <div className="panel-card p-3 sm:p-4 flex-1 flex flex-col min-h-0 lg:max-h-[calc(100vh-200px)]">
+              <BrainDumpSection />
+            </div>
           </aside>
 
           {/* 중앙 타임라인 (모바일에서는 timeline 탭일 때만 표시) */}

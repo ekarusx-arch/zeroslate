@@ -3,7 +3,12 @@
 import { useState, KeyboardEvent, useRef } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { BrainDumpItem as BrainDumpItemType } from "@/types";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   GripVertical,
@@ -59,8 +64,8 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
       id: item.id,
       data: {
         type: "brain-dump",
@@ -70,6 +75,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 
   const style = {
     transform: CSS.Translate.toString(transform),
+    transition,
     opacity: isDragging ? 0.35 : 1,
   };
 
@@ -312,7 +318,7 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
 // ─────────────────────────────────────────────────────────────────────
 // Brain Dump 섹션 전체
 // ─────────────────────────────────────────────────────────────────────
-export default function BrainDumpSection({ dragHandle }: { dragHandle?: React.ReactNode }) {
+export default function BrainDumpSection() {
   const [inputValue, setInputValue] = useState("");
   const brainDump = useTimeboxerStore((s) => s.brainDump);
   const addBrainDumpItem = useTimeboxerStore((s) => s.addBrainDumpItem);
@@ -351,22 +357,19 @@ export default function BrainDumpSection({ dragHandle }: { dragHandle?: React.Re
     >
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          {dragHandle}
-          <div className="flex items-center gap-2 ml-1">
-            <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-blue-600" />
-            </div>
-            <h2 className="font-semibold text-sm text-zinc-800">Brain Dump</h2>
-            <span className="text-xs text-zinc-500">{brainDump.length}개</span>
-            <button
-              onClick={sortBrainDumpByTag}
-              className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors -ml-1"
-              title="태그별 정렬"
-            >
-              <ListFilter className="w-4 h-4" />
-            </button>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+            <Zap className="w-4 h-4 text-blue-600" />
           </div>
+          <h2 className="font-semibold text-sm text-zinc-800">Brain Dump</h2>
+          <span className="text-xs text-zinc-500">{brainDump.length}개</span>
+          <button
+            onClick={sortBrainDumpByTag}
+            className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors -ml-1"
+            title="태그별 정렬"
+          >
+            <ListFilter className="w-4 h-4" />
+          </button>
         </div>
         {completedCount > 0 && (
           <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
@@ -447,24 +450,26 @@ export default function BrainDumpSection({ dragHandle }: { dragHandle?: React.Re
           </div>
         )}
 
-        {/* 미완료 아이템 */}
-        {pendingItems.map((item) => (
-          <DraggableBrainItem key={item.id} item={item} />
-        ))}
+        <SortableContext items={brainDump.map(i => i.id)} strategy={verticalListSortingStrategy}>
+          {/* 미완료 아이템 */}
+          {pendingItems.map((item) => (
+            <DraggableBrainItem key={item.id} item={item} />
+          ))}
 
-        {/* 완료 아이템 구분선 */}
-        {completedItems.length > 0 && pendingItems.length > 0 && (
-          <div className="flex items-center gap-2 py-1">
-            <div className="h-px flex-1 bg-zinc-100" />
-            <span className="text-xs text-zinc-500">완료됨</span>
-            <div className="h-px flex-1 bg-zinc-100" />
-          </div>
-        )}
+          {/* 완료 아이템 구분선 */}
+          {completedItems.length > 0 && pendingItems.length > 0 && (
+            <div className="flex items-center gap-2 py-1">
+              <div className="h-px flex-1 bg-zinc-100" />
+              <span className="text-xs text-zinc-500">완료됨</span>
+              <div className="h-px flex-1 bg-zinc-100" />
+            </div>
+          )}
 
-        {/* 완료 아이템 */}
-        {completedItems.map((item) => (
-          <DraggableBrainItem key={item.id} item={item} />
-        ))}
+          {/* 완료 아이템 */}
+          {completedItems.map((item) => (
+            <DraggableBrainItem key={item.id} item={item} />
+          ))}
+        </SortableContext>
       </div>
     </div>
   );

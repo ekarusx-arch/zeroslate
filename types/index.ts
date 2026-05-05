@@ -34,7 +34,6 @@ export interface Settings {
   theme: ThemeId;
   customAccent?: string;
   bgMood?: string; // 배경 분위기: "none" | "sunset" | "ocean" | "aurora" | "forest" | "rose"
-  leftPanelOrder?: string[]; // ← 신규: 좌측 패널 섹션 순서
   updatedAt?: string; // 동기화 타임스탬프
 }
 

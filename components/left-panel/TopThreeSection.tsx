@@ -3,7 +3,12 @@
 import { useState, KeyboardEvent, useRef } from "react";
 import { useTimeboxerStore } from "@/store/useTimeboxerStore";
 import { TopThreeItem as TopThreeItemType } from "@/types";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useDroppable } from "@dnd-kit/core";
+import { 
+  SortableContext, 
+  verticalListSortingStrategy, 
+  useSortable 
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Plus, Target, Check, Calendar, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -34,8 +39,8 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
       id: item.id,
       data: {
         type: "top-three",
@@ -45,6 +50,7 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
 
   const style = {
     transform: CSS.Translate.toString(transform),
+    transition,
     opacity: isDragging ? 0.4 : 1,
   };
 
@@ -291,7 +297,7 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
 // ─────────────────────────────────────────────────────────────────────
 // Top Three 섹션 전체
 // ─────────────────────────────────────────────────────────────────────
-export default function TopThreeSection({ dragHandle }: { dragHandle?: React.ReactNode }) {
+export default function TopThreeSection() {
   const [inputValue, setInputValue] = useState("");
   const topThree = useTimeboxerStore((s) => s.topThree);
   const addTopThreeItem = useTimeboxerStore((s) => s.addTopThreeItem);
@@ -324,15 +330,12 @@ export default function TopThreeSection({ dragHandle }: { dragHandle?: React.Rea
     >
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          {dragHandle}
-          <div className="flex items-center gap-2 ml-1">
-            <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-              <Target className="w-4 h-4 text-violet-600" />
-            </div>
-            <h2 className="font-semibold text-sm text-zinc-800">Top 3 Focus</h2>
-            <span className="text-xs text-zinc-500">{topThree.length}/3</span>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+            <Target className="w-4 h-4 text-violet-600" />
           </div>
+          <h2 className="font-semibold text-sm text-zinc-800">Top 3 Focus</h2>
+          <span className="text-xs text-zinc-500">{topThree.length}/3</span>
         </div>
       </div>
 
@@ -343,9 +346,11 @@ export default function TopThreeSection({ dragHandle }: { dragHandle?: React.Rea
             오늘 가장 중요한 3가지를 입력하세요 ✨
           </p>
         )}
-        {topThree.map((item) => (
-          <DraggableTopItem key={item.id} item={item} />
-        ))}
+        <SortableContext items={topThree.map(i => i.id)} strategy={verticalListSortingStrategy}>
+          {topThree.map((item) => (
+            <DraggableTopItem key={item.id} item={item} />
+          ))}
+        </SortableContext>
       </div>
 
       {/* 입력창 */}
