@@ -117,7 +117,7 @@ export default function FocusTimer() {
 
   return (
     <div
-      className={`fixed bottom-24 left-8 z-50 ${
+      className={`fixed bottom-24 left-4 sm:left-8 z-50 ${
         isDragging ? "" : "animate-in fade-in slide-in-from-left-4 duration-300"
       }`}
       onPointerDown={handlePointerDown}
@@ -129,36 +129,36 @@ export default function FocusTimer() {
         cursor: isDragging ? "grabbing" : "grab",
       }}
     >
-      <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-md text-zinc-900 rounded-2xl border border-zinc-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] group hover:scale-105 transition-all duration-300 scale-90 sm:scale-100 origin-bottom-left">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-200 animate-pulse-subtle">
-            <Timer className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-2 sm:gap-4 p-2.5 sm:p-4 bg-white/90 backdrop-blur-md text-zinc-900 rounded-2xl border border-zinc-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] group hover:scale-105 transition-all duration-300 origin-bottom-left max-w-[calc(100vw-2rem)]">
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-200 animate-pulse-subtle">
+            <Timer className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping" />
+          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-ping" />
         </div>
         
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">Deep Work</span>
-            <span className="w-1 h-1 rounded-full bg-zinc-300" />
-            <span className="text-[11px] font-bold text-zinc-500 truncate max-w-[120px]">{activeTask}</span>
+        <div className="flex flex-col gap-0 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] text-red-500 whitespace-nowrap">Deep Work</span>
+            <span className="w-0.5 h-0.5 rounded-full bg-zinc-300 shrink-0" />
+            <span className="text-[10px] sm:text-[11px] font-bold text-zinc-500 truncate max-w-[80px] sm:max-w-[120px]">{activeTask}</span>
           </div>
-          <span className="text-2xl font-black font-mono tracking-tighter text-zinc-900 leading-none">
+          <span className="text-xl sm:text-2xl font-black font-mono tracking-tighter text-zinc-900 leading-tight">
             {timeLeft}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 ml-1 sm:ml-2 shrink-0">
           {/* 몰입 시작 버튼 */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               if (activeBlockId) setFocusId(activeBlockId);
             }}
-            className="flex items-center gap-1.5 px-4 h-11 bg-zinc-900 hover:bg-black text-white rounded-xl shadow-lg transition-all active:scale-95 group/focus"
+            className="flex items-center gap-1 px-2.5 sm:px-4 h-9 sm:h-11 bg-zinc-900 hover:bg-black text-white rounded-lg sm:rounded-xl shadow-lg transition-all active:scale-95 group/focus"
           >
-            <Play className="w-3.5 h-3.5 fill-current group-hover/focus:scale-110 transition-transform" />
-            <span className="text-xs font-bold whitespace-nowrap">몰입 시작</span>
+            <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current group-hover/focus:scale-110 transition-transform" />
+            <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">몰입</span>
           </button>
 
           {/* 완료 버튼 */}
@@ -167,10 +167,10 @@ export default function FocusTimer() {
               e.stopPropagation();
               if (activeBlockId) toggleTimeBlock(activeBlockId);
             }}
-            className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-90 group/btn"
+            className="p-2 sm:p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg sm:rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-90 group/btn"
             title="작업 완료 및 종료"
           >
-            <Check className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+            <Check className="w-4 h-4 sm:w-5 sm:h-5 group-hover/btn:scale-110 transition-transform" />
           </button>
         </div>
       </div>
