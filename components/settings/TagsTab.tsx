@@ -208,10 +208,10 @@ export default function TagsTab({
             <Tag className="w-3.5 h-3.5 text-zinc-500" />
             <span className="text-xs font-bold text-zinc-600 uppercase tracking-tight">스마트 태그 ({customTags.length})</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button 
               onClick={pushSettingsToCloud}
-              className="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
+              className="text-[9px] font-bold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1 shrink-0"
               title="현재 기기의 설정을 서버에 덮어씌웁니다."
             >
               <CloudUpload className="w-2.5 h-2.5" />
@@ -219,14 +219,14 @@ export default function TagsTab({
             </button>
             <button 
               onClick={initialize}
-              className="text-[10px] font-bold text-zinc-500 hover:text-zinc-700 transition-colors flex items-center gap-1"
+              className="text-[9px] font-bold text-zinc-500 hover:text-zinc-700 transition-colors flex items-center gap-1 shrink-0"
             >
               <RotateCw className="w-2.5 h-2.5" />
               서버 동기화
             </button>
             <button 
               onClick={handleResetTags}
-              className="text-[10px] font-bold text-zinc-400 hover:text-zinc-600 transition-colors flex items-center gap-1"
+              className="text-[9px] font-bold text-zinc-400 hover:text-zinc-600 transition-colors flex items-center gap-1 shrink-0"
             >
               기본값 복원
             </button>

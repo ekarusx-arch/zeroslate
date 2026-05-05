@@ -83,17 +83,17 @@ export default function SettingsModal() {
         <Tabs defaultValue="timeline" className="flex-1 overflow-hidden flex flex-col">
           <div className="px-6 border-b border-zinc-100 bg-zinc-50/30">
             <TabsList className="w-full bg-zinc-200/50 p-1 rounded-xl h-11 mt-4 mb-3">
-              <TabsTrigger value="timeline" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
-                <Settings2 className="w-3.5 h-3.5 mr-1" /> 타임라인
+              <TabsTrigger value="timeline" className="flex-1 text-[11px] font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all px-0">
+                <Settings2 className="w-3.5 h-3.5 mr-0.5" /> 타임라인
               </TabsTrigger>
-              <TabsTrigger value="routines" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
-                <Repeat className="w-3.5 h-3.5 mr-1" /> 루틴
+              <TabsTrigger value="routines" className="flex-1 text-[11px] font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all px-0">
+                <Repeat className="w-3.5 h-3.5 mr-0.5" /> 루틴
               </TabsTrigger>
-              <TabsTrigger value="tags" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
-                <Tag className="w-3.5 h-3.5 mr-1" /> 스마트 태그
+              <TabsTrigger value="tags" className="flex-1 text-[11px] font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all px-0">
+                <Tag className="w-3.5 h-3.5 mr-0.5" /> 스마트 태그
               </TabsTrigger>
-              <TabsTrigger value="theme" className="flex-1 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all">
-                <Sparkles className="w-3.5 h-3.5 mr-1" /> 테마
+              <TabsTrigger value="theme" className="flex-1 text-[11px] font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm rounded-lg transition-all px-0">
+                <Sparkles className="w-3.5 h-3.5 mr-0.5" /> 테마
               </TabsTrigger>
             </TabsList>
           </div>
