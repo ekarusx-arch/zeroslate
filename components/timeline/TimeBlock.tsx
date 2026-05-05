@@ -129,19 +129,23 @@ export default function TimeBlock({
       if (!containerRef.current) return;
 
       setIsDragging(true);
-      const containerTop = containerRef.current.getBoundingClientRect().top;
-      const originalEnd = localEnd;
+      const originalStart = localStart;
 
       const getClientY = (event: MouseEvent | TouchEvent) => {
         return 'touches' in event ? (event as TouchEvent).touches[0].clientY : (event as MouseEvent).clientY;
       };
 
+      const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
       const onMove = (me: MouseEvent | TouchEvent) => {
-        const relY = getClientY(me) - containerTop;
-        const newStartRaw = timelineStartMinutes + pxToMinutes(relY);
+        const currentY = getClientY(me);
+        const dy = currentY - startY;
+        const deltaMin = pxToMinutes(dy);
+
+        const newStartRaw = originalStart + deltaMin;
         const newStart = Math.max(
           timelineStartMinutes,
-          Math.min(newStartRaw, originalEnd - MIN_BLOCK_MINUTES)
+          Math.min(newStartRaw, localEnd - MIN_BLOCK_MINUTES)
         );
         setLocalStart(newStart);
       };
@@ -153,11 +157,14 @@ export default function TimeBlock({
         window.removeEventListener("touchend", onEnd as EventListener);
         
         setIsDragging(false);
-        const relY = getClientY(me) - containerTop;
-        const finalStartRaw = timelineStartMinutes + pxToMinutes(relY);
+        const currentY = getClientY(me);
+        const dy = currentY - startY;
+        const deltaMin = pxToMinutes(dy);
+        
+        const finalStartRaw = originalStart + deltaMin;
         const finalStart = Math.max(
           timelineStartMinutes,
-          Math.min(finalStartRaw, originalEnd - MIN_BLOCK_MINUTES)
+          Math.min(finalStartRaw, localEnd - MIN_BLOCK_MINUTES)
         );
 
         if (finalStart !== timeStringToMinutes(block.startTime)) {
@@ -172,7 +179,7 @@ export default function TimeBlock({
       window.addEventListener("touchmove", onMove as EventListener, { passive: false });
       window.addEventListener("touchend", onEnd as EventListener, { passive: false });
     },
-    [block.id, block.startTime, localEnd, timelineStartMinutes, containerRef, updateTimeBlock]
+    [block.id, block.startTime, localEnd, localStart, timelineStartMinutes, containerRef, updateTimeBlock, pxToMinutes]
   );
 
   // ── 하단 핸들 리사이즈 ──────────────────────────────
@@ -182,19 +189,23 @@ export default function TimeBlock({
       if (!containerRef.current) return;
 
       setIsDragging(true);
-      const containerTop = containerRef.current.getBoundingClientRect().top;
-      const originalStart = localStart;
+      const originalEnd = localEnd;
 
       const getClientY = (event: MouseEvent | TouchEvent) => {
         return 'touches' in event ? (event as TouchEvent).touches[0].clientY : (event as MouseEvent).clientY;
       };
 
+      const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
       const onMove = (me: MouseEvent | TouchEvent) => {
-        const relY = getClientY(me) - containerTop;
-        const newEndRaw = timelineStartMinutes + pxToMinutes(relY);
+        const currentY = getClientY(me);
+        const dy = currentY - startY;
+        const deltaMin = pxToMinutes(dy);
+
+        const newEndRaw = originalEnd + deltaMin;
         const newEnd = Math.min(
           timelineEndMinutes,
-          Math.max(originalStart + MIN_BLOCK_MINUTES, newEndRaw)
+          Math.max(localStart + MIN_BLOCK_MINUTES, newEndRaw)
         );
         setLocalEnd(newEnd);
       };
@@ -206,11 +217,14 @@ export default function TimeBlock({
         window.removeEventListener("touchend", onEnd as EventListener);
         
         setIsDragging(false);
-        const relY = getClientY(me) - containerTop;
-        const finalEndRaw = timelineStartMinutes + pxToMinutes(relY);
+        const currentY = getClientY(me);
+        const dy = currentY - startY;
+        const deltaMin = pxToMinutes(dy);
+        
+        const finalEndRaw = originalEnd + deltaMin;
         const finalEnd = Math.min(
           timelineEndMinutes,
-          Math.max(originalStart + MIN_BLOCK_MINUTES, finalEndRaw)
+          Math.max(localStart + MIN_BLOCK_MINUTES, finalEndRaw)
         );
 
         if (finalEnd !== timeStringToMinutes(block.endTime)) {
@@ -229,10 +243,12 @@ export default function TimeBlock({
       block.id,
       block.endTime,
       localStart,
+      localEnd,
       timelineStartMinutes,
       timelineEndMinutes,
       containerRef,
       updateTimeBlock,
+      pxToMinutes
     ]
   );
 
@@ -465,7 +481,7 @@ export default function TimeBlock({
       <div
         data-handle="top"
         className={`absolute top-0 left-0 right-0 h-6 cursor-ns-resize flex items-center justify-center transition-all z-40 ${
-          isHovered ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100"
+          isHovered || isDragging ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100"
         }`}
         onMouseDown={handleTopResize}
         onTouchStart={handleTopResize}
@@ -555,7 +571,7 @@ export default function TimeBlock({
       <div
         data-handle="bottom"
         className={`absolute bottom-0 left-0 right-0 h-7 cursor-ns-resize flex items-center justify-center transition-all z-40 ${
-          isHovered ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100"
+          isHovered || isDragging ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100"
         }`}
         onMouseDown={handleBottomResize}
         onTouchStart={handleBottomResize}
