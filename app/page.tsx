@@ -10,6 +10,8 @@ import {
   useSensor,
   useSensors,
   closestCenter,
+  TouchSensor,
+  KeyboardSensor,
 } from "@dnd-kit/core";
 import { PlanBadge } from "@/components/ui/ProBadge";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -295,7 +297,14 @@ export default function Home() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
-    })
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 2000,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor)
   );
 
   // 드래그 시작

@@ -180,8 +180,9 @@ function DraggableBrainItem({ item }: { item: BrainDumpItemType }) {
       <button
         {...listeners}
         {...attributes}
+        style={{ touchAction: "none" }}
         className="text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing shrink-0"
-        aria-label="드래그"
+        aria-label="브레인 덤프 항목 드래그"
       >
         <GripVertical className="w-4 h-4" />
       </button>

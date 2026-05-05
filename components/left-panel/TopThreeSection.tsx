@@ -96,6 +96,7 @@ function DraggableTopItem({ item }: { item: TopThreeItemType }) {
       <button
         {...listeners}
         {...attributes}
+        style={{ touchAction: "none" }}
         className="text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing shrink-0"
         aria-label="Top 3 항목 드래그"
       >
