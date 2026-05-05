@@ -388,12 +388,20 @@ export const useTimeboxerStore = create<TimeboxerState>()((set, get) => ({
       timeBlocks: (tb.data || []).map(r => ({ id: r.id, taskId: r.task_id, content: r.content, startTime: r.start_time, endTime: r.end_time, color: r.color, isCompleted: r.is_completed, memo: r.memo, date: r.date })),
     });
   },
-
   initialize: async () => {
+    // 0. 마지막으로 확인된 플랜 정보를 우선 로드 (서버 응답 대기 시간 제거)
+    const lastPlan = localStorage.getItem('zeroslate_last_plan') as any;
+    if (lastPlan) set({ userPlan: lastPlan });
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const userId = session.user.id;
     const accountPlan = getPlanForEmail(session.user.email);
+    
+    // 플랜 정보 로컬에 저장 (다음 로딩 시 활용)
+    localStorage.setItem('zeroslate_last_plan', accountPlan);
+    set({ userPlan: accountPlan, userId });
+
     const targetDate = get().selectedDate;
     
     // 1. 로컬 스토리지에서 우선 로드 (즉각적인 UI 반영)
